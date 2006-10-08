@@ -1,0 +1,3 @@
+; $Id$
+name = lm_paypal
+description = "Lowest level PayPal interface required by other LM PayPal modules."

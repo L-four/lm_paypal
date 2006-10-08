@@ -1,0 +1,10 @@
+Before installing you will need a PayPal account that can support IPN.
+Currently this means either a Premium or Business Account.
+
+1. Copy either the entire lm_paypal directory or just
+   the *.module, *.install, *.info and *.js files into your drupal/modules
+   directory.  For just one site in a multi-site setup copy into
+   drupal/sites/www.mysite.com/modules
+2. Enable the modules in admin/modules
+3. Under administer>settings configure, as appropriate, each module.
+4. Under administer>help read the help pages for each module.

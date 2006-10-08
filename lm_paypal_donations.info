@@ -1,0 +1,3 @@
+; $Id$
+name = lm_paypal_donations
+description = "Provides PayPal donation buttons (requires lm_paypal)."

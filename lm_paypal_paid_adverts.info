@@ -1,0 +1,3 @@
+; $Id$
+name = lm_paypal_paid_adverts
+description = "Provides PayPal paid advert pages (requires lm_paypal and lm_paypal_subscriptions)."

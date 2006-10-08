@@ -1,0 +1,22 @@
+<?php
+
+// $Id$
+
+/**
+ * @file
+ *
+ * Install or update the PayPal Paid Adverts interface.
+ *
+ * Lee McLoughlin <lee@lmmrtech.com>. Aug 2006
+ */
+
+function lm_paypal_paid_adverts_install() {
+}
+
+function lm_paypal_paid_adverts_update_1() {
+  $items = array();
+  $items[] = update_sql("DROP TABLE {lm_paypal_paid_adverts}");
+  return $items;
+}
+
+?>

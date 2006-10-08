@@ -1,0 +1,66 @@
+<?php
+
+// $Id$
+
+/**
+ * @file
+ *
+ * Install or update the PayPal donations interface.
+ *
+ * Lee McLoughlin <lee@lmmrtech.com>. July 2006
+ */
+
+function lm_paypal_donations_install() {
+  $mysql_create_donations = "
+    CREATE TABLE {lm_paypal_donations} (
+      udid        int unsigned not null auto_increment,
+      uid         int(10) unsigned null,
+      datepaid    int(11) not null,
+      txn_id      varchar(20) not null default '', # Paypal generated transaction id
+      mc_gross    decimal(10,2) default '0.00' not null,
+      mc_fee      decimal(10,2) default '0.00' not null,
+      mc_currency varchar(3) default null,
+      item_name   varchar(127) not null default '',
+
+      primary key(udid)
+    )  /*!40100 DEFAULT CHARACTER SET utf8 */ ;
+  ";
+
+  $ret = '';
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret .= lm_paypal_donations_create_table('lm_paypal_donations', $mysql_create_donations);
+      break;
+   
+    case 'pgsql':
+      watchdog('lm_paypal_donations', t('pgsql not supported yet'), WATCHDOG_ERROR);
+      return;
+      break;
+  }
+  if ($ret == '') {
+    $msg = t('lm_paypal_donations created tables');
+  }
+  else {
+    $msg = t('lm_paypal_donations FAILED to create tables:') . $ret;
+  }
+  drupal_set_message($msg);
+}
+
+function lm_paypal_donations_create_table($table, $sql) {
+  $res = db_query($sql);
+  if (!$res) {
+    $ret = t('Failed to create table:') . $table . t('. ');
+    watchdog('lm_paypal', $ret, WATCHDOG_ERROR);
+    return $ret;
+  }
+  return '';
+}
+
+function lm_paypal_donations_update_1() {
+  $items = array();
+  $items[] = update_sql("ALTER TABLE {lm_paypal_donations} ADD item_name varchar(127) not null default '' AFTER mc_currency");
+  return $items;
+}
+
+?>
