@@ -781,7 +781,7 @@ function lm_paypal_subscription_edit_form($subid = '') {
 
     $form['edit_subid'] = array(
       '#type' => 'hidden',
-      '#default_value' => $subid,
+      '#value' => $subid,
     );
   }
   else {
