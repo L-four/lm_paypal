@@ -1300,8 +1300,8 @@ function lm_paypal_subscription_edit_submit($form_id, $values) {
     if ($kind == 2 && $key == 'rid') {
       continue;
     }
-    // Ditto for role subs - ignore gid
-    if ($kind == 0 && $key == 'gid') {
+    // Ditto for role and node subs - ignore gid
+    if (($kind == 0 || $kind == 1) && $key == 'gid') {
       continue;
     }
     $value = $values [$key];
@@ -2224,8 +2224,8 @@ function lm_paypal_subscriptions_user($op, &$edit, &$account, $category = NULL) 
 
   // In the "my account" view area show any role subscriptions
   // but only for admin looking at other users or the user themself
-  if ($op == 'view' && ($user->uid == 1 || $user->uid == $account->uid)) {
-  //xx
+  
+  if ($op == 'view' && (user_access('administer lm_paypal') || $user->uid == $account->uid)) {
     $output = lm_paypal_subscribe(null, 32, '', null, $account);
     
     $sitems [] = array(
