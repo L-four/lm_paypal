@@ -26,8 +26,7 @@ function lm_paypal_subscriptions_install() {
       KEY uid (uid),
       KEY subscr_id (subscr_id),
       PRIMARY KEY(usid)
-    )  /*!40100 DEFAULT CHARACTER SET utf8 */ ;
-  ";
+    )  /*!40100 DEFAULT CHARACTER SET utf8 */;";
 
   $mysql_create_subscriptions = "
     CREATE TABLE {lm_paypal_subscriptions} (

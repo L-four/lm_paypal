@@ -23,8 +23,7 @@ function lm_paypal_donations_install() {
       item_name   varchar(127) not null default '',
 
       primary key(udid)
-    )  /*!40100 DEFAULT CHARACTER SET utf8 */ ;
-  ";
+    )  /*!40100 DEFAULT CHARACTER SET utf8 */;";
 
   $ret = '';
   switch ($GLOBALS['db_type']) {

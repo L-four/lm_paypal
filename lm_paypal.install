@@ -119,8 +119,7 @@ function lm_paypal_install() {
 
       KEY txn_id (txn_id),
       PRIMARY KEY(id)
-    )  /*!40100 DEFAULT CHARACTER SET utf8 */ ;
-";
+    )  /*!40100 DEFAULT CHARACTER SET utf8 */;";
 
   $ret = '';
   switch ($GLOBALS['db_type']) {
