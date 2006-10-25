@@ -125,12 +125,12 @@ function lm_paypal_install() {
   $ret = '';
   switch ($GLOBALS['db_type']) {
     case 'mysql':
-    case 'mysqli':
       $ret .= lm_paypal_create_table('lm_paypal_ipns', $mysql_create_ipns);
       break;
    
+    case 'mysqli':  // Bad Lee... using mysql_insert_id in lm_paypal!
     case 'pgsql':
-      watchdog('lm_paypal', t('pgsql not supported yet'), WATCHDOG_ERROR);
+      watchdog('lm_paypal', t('%db_type not supported yet', array('%db_type' => $GLOBALS['db_type'])), WATCHDOG_ERROR);
       return;
       break;
   }
