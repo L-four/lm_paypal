@@ -677,8 +677,8 @@ function lm_paypal_user_subscribed($subid, $account = null) {
     return FALSE;
   }
 
-  // kind 0 is a role subscription, kind 1 is a group
-  $sql = "SELECT uid, subid, status FROM {lm_paypal_subscribers} WHERE uid = %d AND subid = %d AND (kind = 0 OR kind = 2)";
+  // kind 0 is a role subscription, kind 2 is a group
+  $sql = "SELECT uid, subid, status, kind FROM {lm_paypal_subscribers} WHERE uid = %d AND subid = %d AND status = 1 AND (kind = 0 OR kind = 2)";
   $subs = db_query($sql, $uid, $subid);
   if (db_num_rows($subs) <= 0) {
     return FALSE;
@@ -692,7 +692,7 @@ function lm_paypal_user_subscribed($subid, $account = null) {
       WATCHDOG_ERROR);
     return FALSE;
   }
-  return ($ss->status == 1);
+  return TRUE;
 }
 
 /**
@@ -930,7 +930,7 @@ function lm_paypal_subscription_edit_form($subid = '') {
     '#title' => t('Trial amount 1'),
     '#maxlength' => 10,
     '#default_value' => $so->a1,
-    '#description' => t('This is the price of the first trial period. For a free trial leave this amount and Trial period 1 empty'),
+    '#description' => t('This is the price of the first trial period. For a free trial leave this amount empty'),
   );
 
   $form['p1'] = array(
@@ -954,7 +954,7 @@ function lm_paypal_subscription_edit_form($subid = '') {
     '#title' => t('Trial amount 2'),
     '#maxlength' => 10,
     '#default_value' => $so->a2,
-    '#description' => t('This is the price of the first trial period. For a free trial leave this amount and Trial period 2 empty'),
+    '#description' => t('This is the price of the first trial period. For a free trial leave this amount empty'),
   );
 
   $form['p2'] = array(
@@ -1186,6 +1186,7 @@ function lm_paypal_subscription_edit_validate($formid, $form) {
     form_set_error('p3', $perr);
   }
 
+  /* Wrong... an empty amount means free
   $perr = t('If a trial period is set the amount must be set too');
   if ($p1 != '' && $a1 == '') {
     form_set_error('a1', $perr);
@@ -1193,6 +1194,7 @@ function lm_paypal_subscription_edit_validate($formid, $form) {
   if ($p2 != '' && $a2 == '') {
     form_set_error('a2', $perr);
   }
+  */
 
   $perr = t('If a trial amount is set the period must be set too');
   if ($a1 != '' && $p1 == '') {
@@ -2109,6 +2111,12 @@ function _lm_paypal_subscriptions_validate_ap($msg, $link, $subscr_id, $ipn_amou
     return FALSE;
   }
 
+  // If the amount is zero then ignore the period (this only applies to
+  // trials because the regular period cannot have a zero amount)
+  if ($ipn_amount == 0 || $ipn_amount == '') {
+    return TRUE;
+  }
+
   $ipn_period = trim($ipn_period);
   $period = trim($period);
   $units = trim($units);
@@ -2359,7 +2367,10 @@ function lm_paypal_subscribers($subid = null) {
   }
 
   while ($sub = db_fetch_object($result)) {
-    $ss = $stati[$sub->status];
+    $ss = $_lm_paypal_subscriptions_stati[$sub->status];
+    if ($ss == '') {
+      $ss = $sub->status;
+    }
     if ($sub->nid != 0) {
       $l = "node/$sub->nid";
       $nid = l($l,$l);
@@ -2502,7 +2513,7 @@ function lm_paypal_subscriber_edit($usid = '') {
     return drupal_get_form('lm_paypal_subscriber_edit_form', $usid);
   }
   else {
-    $form = lm_paypal_subscription_edit_form($usid);
+    $form = lm_paypal_subscriber_edit_form($usid);
 
     // Note: I've chosen a form_id the same as this function
     return drupal_get_form('lm_paypal_subscriber_edit', $form);
