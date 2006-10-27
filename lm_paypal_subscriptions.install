@@ -66,8 +66,7 @@ function lm_paypal_subscriptions_install() {
       send_user_onend_body        varchar(200) default '',
 
       primary key(subid)
-    )  /*!40100 DEFAULT CHARACTER SET utf8 */ ;
-  ";
+    )  /*!40100 DEFAULT CHARACTER SET utf8 */ ;";
 
   $ret = '';
   switch ($GLOBALS['db_type']) {
