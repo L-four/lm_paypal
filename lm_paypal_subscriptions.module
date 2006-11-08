@@ -2452,6 +2452,13 @@ function lm_paypal_subscribers_submit($form_id, $form) {
 }
 
 /**
+ * Process the form submission for lm_paypal_subscribers for Drupal 5
+ */
+function lm_paypal_subscribers_form_submit($form_id, $form) {
+  lm_paypal_subscribers_submit($form_id, $form);
+}
+
+/**
  * Edit a subscriber.
  *
  * @param $usit
