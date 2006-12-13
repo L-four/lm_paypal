@@ -900,15 +900,13 @@ function lm_paypal_mark_processed($ipn) {
   // TODO: Check for error
 }
 
-/**
- * Has a saved ipn already been processed.
- *
- * @param $txn_id
- *  The txn_id to be searched for.
- */
 function lm_paypal_already_processed($txn_id) {
   // Has this transaction already been processed?
-  $sql = "SELECT * FROM {lm_paypal_ipns} WHERE txn_id = '%s' and processed = '1'";
+  // Changed to allow for echecks which can be payment_status = 'Pending' for
+  //  quite a while
+  // OLD:
+  //$sql = "SELECT * FROM {lm_paypal_ipns} WHERE txn_id = '%s' and processed = '1'";
+  $sql = "SELECT * FROM {lm_paypal_ipns} WHERE txn_id = '%s' and processed = '1' and payment_status = 'Completed'";
   $r = db_query($sql, $txn_id);
   return (db_num_rows($r) > 0);
 }
