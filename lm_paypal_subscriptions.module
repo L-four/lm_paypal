@@ -930,7 +930,7 @@ function lm_paypal_subscription_edit_form($subid = '') {
     '#title' => t('Trial amount 1'),
     '#maxlength' => 10,
     '#default_value' => $so->a1,
-    '#description' => t('This is the price of the first trial period. For a free trial leave this amount empty'),
+    '#description' => t('This is the price of the first trial period. For a free trial set this to 0'),
   );
 
   $form['p1'] = array(
@@ -954,7 +954,7 @@ function lm_paypal_subscription_edit_form($subid = '') {
     '#title' => t('Trial amount 2'),
     '#maxlength' => 10,
     '#default_value' => $so->a2,
-    '#description' => t('This is the price of the first trial period. For a free trial leave this amount empty'),
+    '#description' => t('This is the price of the second trial period. For a free trial set this to 0'),
   );
 
   $form['p2'] = array(
@@ -1165,11 +1165,11 @@ function lm_paypal_subscription_edit_validate($formid, $form) {
     form_set_error('a3', $perr);
   }
 
-  $perr = t('A trial amount must either be empty or a positive number greater than 0');
-  if ($a1 != '' && (!is_numeric($a1) || $a1 <= 0)) {
+  $perr = t('A trial amount must either be empty or a positive number greater than or equal to 0');
+  if ($a1 != '' && (!is_numeric($a1) || $a1 < 0)) {
     form_set_error('a1', $perr);
   }
-  if ($a2 != '' && (!is_numeric($a2) || $a2 <= 0)) {
+  if ($a2 != '' && (!is_numeric($a2) || $a2 < 0)) {
     form_set_error('a2', $perr);
   }
 
@@ -2100,6 +2100,13 @@ function _lm_paypal_subscriptions_validate_ap($msg, $link, $subscr_id, $ipn_amou
   $ipn_currency = trim($ipn_currency);
   $amount = trim($amount);
   $cc = trim($cc);
+
+  if ($ipn_amount == '0.00') {
+    $ipn_amount = 0;
+  }
+  if ($amount == '0.00') {
+    $amount = 0;
+  }
 
   if ($ipn_amount != $amount || $ipn_currency != $cc) {
     watchdog(
