@@ -491,9 +491,10 @@ function lm_paypal_ipn_in() {
   global $_lm_paypal_debug;
   global $_lm_paypal_host;
 
-  // Don't bother with these fields
+  // Don't bother with these fields - but don't flag them as errors
   $ignore_fields = array(
    'notify_version',
+   'receipt_id',
    'charset',
   );
   // These fields, if present, should be saved in the ipn log
@@ -583,7 +584,7 @@ function lm_paypal_ipn_in() {
       $sql .= "'" . db_escape_string($value) . "'";
     }
     else {
-      watchdog(LM_PAYPAL, t('IPN unknown field ignored: %key => $value', array('%key' => check_plain($key), '%value' => check_plain($value))));
+      watchdog(LM_PAYPAL, t('IPN unknown field ignored: %key => %value', array('%key' => check_plain($key), '%value' => check_plain($value))));
     }
   }
 
