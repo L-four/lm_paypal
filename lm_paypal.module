@@ -81,9 +81,19 @@ function _lm_paypal_ini() {
     'USD' => t('U.S. Dollar'),
     'GBP' => t('Pound Sterling'), 
     'EUR' => t('Euro'), 
-    'AUD' => t('Australian Dollar'), // Not available for subscriptions?
+    'AUD' => t('Australian Dollar'),
     'CAD' => t('Canadian Dollar'), 
     'JPY' => t('Japanese Yen'),
+    'CHF' => t('Swiss Franc'),
+    'CZK' => t('Czech Koruna'),
+    'DKK' => t('Danish Krone'),
+    'HKD' => t('Hong Kong Dollar'),
+    'HUF' => t('Hungarian Forint'),
+    'NOK' => t('Norwegian Krone'),
+    'NZD' => t('New Zealand Dollar'),
+    'PLN' => t('Polish Zloty'),
+    'SEK' => t('Swedish Krona'),
+    'SGD' => t('Singapore Dollar'),
   );
 
   $_lm_paypal_currency_syms = array(
@@ -94,6 +104,16 @@ function _lm_paypal_ini() {
     'GBP' => '&#163;',
     'JPY' => '&#165;',
     'USD' => '$',
+    'CHF' => 'CHF',   // Yes - it really is writen as CHF
+    'CZK' => 'Kc',
+    'DKK' => 'kr',
+    'HKD' => 'HK$',
+    'HUF' => 'Ft',
+    'NOK' => 'kr',
+    'NZD' => 'NZ$',
+    'PLN' => 'zl',  // I cannot find the HTML character for a crossed l
+    'SEK' => 'kr',
+    'SGD' => 'S$',
   );
 
   $_lm_paypal_period_units_option = array(
