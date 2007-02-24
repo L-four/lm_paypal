@@ -515,7 +515,7 @@ function lm_paypal_subscribe($subid = null, $display = 15, $button_url = '', $ni
     else {
       $ret_url = $_lm_paypal_subscriptions_inprogress;
     }
-    $return_url = url(check_url($ret_url), null, null, TRUE);
+    $return_url = url(null, 'q=' . check_url($ret_url), null, TRUE);
     $notify_url = url('lm_paypal/ipn', null, null, TRUE);
     $biz = check_plain($_lm_paypal_business);
     $so->item_name = check_plain($so->item_name);

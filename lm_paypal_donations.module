@@ -366,7 +366,7 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
   if ($ret_url == '' || is_null($ret_url)) {
     $ret_url = $_lm_paypal_donations_thanks;
   }
-  $return_url = url(check_url($ret_url), null, null, TRUE);
+  $return_url = url(null, 'q=' . check_url($ret_url), null, TRUE);
   $notify_url = url('lm_paypal/ipn', null, null, TRUE);
 
 
