@@ -71,7 +71,10 @@ function _lm_paypal_ini() {
   // Drupal 5 - t() has changed and to use a link in it use '!'
   $c = ($_lm_paypal_drupal_major > 4 ? '!' : '%');
 
-  $lm = l('LMMR Tech', 'http://lmmrtech.com');
+  // If, eventually, a lot of companies help support this module the welcome
+  //  message could get pretty long :)
+  // $lm = l('LMMR Tech', 'http://lmmrtech.com');
+  $lm = 'LM';
   $_lm_paypal_welcome = '<p>'. t("Welcome to the ${c}lm PayPal modules for Drupal.", array("${c}lm" => $lm)) .'</p>';
 
   //$_lm_paypal_welcome .= '<p><b>'. t('These modules are still undergoing development so it is strongly advised that you to test them out against the PayPal Sandbox first.') .'</b></p>';
@@ -100,7 +103,9 @@ function _lm_paypal_ini() {
     '' => '?',
     'AUD' => 'A$',
     'CAD' => 'Can$',
-    'EUR' => '&euro;', 
+    //'EUR' => '&euro;',  This causes problems depending on the fonts
+    // available and the version of the browser used
+    'EUR' => 'Euro', 
     'GBP' => '&#163;',
     'JPY' => '&#165;',
     'USD' => '$',
