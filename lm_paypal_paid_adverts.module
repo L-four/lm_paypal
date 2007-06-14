@@ -347,7 +347,7 @@ function lm_paypal_paid_adverts_user($op, &$edit, &$account, $category = NULL) {
   global $_lm_paypal_debug;
 
   // In the "my account" view area show all paid_adverts
-  if ($op == 'view') {
+  if ($op == 'view' && (user_access('administer lm_paypal') || $user->uid == $account->uid)) {
     $output = lm_paypal_paid_adverts_list_nodes($account->uid,10);
     $items [] = array(
       'title' => '',
@@ -407,24 +407,39 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50)
     array('data' => t('Published')),
   );
 
-  if ($uid == 0) {
-    $sql = db_rewrite_sql("SELECT n.nid, u.name, n.title, n.type FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.status = 1");
+  // Create a list of known paid node types
+  $ts = array();
+  foreach ($type_subs as $k => $v) {
+    $ts[$k] = 1; // This will loose duplicates
   }
-  else {
-    $sql = db_rewrite_sql("SELECT n.nid, u.name, n.title, n.type FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.uid = %d AND n.status = 1");
+  // Turn it into a string to be used in an "IN" clause
+  $tstr = '(';
+  foreach ($ts as $t => $v) {
+    if ($nTs > 0) {
+      $tstr .= ',';
+    }
+    $tstr .= "'" . $t . "'";
+    $nTs ++;
   }
+  $tstr .= ')';
 
-  $tablesort = tablesort_sql($header);
+  if ($nTs > 0) {
+    if ($uid == 0) {
+      $sql = db_rewrite_sql("SELECT n.nid, u.name, n.title, n.type FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.status = 1 AND n.type IN $tstr");
+    }
+    else {
+      $sql = db_rewrite_sql("SELECT n.nid, u.name, n.title, n.type FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.uid = %d AND n.status = 1 AND n.type IN $tstr");
+    }
 
-  $result = pager_query($sql . $tablesort, $nodes_per_page, 0, null, $uid);
+    $tablesort = tablesort_sql($header);
 
-  // Note: Drupal 5 pass 'names' to get a type,name array (Drupal 4 ignores it)
-  $node_types = node_get_types('names');
+    $result = pager_query($sql . $tablesort, $nodes_per_page, 0, null, $uid);
 
-  while ($n = db_fetch_object($result)) {
-    $has_sub = lm_paypal_paid_adverts_has_sub($n, $subid, $paidfor);
-    // Does this node type have a PayPal subscription associated with it
-    if ($has_sub) {
+    // Note: Drupal 5 pass 'names' to get a type,name array (Drupal 4 ignores it)
+    $node_types = node_get_types('names');
+
+    while ($n = db_fetch_object($result)) {
+      $has_sub = lm_paypal_paid_adverts_has_sub($n, $subid, $paidfor);
       if ($paidfor) {
         $pub = t('published');
       }
