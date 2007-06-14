@@ -452,7 +452,7 @@ function lm_paypal_donations_user($op, &$edit, &$account, $category = NULL) {
   $uid = $account->uid;
 
   // In the "my account" view area show all donations
-  if ($op == 'view') {
+  if ($op == 'view' && (user_access('administer lm_paypal') || $user->uid == $account->uid)) {
     $output .= lm_paypal_donations($uid, $per_page = 10);
     
     $ditems [] = array(
