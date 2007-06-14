@@ -29,7 +29,7 @@ function lm_paypal_install() {
       processed   int(1) default '0',                # set if processed
       
       test_ipn    int(1) default null,               # Only set by sandbox to 1
-      verify_sign varchar(20) default null,          # Security string
+      verify_sign varchar(120) default null,         # Security string (Was 20)
       
       # Website Payments Standard, Website Payments Pro, and Refund Information 
       # SOME FIELDS OMITTED 
@@ -56,7 +56,7 @@ function lm_paypal_install() {
       address_state        varchar(40) default null, # State of customers address
       address_status       int(1) default null, # Customer provided a confirmed/unconfirmed address.
       payer_id varchar(13) default null, # Unique customer ID.
-      payer_status int(1)  default null, # Customer has a Verified|Unverified PayPal account.
+      payer_status varchar(40) default null, # Customer has a Verified|Unverified PayPal account.
       residence_country    varchar(2) default null, # Two-character ISO 3166 country code
       
       # Business Information
@@ -151,6 +151,14 @@ function lm_paypal_create_table($table, $sql) {
   }
   return '';
 }
+
+function lm_paypal_update_1() {
+  $items = array();
+  $items[] = update_sql("ALTER TABLE {lm_paypal_ipns} CHANGE verify_sign verify_sign varchar(120) default null");
+  $items[] = update_sql("ALTER TABLE {lm_paypal_ipns} CHANGE payer_status payer_status varchar(40) default null");
+  return $items;
+}
+
 
 /*
  * Example from: http://drupal.org/node/51220
