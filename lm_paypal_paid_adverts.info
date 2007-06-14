@@ -2,3 +2,4 @@
 name = lm_paypal_paid_adverts
 description = "Provides PayPal paid advert pages (requires lm_paypal and lm_paypal_subscriptions)."
 package = "LM_PayPal"
+dependencies = lm_paypal lm_paypal_subscriptions

@@ -2,3 +2,4 @@
 name = lm_paypal_subscriptions
 description = "Provides PayPal subscriptions to Drupal roles (requires lm_paypal)."
 package = "LM_PayPal"
+dependencies = lm_paypal
