@@ -30,6 +30,16 @@ on paypal.com.)
 Note: Thanks to an idea from Klaus Brune and nekstrom this version of
 lm_paypal should be able to co-exist with other Drupal PayPal modules.
 
+Special note: when using these modules all uid's must be in the range 1-65535
+and, if using lm_paypal_paid_adverts, the same range applies to node ids.
+
+Incompatibilities:
+It has been reported that the module Bad Behaviour can block incoming
+IPN responses. I've not had the time to investigate how to correct this.
+For now please disable this module.
+
+(see http://drupal.org/node/137182 and http://drupal.org/node/30501)
+
 lm_paypal
 ---------
 
