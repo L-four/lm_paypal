@@ -56,6 +56,8 @@ define(LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_DEFAULT, 0);
 define(LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_SUBJECT_DEFAULT, 'Goodbye from %Subscription');
 define(LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_BODY_DEFAULT, 'Hello %Username and thank you for being a subscriber to %Subscription on %Site. We hope you will join us again.');
 
+define(LM_PAYPAL_SUBSCRIPTIONS_TERMS_DEFAULT, '');
+
 // In theory a subscription will go:
 // signedup, live, EOT (end of term) or cancelled
 // however sometimes (often) a subscr_payment will arrive before a subscr_signup
@@ -433,6 +435,8 @@ function lm_paypal_node_subscribed($nid,&$subid) {
  *  16 = brief
  *  32 = no section header (applies to list of subscriptions, subid=null)
  *   These can be added to get combinations (eg: 11 = 1 + 2 + 8)
+ *  64 = output a comma seperated list the current users subscriptions
+ *       (or just none)
  * @param button_url
  *   The url of the button to display
  * @param nid
@@ -499,6 +503,13 @@ function lm_paypal_subscribe($subid = null, $display = 15, $button_url = '', $ni
       // If I am not displaying a button then I am done.
       return $output;
     }
+
+    $i_agree = $_SESSION['lm_paypal_I_agree'];
+    if ($so->terms != '' && $i_agree != $subid) {
+      $output .= lm_paypal_subscription_terms($subid, $so->terms);
+      return $output;
+    }
+    $_SESSION['lm_paypal_I_agree'] = '';
 
     if ($button_url == '') {
       // This is the default paypal subscribe button
@@ -608,6 +619,26 @@ function lm_paypal_subscribe($subid = null, $display = 15, $button_url = '', $ni
   $subs = db_query($sql);
   if (db_num_rows($subs) <= 0) {
     $output .= '<p>' . t('No subscriptions currently defined') . '</p>';
+    return $output;
+  }
+
+  if (($display & 64) != 0) {
+    $nSubs = 0;
+    while ($so = db_fetch_object($subs)) {
+      $already = lm_paypal_user_subscribed($so->subid, $account);
+      if (!$already) {
+        continue;
+      }
+      $item_name = check_plain($so->item_name);
+      if ($nSubs > 0) {
+        $output .= ", ";
+      }
+      $output .= '"' . $item_name . '"';
+      $nSubs ++;
+    }
+    if ($nSubs == 0) {
+      $output .= t('<b>none</b>');
+    }
     return $output;
   }
 
@@ -721,6 +752,74 @@ function lm_paypal_can_subscribe($subid) {
 }
 
 /**
+ * The user has to agree to the terms and conditions
+ */
+function lm_paypal_subscription_terms($subid, $terms) {
+  _lm_paypal_subscriptions_ini();
+  global $_lm_paypal_drupal_major;
+
+  if ($_lm_paypal_drupal_major > 4) {
+    return drupal_get_form('lm_paypal_subscription_terms_form', $subid, $terms);
+  }
+  else {
+    $form = lm_paypal_subscription_terms_form($subid, $terms);
+
+    // Note: I've chosen a form_id the same as this function
+    return drupal_get_form('lm_paypal_subscription_terms', $form);
+  }
+}
+
+function lm_paypal_subscription_terms_form($subid, $terms) {
+  // Under Drupal 5 this form has the following base name and all the
+  // processing is done by calling #base_validate, ...
+  $form['#base'] = 'lm_paypal_subscription_terms';
+
+  $_SESSION['lm_paypal_I_agree'] = '';
+
+  $terms = check_plain($terms);
+
+  $form['terms'] = array(
+    '#value' => t('<h2>Terms and Conditions</h2><p>') . $terms . 
+     t('</p><p><em>Before you can subscribe you must agree to these terms and conditions</em></p>'),
+  );
+
+  $form['terms_subid'] = array(
+    '#type' => 'hidden',
+    '#value' => $subid,
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('I agree'),
+  );
+
+  return $form;
+}
+
+/**
+ * Process "I Agree" to terms form
+ *
+ * @param $form_id
+ *   The form_id that caused this _submit function to be called
+ * @pararm $values
+ *   The array of name,value pairs from the form
+ *
+ * @return
+ *   The url to go to.
+ *
+ * The user has agreed to the terms and conditions. Allow them to subscribe.
+ */
+function lm_paypal_subscription_terms_submit($form_id, $values) {
+  _lm_paypal_subscriptions_ini();
+  global $_lm_paypal_debug;
+
+  $subid = ($values ['terms_subid']);
+  $_SESSION['lm_paypal_I_agree'] = $subid;
+  return 'lm_paypal/subscribe/' . $subid;
+}
+
+
+/**
  * Creates or edits a subscription.
  *
  * @param $subid
@@ -808,6 +907,8 @@ function lm_paypal_subscription_edit_form($subid = '') {
     $so->send_user_onend = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_DEFAULT;
     $so->send_user_onend_subject = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_SUBJECT_DEFAULT;
     $so->send_user_onend_body = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_BODY_DEFAULT;
+
+    $so->terms = LM_PAYPAL_SUBSCRIPTIONS_TERMS_DEFAULT;
   }
 
   $form['item_name'] = array(
@@ -1102,6 +1203,14 @@ function lm_paypal_subscription_edit_form($subid = '') {
     '#description' => t('Body of email sent to a user on a subscription end or cancellation'),
   );
 
+  $form['terms'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Terms and conditions'),
+    '#maxlength' => 2000,
+    '#default_value' => $so->terms,
+    '#description' => t('Terms and conditions the user must agree to. If empty no terms or conditions are required.'),
+  );
+
   if ($edit) {
     $form['status'] = array(
       '#type' => 'select',
@@ -1286,6 +1395,8 @@ function lm_paypal_subscription_edit_submit($form_id, $values) {
     'send_user_onend',
     'send_user_onend_subject',
     'send_user_onend_body',
+
+    'terms',
   );
 
   $nulls = array (
@@ -1509,6 +1620,7 @@ function lm_paypal_subscription($subid = '', $display = 0) {
     'src' => 'Recurring payments',
     'srt' => 'Recurring times',
     'currency_code' => 'Currency',
+    'terms' => 'Terms and Conditions',
     'status' => 'Status',
   );
 
@@ -1618,11 +1730,11 @@ function lm_paypal_subscription($subid = '', $display = 0) {
     return $output;
   }
 
-  // Output the transaction as a table of fields/values (skip the empty ones)
+  // Output the subscription as a table of fields/values (skip the empty ones)
   $output = '<h2>' . t('Subscription %subid', array('%subid' => $subid)) . '</h2>';
   $header = array(t('field'), t('value'));
-  $ipn = db_fetch_array($subs);
-  foreach ($ipn as $key => $value) {
+  $sub = db_fetch_array($subs);
+  foreach ($sub as $key => $value) {
     if ($value == '') {
       continue;
     }
@@ -1635,7 +1747,7 @@ function lm_paypal_subscription($subid = '', $display = 0) {
     else if ($key == 'rid') {
       $value = $roles [$value];
     }
-    else if (strncmp($key, 't', 1) == 0) {
+    else if (strncmp($key, 't', 1) == 0 && strlen($key) == 2) {
       $value = lm_paypal_unit2str($value);
     }
     $k = $field_names [$key];
@@ -1783,11 +1895,15 @@ function lm_paypal_process_in_subscr($ipn) {
     $sql = "SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'";
     $subs = db_query($sql, $ipn->subscr_id);
     if (db_num_rows($subs) <= 0) {
+// Try and track problem maybe caused by multiple subscr_signups
+watchdog(LM_PAYPAL_SUBSCRIPTIONS, t('new subscr_signup subscr_id %sid', array('%sid' => $ipn->subscr_id)));
       // Not already present. 
       // Create an entry in the subscribers table.
       lm_paypal_add_subscriber($so->kind, $uid, $other, $subid, $ipn->subscr_id, LM_PAYPAL_SUBSCRIPTIONS_STATUS_SIGNEDUP);
     }
     else {
+// Try and track problem maybe caused by multiple subscr_signups
+watchdog(LM_PAYPAL_SUBSCRIPTIONS, t('repeat subscr_signup subscr_id %sid', array('%sid' => $ipn->subscr_id)));
       // It is already present
       $ss = db_fetch_object($subs);
       if (!$ss) {
@@ -1809,7 +1925,16 @@ function lm_paypal_process_in_subscr($ipn) {
           watchdog(LM_PAYPAL_SUBSCRIPTIONS, t('Attempt to signup to ended subscription, ignored %status', array('%status' => $ss->status)), WATCHDOG_ERROR, $link);
           return;
 
+        // Some users are reporting symptoms that suggest multiple
+        // subscr_signup's are arriving. Ignore the duplicates here.
+        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_LIVE:
+        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_SIGNEDUP:
+          watchdog(LM_PAYPAL_SUBSCRIPTIONS, t('Signup received but subscription live or signedup, ignoring'), WATCHDOG_ERROR, $link);
+          return;
+
+        // A payment arrived first. Now obey the signup
         case LM_PAYPAL_SUBSCRIPTIONS_STATUS_PAID:
+          watchdog(LM_PAYPAL_SUBSCRIPTIONS, t('Signup received after payment, obeying it anyway'));
           break;
       }
     }
