@@ -56,16 +56,16 @@ function lm_paypal_subscriptions_install() {
 
       send_user_onsub             int(1) unsigned not null default '0',
       send_user_onsub_subject     varchar(80) default '',
-      send_user_onsub_body        text(2000),
+      send_user_onsub_body        text,
       nearend_days                int unsigned not null default '0',
       send_user_onnearend         int(1) unsigned not null default '0',
       send_user_onnearend_subject varchar(80) default '',
-      send_user_onnearend_body    text(2000),
+      send_user_onnearend_body    text,
       send_user_onend             int(1) unsigned not null default '0',
       send_user_onend_subject     varchar(80) default '',
-      send_user_onend_body        text(2000),
+      send_user_onend_body        text,
 
-      terms                       text(2000),
+      terms                       text,
 
       primary key(subid)
     )  /*!40100 DEFAULT CHARACTER SET utf8 */ ;";
@@ -171,4 +171,15 @@ function lm_paypal_subscriptions_update_8() {
   $items[] = update_sql("ALTER TABLE {lm_paypal_subscriptions} ADD terms text(2000) AFTER send_user_onend_body ");
   return $items;
 }
+
+// Sigh... some users report that text(2000) doesn't work so switch to just text
+function lm_paypal_subscriptions_update_9() {
+  $items = array();
+  $items[] = update_sql("ALTER TABLE {lm_paypal_subscriptions} CHANGE send_user_onsub_body send_user_onsub_body text");
+  $items[] = update_sql("ALTER TABLE {lm_paypal_subscriptions} CHANGE send_user_onnearend_body send_user_onnearend_body text");
+  $items[] = update_sql("ALTER TABLE {lm_paypal_subscriptions} CHANGE send_user_onend_body send_user_onend_body text");
+  $items[] = update_sql("ALTER TABLE {lm_paypal_subscriptions} CHANGE terms terms text");
+  return $items;
+}
+
 ?>
