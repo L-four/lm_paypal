@@ -1524,6 +1524,11 @@ function lm_paypal_subscribable_roles()
 function lm_paypal_subscriptions() {
   _lm_paypal_subscriptions_ini();
   global $_lm_paypal_business;
+  global $_lm_paypal_debug;
+  global $_lm_paypal_drupal_major;
+
+  // Drupal 5 - t() has changed and to use a link/literal in it use '!'
+  $c = ($_lm_paypal_drupal_major > 4 ? '!' : '%');
 
   $roles = lm_paypal_subscribable_roles(TRUE);
   $groups = lm_paypal_subscribable_groups();
