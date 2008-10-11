@@ -313,7 +313,7 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
   global $_lm_paypal_js_hide_email;
 
   if (!user_access('access lm_paypal_donate')) {
-    return t('Access to PayPal donatation buttons denied');
+    return t('Access to PayPal donation buttons denied');
   }
 
   if ($button_url == '') {
