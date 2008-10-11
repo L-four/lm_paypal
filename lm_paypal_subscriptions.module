@@ -250,7 +250,7 @@ function lm_paypal_subscriptions_menu($may_cache) {
     $items[] = array(
       'path' => 'admin/lm_paypal/subscriptions',
       'title' => t('LM PayPal Subscriptions'),
-      'callback' => 'lm_paypal_subscriptions',
+      'callback' => 'lm_paypal_view_subscriptions',
       'access' => user_access('administer lm_paypal'),
       'weight' => -3,
       // New to Drupal 5 - every path has a description
@@ -1521,7 +1521,7 @@ function lm_paypal_subscribable_roles()
  * @return
  *   The contents of the page allowing the admin to view subscriptions.
  */
-function lm_paypal_subscriptions() {
+function lm_paypal_view_subscriptions() {
   _lm_paypal_subscriptions_ini();
   global $_lm_paypal_business;
   global $_lm_paypal_debug;
