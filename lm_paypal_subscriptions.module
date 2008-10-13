@@ -224,6 +224,7 @@ function lm_paypal_subscriptions_menu() {
     'type' => MENU_NORMAL_ITEM,
     'weight' => 1,
     'description' => 'PayPal subscriptions interface configuration.',
+    'weight' => 31,
   );
 
   // Subscription admin
@@ -233,6 +234,7 @@ function lm_paypal_subscriptions_menu() {
     'access arguments' => array('administer lm_paypal'),
     'weight' => -3,
     'description' => 'View PayPal subscriptions.',
+    'weight' => 32,
   );
 
   $items['admin/settings/lm_paypal/subscriptions/new'] = array(
@@ -275,6 +277,7 @@ function lm_paypal_subscriptions_menu() {
     'page callback' => 'lm_paypal_subscriber_pay',
     'access arguments' => array('administer lm_paypal'),
     'description' => 'Mark a node as paid bypassing Paypal.',
+    'weight' => 33,
   );
 
   // User page to subscribe

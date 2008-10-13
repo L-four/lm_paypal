@@ -17,7 +17,7 @@
 
 define(LM_PAYPAL_DONATIONS, 'LM_PayPal_Donat');
 
-// Don't change these here! Use the admin interface at admin/lm_paypal
+// Don't change these here! Use the admin interface at admin/settings/lm_paypal
 define(LM_PAYPAL_DONATIONS_THANKS_DEFAULT, '/lm_paypal/donations_thanks');
 
 /**
@@ -47,7 +47,7 @@ function lm_paypal_donations_help($path, $arg) {
   global $_lm_paypal_welcome;  // Welcome message
   global $base_url;
 
-  $admin = l('LM PayPal Admin', 'admin/lm_paypal/settings');
+  $admin = l('LM PayPal Admin', 'admin/settings/lm_paypal/settings');
   $access = l('administer permissions', 'admin/user/permissions');
 
   $help = l('LM PayPal Help', 'admin/help/lm_paypal');
@@ -116,9 +116,9 @@ if (function_exists(\'lm_paypal_donate\')) {
     // This appears at the start of the module admin page before the options
     case 'admin/settings/lm_paypal_donations':
     // This appears at the start of the admin page before the options
-    case 'admin/lm_paypal/donations':
+    case 'admin/settings/lm_paypal/donations':
     // New to Drupal 5 - settings has moved
-    case 'admin/lm_paypal/donations_settings':
+    case 'admin/settings/lm_paypal/donations_settings':
       $output .= $_lm_paypal_welcome;
 
       $output .= '<p>'. t("For detailed help please read !help_dons", array("!help_dons" => $help_dons)) .'</p>';
@@ -142,13 +142,13 @@ function lm_paypal_donations_menu() {
 
   $items = array();
 
-  $items['admin/lm_paypal/donations_settings'] = array(
+  $items['admin/settings/lm_paypal/donations_settings'] = array(
     'title' => 'LM PayPal Donations Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_donations_admin_settings'),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 3,
+    'weight' => 21,
     'description' => 'PayPal donations interface configuration.',
     );
 

@@ -139,7 +139,7 @@ function lm_paypal_paid_adverts_menu() {
     'page arguments' => array('lm_paypal_paid_adverts_settings_form'),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 2,
+    'weight' => 11,
     'description' => 'PayPal Paid Advert interface configuration.',
   );
 
@@ -147,7 +147,7 @@ function lm_paypal_paid_adverts_menu() {
     'title' => 'Show Paid Adverts',
     'page callback' => 'lm_paypal_paid_adverts_list_nodes',
     'access arguments' => array('administer lm_paypal'),
-    'weight' => -2,
+    'weight' => 12,
     'description' => 'Show all PayPal Paid Adverts.',
   );
 

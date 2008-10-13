@@ -208,41 +208,42 @@ function lm_paypal_menu() {
   $items = array();
 
   $items['admin/settings/lm_paypal'] = array(
-  'title' => 'LM PayPal',
-  'page callback' => 'system_admin_menu_block_page',
-  'access arguments' => array('administer site configuration'),
-  'type' => MENU_NORMAL_ITEM,
-  'description' => 'LM PayPal is a set of modules that interface to PayPal.com and provide subscriptions (paid role memberships), donations (tip jar), and paid node publishing (classified adverts)',
-  'file' => 'system.admin.inc',
-  'file path' => drupal_get_path('module', 'system'),
+    'title' => 'LM PayPal',
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'description' => 'LM PayPal is a set of modules that interface to PayPal.com and provide subscriptions (paid role memberships), donations (tip jar), and paid node publishing (classified adverts)',
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
   );
 
   $items['admin/settings/lm_paypal/settings'] = array(
-  'title' => 'IPN Settings',
-  'page callback' => 'drupal_get_form',
-  'page arguments' => array('lm_paypal_admin_settings'),
-  'access arguments' => array('administer site configuration'),
-  'type' => MENU_NORMAL_ITEM,
-  'weight' => 0,
-  'description' => 'PayPal IPN interface configuration.',
+    'title' => 'IPN Settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lm_paypal_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 0,
+    'description' => 'PayPal IPN interface configuration.',
+    'weight' => 1,
   );
 
   // Display all the saved ipns
   $items['admin/settings/lm_paypal/ipns'] = array(
-  'title' => 'Saved IPNs',
-  'page callback' => 'lm_paypal_ipns',
-  'access arguments' => array('administer lm_paypal'),
-  'weight' => -1,
-  'description' => 'Show details of all saved PayPal IPN\'s',
+    'title' => 'Saved IPNs',
+    'page callback' => 'lm_paypal_ipns',
+    'access arguments' => array('administer lm_paypal'),
+    'weight' => 2,
+    'description' => 'Show details of all saved PayPal IPN\'s',
   );
 
   // Display the details of a saved ipn - internal
   $items['admin/settings/lm_paypal/id'] = array(
-  'title' => 'Show ID Details',
-  'type' => MENU_CALLBACK,
-  'page callback' => 'lm_paypal_id',
-  'access arguments' => array('administer lm_paypal'),
-  'description' => 'Show details of a single saved IPN',
+    'title' => 'Show ID Details',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'lm_paypal_id',
+    'access arguments' => array('administer lm_paypal'),
+    'description' => 'Show details of a single saved IPN',
   );
 
   // PayPal will send IPN pages at this. PayPal will not login first so
@@ -250,10 +251,10 @@ function lm_paypal_menu() {
   // This is other a non-visible menu until someone creates an
   // lm_paypal parent menu...
   $items['lm_paypal/ipn'] = array(
-  'title' => 'LM PayPal Incoming IPN',
-  'type' => MENU_CALLBACK,
-  'page callback' => 'lm_paypal_ipn_in',
-  'access callback' => TRUE,
+    'title' => 'LM PayPal Incoming IPN',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'lm_paypal_ipn_in',
+    'access callback' => TRUE,
   );
 
   return $items;
