@@ -258,6 +258,7 @@ function lm_paypal_paid_adverts_settings_form_submit($form, &$form_state) {
   $values = $form_state['values'];
 
   // Find all the type sub's by looking for any key that matches NTtype
+  $type_subs = array();
   foreach ($values as $key => $val) {
     if (strncmp($key, "NT", 2) != 0) {
       // Not an NTtype skip it
