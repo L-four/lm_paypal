@@ -229,7 +229,7 @@ function lm_paypal_subscriptions_menu() {
   // Subscription admin
   $items['admin/settings/lm_paypal/subscriptions'] = array(
     'title' => 'Subscriptions',
-    'page callback' => 'lm_paypal_subscriptions',
+    'page callback' => 'lm_paypal_view_subscriptions',
     'access arguments' => array('administer lm_paypal'),
     'weight' => -3,
     'description' => 'View PayPal subscriptions.',
@@ -1471,7 +1471,7 @@ function lm_paypal_subscribable_roles() {
  * @return
  *   The contents of the page allowing the admin to view subscriptions.
  */
-function lm_paypal_subscriptions() {
+function lm_paypal_view_subscriptions() {
   _lm_paypal_subscriptions_ini();
   global $_lm_paypal_business;
   global $_lm_paypal_debug;
