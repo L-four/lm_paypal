@@ -687,13 +687,17 @@ function lm_paypal_process_in($id) {
   $in = 'lm_paypal_process_in_';
   $f = $in . $ipn->txn_type;
   if (function_exists($f)) {
-    return $f($ipn);
+    $res = $f($ipn);
+    module_invoke_all('lm_paypal_process_in', $ipn, $f, $res);
+    return $res;
   }
   $u = strpos($ipn->txn_type, '_');
   if ($u > 0) {
     $f = $in . substr($ipn->txn_type, 0, $u);
     if (function_exists($f)) {
-      return $f($ipn);
+      $res = $f($ipn);
+      module_invoke_all('lm_paypal_process_in', $ipn, $f, $res);
+      return $res;
     }
   }
 
