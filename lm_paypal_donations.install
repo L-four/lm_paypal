@@ -18,23 +18,23 @@ function lm_paypal_donations_uninstall() {
   drupal_uninstall_schema('lm_paypal_donations');
   variable_del('lm_paypal_donations_thanks');
 }
-  
+
 function lm_paypal_donations_schema() {
   $schema['lm_paypal_donations'] = array(
     'fields' => array(
       'udid' => array(
-	'type' => 'serial',
+        'type' => 'serial',
         'not null' => TRUE,
         'description' => 'The donation unique identifier.'),
       'uid' => array(
-	'type' => 'int',
+        'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'description' => 'The corresponding drupal user (role) identifier.'),
       'datepaid' => array(
-	'type' => 'int',
+        'type' => 'int',
         'not null' => TRUE,
-	'default' => 0,
+        'default' => 0,
         'description' => 'The Unix date when paid.'),
       'txn_id' => array(
         'type' => 'varchar',
@@ -53,7 +53,7 @@ function lm_paypal_donations_schema() {
         'scale' => 2,
         'description' => 'Transaction fee associated with the payment. mc_gross minus mc_fee equals the amount deposited into the receiver_email account. Equivalent to payment_fee for USD payments. If this amount is negative, it signifies a refund or reversal, and either of those payment statuses can be for the full or partial amount of the original transaction fee.'),
       'mc_currency' => array(
-	'type' => 'varchar',
+        'type' => 'varchar',
         'length' => 3,
         'description' => 'The code of the currency used for the payment.'),
       'item_name' => array(

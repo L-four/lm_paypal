@@ -46,7 +46,6 @@ function lm_paypal_donations_help($path, $arg) {
   _lm_paypal_donations_ini();
   global $_lm_paypal_welcome;  // Welcome message
   global $base_url;
-  global $_lm_paypal_drupal_minor;
 
   $admin = l('LM PayPal Admin', 'admin/lm_paypal/settings');
   $access = l('administer permissions', 'admin/user/permissions');
@@ -140,31 +139,30 @@ function lm_paypal_donations_perm() {
  */
 function lm_paypal_donations_menu() {
   _lm_paypal_donations_ini();
-  global $_lm_paypal_drupal_minor;
 
   $items = array();
 
   $items['admin/lm_paypal/donations_settings'] = array(
-    'title' => t('LM PayPal Donations Settings'),
+    'title' => 'LM PayPal Donations Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_donations_admin_settings'),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 3,
-    'description' => t('PayPal donations interface configuration.'),
+    'description' => 'PayPal donations interface configuration.',
     );
 
   // admin - print all donations
   $items['lm_paypal/donations'] = array(
-    'title' => t('PayPal Donations'),
+    'title' => 'PayPal Donations',
     'page callback' => 'lm_paypal_all_donations',
     'access arguments' => array('view lm_paypal_all_donations'),
-    'description' => t('PayPal view All Donations'),
+    'description' => 'PayPal view All Donations',
   );
 
   // By default we tell Paypal to redirect users here after donating
   $items['lm_paypal/donations_thanks'] = array(
-    'title' => t('LM PayPal Donation Thanks'),
+    'title' => 'LM PayPal Donation Thanks',
     'type' => MENU_CALLBACK,
     'page callback' => 'lm_paypal_donations_thanks',
     'access arguments' => array('access lm_paypal_donate'),
@@ -183,12 +181,11 @@ function lm_paypal_donations_admin_settings() {
 }
 
 /**
- * Implementation of hook_settings()
+ * Settings form.
  */
 function lm_paypal_donations_settings_form() {
   _lm_paypal_donations_ini();
   global $_lm_paypal_donations_thanks;
-  global $_lm_paypal_drupal_minor;
 
   if (!user_access('administer lm_paypal')) {
     drupal_access_denied();
@@ -334,13 +331,13 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
   }
 
   if (variable_get('clean_url', 0)) {
-    $return_url = url(check_url($ret_url), array('query' => null, 'fragment' => null, 'absolute' => TRUE));
+    $return_url = url(check_url($ret_url), array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
   }
   else {
-    $return_url = url(null, array('query' => 'q='. check_url($ret_url), 'fragment' => null, 'absolute' => TRUE));
+    $return_url = url(NULL, array('query' => 'q='. check_url($ret_url), 'fragment' => NULL, 'absolute' => TRUE));
   }
 
-  $notify_url = url('lm_paypal/ipn', array('query' => null, 'fragment' => null, 'absolute' => TRUE));
+  $notify_url = url('lm_paypal/ipn', array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
 
   // If email hiding is enabled then turn on this javascript
   //  and add an onsubmit action
@@ -410,7 +407,7 @@ function lm_paypal_donations_thanks() {
 /**
  * Implementation of hook_user().
  */
-function lm_paypal_donations_user($op, &$edit, &$account, $category = NULL) { 
+function lm_paypal_donations_user($op, &$edit, &$account, $category = NULL) {
   _lm_paypal_donations_ini();
   global $_lm_paypal_debug;
 
@@ -419,25 +416,13 @@ function lm_paypal_donations_user($op, &$edit, &$account, $category = NULL) {
   // In the "my account" view area show all donations
   if ($op == 'view' && (user_access('administer lm_paypal') || $user->uid == $account->uid)) {
     $output .= lm_paypal_donations($uid, $per_page = 10);
-    
+
     $ditems [] = array(
       'title' => '',
       'value' => $output);
     $ret_dons = array(t('Paypal Donations') => $ditems);
 
     return $ret_dons;
-  }
-}
-
-/**
- * Implementation of hook_form_alter().
- */
-function lm_paypal_donations_form_alter(&$form, &$form_state, $form_id) {
-  if ($form_id == 'system_modules' && !$_POST) {
-    // Check that lm_paypal is enabled
-    $me = 'lm_paypal_donations';
-    $dep = array('lm_paypal');
-    lm_paypal_system_module_validate($form, $me, $dep);
   }
 }
 
@@ -464,7 +449,7 @@ function lm_paypal_my_donations($uid) {
 function lm_paypal_donations($uid, $per_page = 50) {
   global $user;
 
-  if ($uid == null || !is_numeric($uid) || intval($uid) != $uid) {
+  if ($uid == NULL || !is_numeric($uid) || intval($uid) != $uid) {
     $uid = 0;
   }
 
