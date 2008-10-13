@@ -25,7 +25,7 @@ define(LM_PAYPAL_DONATIONS_THANKS_DEFAULT, '/lm_paypal/donations_thanks');
  */
 function _lm_paypal_donations_ini() {
   _lm_paypal_ini();
-  global $_lm_paypal_donations_thanks;	// page user is directed to on donation
+  global $_lm_paypal_donations_thanks;  // page user is directed to on donation
 
   static $inited = 0;
 
@@ -42,49 +42,39 @@ function _lm_paypal_donations_ini() {
 /**
  * Implementation of hook_help().
  */
-function lm_paypal_donations_help($section) {
+function lm_paypal_donations_help($path, $arg) {
   _lm_paypal_donations_ini();
-  global $_lm_paypal_welcome;	// Welcome message
+  global $_lm_paypal_welcome;  // Welcome message
   global $base_url;
-  global $_lm_paypal_drupal_major;
   global $_lm_paypal_drupal_minor;
 
-  if ($_lm_paypal_drupal_major > 4) {
-    // Drupal 5
-    $c = '!'; // t() has changed and to use a link in it use '!'
-    $admin = l('LM PayPal Admin', 'admin/lm_paypal/settings');
-    $access = l('access control', 'admin/user/access');
-  }
-  else {
-    // Drupal 4
-    $c = '%';
-    $admin = l('LM PayPal Admin', 'admin/settings/lm_paypal');
-    $access = l('access control', 'admin/access');
-  }
+  $admin = l('LM PayPal Admin', 'admin/lm_paypal/settings');
+  $access = l('administer permissions', 'admin/user/permissions');
+
   $help = l('LM PayPal Help', 'admin/help/lm_paypal');
   $help_dons = l('LM PayPal Donations Help', 'admin/help/lm_paypal_donations');
   $view_dons = l(t('PayPal Donations'), 'lm_paypal/donations');
 
-  switch ($section) {
+  switch ($path) {
     case 'admin/help#lm_paypal_donations': // admin/help/lm_paypal_donations
       $output = $_lm_paypal_welcome;
 
       $output .= '<p>'. t('If you are not already familar with PayPal please go to there <a href="http://www.paypal.com">website</a> and read up.') .'</p>';
 
-      $output .= '<p><b>'. t('Special Note') . ':</b>';
+      $output .= '<p><b>'. t('Special Note') .':</b>';
       $output .= '<ul>';
-      $output .= '<li><b>' . t('This module requires the module lm_paypal to be installed, enabled and configured.') . '</b></li>';
+      $output .= '<li><b>'. t('This module requires the module lm_paypal to be installed, enabled and configured.') .'</b></li>';
       $output .= '</ul>';
 
-      $output .= '<p>' . t('If you are new to this module you need to:');
+      $output .= '<p>'. t('If you are new to this module you need to:');
       $output .= '<ul>';
-      $output .= '<li>' . t("First make sure you have configured the main ${c}admin and read ${c}help.", array("${c}admin" => $admin, "${c}help" => $help)) . '</li>';
+      $output .= '<li>'. t("First make sure you have configured the main !admin and read !help.", array("!admin" => $admin, "!help" => $help)) .'</li>';
       $output .= '</ul>';
       $output .= '</p>';
-      $output .= '<p>' . t("Ensure the right roles (usually everyone, so <b>anonymous</b> and <b>authenticated</b>!) can see the donation buttons by enabling this in ${c}access under <b>lm_paypal_module</b> 'access lm_paypal_donate'. You can allow roles to view everyones donations using 'view lm_paypal_all_donations'.", array("${c}access" => $access)) .'</p>';
+      $output .= '<p>'. t("Ensure the right roles (usually everyone, so <b>anonymous</b> and <b>authenticated</b>!) can see the donation buttons by enabling this in !access under <b>lm_paypal_module</b> 'access lm_paypal_donate'. You can allow roles to view everyones donations using 'view lm_paypal_all_donations'.", array("!access" => $access)) .'</p>';
 
       $output .= '<h2>'. t('Creating Donation Buttons') .'</h2>';
-      $output .= '<p>'. t('Donations buttons are displayed with php like the following which display the three types of donation:') . '</p>';
+      $output .= '<p>'. t('Donations buttons are displayed with php like the following which display the three types of donation:') .'</p>';
 
       $output .= '<pre>'. t('
 &lt;?php
@@ -104,12 +94,12 @@ if (function_exists(\'lm_paypal_donate\')) {
     lm_paypal_donate(array(5,array(10),15), \'USD\', \'donation to example.com\', \'\', \'Donation\') .\'&lt;br&gt;\';
 }
 ?&gt;
-        ') . '</pre>';
-      $output .= '<p>'. t('It is best to check that the lm_paypal_donate function exists before using it just in case the module has been disabled.') . '</p>';
-      $output .= '<p>'. t('If the button is clicked by a logged in user when the payment arrives the amount will be associated with them. Otherwise an attempt will be made to match the payers email with user emails.') . '</p>';
+        ') .'</pre>';
+      $output .= '<p>'. t('It is best to check that the lm_paypal_donate function exists before using it just in case the module has been disabled.') .'</p>';
+      $output .= '<p>'. t('If the button is clicked by a logged in user when the payment arrives the amount will be associated with them. Otherwise an attempt will be made to match the payers email with user emails.') .'</p>';
 
       $output .= '<h2>'. t('Viewing Donations') .'</h2>';
-      $output .= '<p>'. t("To view all the donations that have arrived use ${c}view_dons.", array("${c}view_dons" => $view_dons)) . '</p>';
+      $output .= '<p>'. t("To view all the donations that have arrived use !view_dons.", array("!view_dons" => $view_dons)) .'</p>';
 
       return $output;
 
@@ -132,7 +122,7 @@ if (function_exists(\'lm_paypal_donate\')) {
     case 'admin/lm_paypal/donations_settings':
       $output .= $_lm_paypal_welcome;
 
-      $output .= '<p>'. t("For detailed help please read ${c}help_dons", array("${c}help_dons" => $help_dons)) . '</p>';
+      $output .= '<p>'. t("For detailed help please read !help_dons", array("!help_dons" => $help_dons)) .'</p>';
       return $output;
   }
 }
@@ -148,62 +138,39 @@ function lm_paypal_donations_perm() {
 /**
  * Implementation of hook_menu().
  */
-function lm_paypal_donations_menu($may_cache) {
+function lm_paypal_donations_menu() {
   _lm_paypal_donations_ini();
-  global $_lm_paypal_drupal_major;
   global $_lm_paypal_drupal_minor;
 
   $items = array();
 
-  if ($may_cache) {
-    if ($_lm_paypal_drupal_major > 4) {
-      // New to Drupal 5 - hook_settings gone so settings is a normal page
-      $items[] = array(
-        'path' => 'admin/lm_paypal/donations_settings',
-        'title' => t('LM PayPal Donations Settings'),
-        'callback' => 'drupal_get_form',
-        'callback arguments' => array('lm_paypal_donations_admin_settings'),
-        'access' => user_access('administer site configuration'),
-        'type' => MENU_NORMAL_ITEM,
-        'weight' => 3,
-        // New to Drupal 5 - every path has a description
-        'description' => t('PayPal donations interface configuration.'),
-      );
-    }
-
-    // admin - print all donations
-    $items[] = array(
-      'path' => 'lm_paypal/donations',
-      'title' => t('PayPal Donations'),
-      'callback' => 'lm_paypal_all_donations',
-      'access' => user_access('view lm_paypal_all_donations'),
-      // New to Drupal 5 - every path has a description
-      'description' => t('PayPal view All Donations'),
+  $items['admin/lm_paypal/donations_settings'] = array(
+    'title' => t('LM PayPal Donations Settings'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lm_paypal_donations_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 3,
+    'description' => t('PayPal donations interface configuration.'),
     );
 
-    // By default we tell Paypal to redirect users here after donating
-    $items[] = array(
-      'path' => 'lm_paypal/donations_thanks',
-      'title' => t('LM PayPal Donation Thanks'),
-      'type' => MENU_CALLBACK,
-      'callback' => 'lm_paypal_donations_thanks',
-      'access' => user_access('access lm_paypal_donate'),
-    );
-  }
+  // admin - print all donations
+  $items['lm_paypal/donations'] = array(
+    'title' => t('PayPal Donations'),
+    'page callback' => 'lm_paypal_all_donations',
+    'access arguments' => array('view lm_paypal_all_donations'),
+    'description' => t('PayPal view All Donations'),
+  );
+
+  // By default we tell Paypal to redirect users here after donating
+  $items['lm_paypal/donations_thanks'] = array(
+    'title' => t('LM PayPal Donation Thanks'),
+    'type' => MENU_CALLBACK,
+    'page callback' => 'lm_paypal_donations_thanks',
+    'access arguments' => array('access lm_paypal_donate'),
+  );
 
   return $items;
-}
-
-// Ugly magic to hide lm_paypal_settings from Drupal 5.0 as it spots its
-// existance and refuses to access the real page.
-if (strncmp(VERSION, '4', 1) == 0) {
-  /**
-   * Implementation of hook_settings()
-   * Note: hook_settings not used in Drupal 5.
-   */
-  function lm_paypal_donations_settings() {
-    return lm_paypal_donations_settings_form();
-  }
 }
 
 /**
@@ -221,7 +188,6 @@ function lm_paypal_donations_admin_settings() {
 function lm_paypal_donations_settings_form() {
   _lm_paypal_donations_ini();
   global $_lm_paypal_donations_thanks;
-  global $_lm_paypal_drupal_major;
   global $_lm_paypal_drupal_minor;
 
   if (!user_access('administer lm_paypal')) {
@@ -313,7 +279,7 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
   global $_lm_paypal_js_hide_email;
 
   if (!user_access('access lm_paypal_donate')) {
-    return t('Access to PayPal donation buttons denied');
+    return t('Access to PayPal donatation buttons denied');
   }
 
   if ($button_url == '') {
@@ -368,14 +334,13 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
   }
 
   if (variable_get('clean_url', 0)) {
-    $return_url = url(check_url($ret_url), null, null, TRUE);
+    $return_url = url(check_url($ret_url), array('query' => null, 'fragment' => null, 'absolute' => TRUE));
   }
   else {
-    $return_url = url(null, 'q=' . check_url($ret_url), null, TRUE);
+    $return_url = url(null, array('query' => 'q='. check_url($ret_url), 'fragment' => null, 'absolute' => TRUE));
   }
 
-  $notify_url = url('lm_paypal/ipn', null, null, TRUE);
-
+  $notify_url = url('lm_paypal/ipn', array('query' => null, 'fragment' => null, 'absolute' => TRUE));
 
   // If email hiding is enabled then turn on this javascript
   //  and add an onsubmit action
@@ -467,12 +432,12 @@ function lm_paypal_donations_user($op, &$edit, &$account, $category = NULL) {
 /**
  * Implementation of hook_form_alter().
  */
-function lm_paypal_donations_form_alter($form_id, $form) {
+function lm_paypal_donations_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'system_modules' && !$_POST) {
     // Check that lm_paypal is enabled
     $me = 'lm_paypal_donations';
     $dep = array('lm_paypal');
-    lm_paypal_system_module_validate($form,$me,$dep);
+    lm_paypal_system_module_validate($form, $me, $dep);
   }
 }
 
@@ -524,7 +489,7 @@ function lm_paypal_donations($uid, $per_page = 50) {
   $tablesort = tablesort_sql($header);
 
   // If not sorting by datepaid then make that the 2nd field to sort on
-  if (strpos($tablesort,'datepaid') === FALSE) {
+  if (strpos($tablesort, 'datepaid') === FALSE) {
     $tablesort .= ', datepaid DESC';
   }
 
@@ -550,7 +515,7 @@ function lm_paypal_donations($uid, $per_page = 50) {
   while ($don = db_fetch_object($result)) {
     $rows[] = array('data' =>
       array(
-        l(check_plain($don->name), "user/$sub->uid"),
+        l($don->name, "user/$sub->uid"),
         check_plain($don->item_name),
         format_date($don->datepaid, 'small'),
         check_plain($don->mc_gross),

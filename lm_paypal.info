@@ -1,4 +1,6 @@
 ; $Id$
-name = lm_paypal
+name = "LM PayPal"
 description = "Lowest level PayPal interface required by other LM PayPal modules."
-package = "LM_PayPal"
+package = "LM PayPal"
+core = 6.x
+

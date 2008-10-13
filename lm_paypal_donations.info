@@ -1,5 +1,8 @@
 ; $Id$
-name = lm_paypal_donations
-description = "Provides PayPal donation buttons (requires lm_paypal)."
-package = "LM_PayPal"
-dependencies = lm_paypal
+name = "LM PayPal Donations"
+description = "Provides PayPal donation buttons."
+package = "LM PayPal"
+core = 6.x
+dependencies[] = lm_paypal
+
+

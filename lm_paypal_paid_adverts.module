@@ -25,7 +25,7 @@ function _lm_paypal_paid_adverts_ini() {
 
   $type_subs = variable_get('lm_paypal_paid_adverts_type_subs', null);
   if (is_null($type_subs)) {
-    $_lm_paypal_paid_adverts_type_subs = array ();
+    $_lm_paypal_paid_adverts_type_subs = array();
   }
   else {
     $_lm_paypal_paid_adverts_type_subs = unserialize($type_subs);
@@ -36,74 +36,60 @@ function _lm_paypal_paid_adverts_ini() {
 /**
  * Implementation of hook_help().
  */
-function lm_paypal_paid_adverts_help($section) {
+function lm_paypal_paid_adverts_help($path, $arg) {
   _lm_paypal_paid_adverts_ini();
-  global $_lm_paypal_welcome;	// Welcome message
+  global $_lm_paypal_welcome;  // Welcome message
   global $_lm_paypal_paid_adverts_type_subs;
-  global $_lm_paypal_drupal_major;
 
-  if ($_lm_paypal_drupal_major > 4) {
-    // Drupal 5
-    $c = '!'; // t() has changed and to use a link in it use '!'
-    $admin = l('LM PayPal Admin', 'admin/lm_paypal/settings');
-    $roles = l(t('user management > roles'), 'admin/user/roles');
-    $access = l(t('user management > access control'), 'admin/user/access');
-    $blocks = l(t('site building > blocks'), 'admin/build/block');
-    $subs = l(t('LM PayPal Subscriptions'), 'admin/lm_paypal/subscriptions');
-    $adminpa = l('LM PayPal Paid Adverts', 'admin/lm_paypal/paid_adverts_settings');
-  }
-  else {
-    // Drupal 4
-    $c = '%';
-    $admin = l('LM PayPal Admin', 'admin/settings/lm_paypal');
-    $roles = l(t('access control > roles'), 'admin/access/roles');
-    $access = l(t('access control'), 'admin/access');
-    $blocks = l(t('administer blocks'), 'admin/block');
-    $subs = l(t('LM PayPal Subscriptions'), 'admin/lm_paypal_subscriptions');
-    $adminpa = l('LM PayPal Paid Adverts', 'admin/settings/lm_paypal_paid_adverts');
-  }
-  $new_sub = l('LM PayPal New Subscriptions', 'admin/lm_paypal/subscriptions/new');
+  $admin = l('LM PayPal Admin', 'admin/settings/lm_paypal/settings');
+  $roles = l(t('user management > roles'), 'admin/user/roles');
+  $access = l(t('user management > permissions'), 'admin/user/permissions');
+  $blocks = l(t('site building > blocks'), 'admin/build/block');
+  $subs = l(t('LM PayPal Subscriptions'), 'admin/settings/lm_paypal/subscriptions');
+  $adminpa = l('LM PayPal Paid Adverts', 'admin/settings/lm_paypal/paid_adverts_settings');
+  
+  $new_sub = l('LM PayPal New Subscriptions', 'admin/settings/lm_paypal/subscriptions/new');
   $help_pa = l(t('LM PayPal Paid Adverts Help'), 'admin/help/lm_paypal_paid_adverts');
 
   // HIJACK! This will put at help message at the start of node/add/... pages
   //  for types associated with PayPal
-  if (strncmp($section, 'node/add/', 9) == 0) {
+  if (strncmp($path, 'node/add/', 9) == 0) {
     $type_subs = $_lm_paypal_paid_adverts_type_subs;
 
-    $type = substr($section, 9);
+    $type = substr($path, 9);
     $ts = $type_subs[$type];
     // Does this node type have a PayPal subscription associated with it
     if (is_array($ts) && count($ts) > 0) {
       // It does so print some help
-      $output .= '<center><b>' . t('Nodes of this type will not be published until paid for.<br>After Submitting this new node use the <em>PayPal Publish</em> tab to publish.<br>The status of paid items can be found under <em>my account</em>.') . '</b></center>';
+      $output .= '<center><b>'. t('Nodes of this type will not be published until paid for.<br>After Submitting this new node use the <em>PayPal Publish</em> tab to publish.<br>The status of paid items can be found under <em>my account</em>.') .'</b></center>';
       return $output;
     }
   }
 
-  switch ($section) {
+  switch ($path) {
     // admin/help/lm_paypal_paid_adverts
     case 'admin/help#lm_paypal_paid_adverts':
       $output = $_lm_paypal_welcome;
 
-      $output .= '<p>' . t('This module allow users to create Paid Advert pages, which are private by default. They can then make them publically viewable using a PayPal based subscription.') . '</p>';
+      $output .= '<p>'. t('This module allow users to create Paid Advert pages, which are private by default. They can then make them publically viewable using a PayPal based subscription.') .'</p>';
 
-      $output .= '<p><b>'. t('Special Notes') . ':</b>';
+      $output .= '<p><b>'. t('Special Notes') .':</b>';
       $output .= '<ul>';
-      $output .= '<li><b>' . t('This module requires the lm_paypal and lm_paypal_subscription modules to be installed, enabled and configured.') . '</b></li>';
+      $output .= '<li><b>'. t('This module requires the lm_paypal and lm_paypal_subscription modules to be installed, enabled and configured.') .'</b></li>';
       $output .= '</ul>';
       $output .= '</p>';
 
-      $output .= '<h2>' . t('Initial Configuration') . '</h2>';
-      $output .= '<p>' . t('If you are new to this module you need to:');
+      $output .= '<h2>'. t('Initial Configuration') .'</h2>';
+      $output .= '<p>'. t('If you are new to this module you need to:');
       $output .= '<ul>';
-      $output .= '<li>' . t("Update the site specific PayPal settings via ${c}admin. Normally you only need to provide your PayPal Business Email.", array("${c}admin" => $admin)) . '</li>';
-      $output .= '<li>' . t("Create one or more Node Subscriptions using ${c}new_sub .", array("${c}new_sub" => $new_sub)) . '</li>';
-      $output .= '<li>' . t("Associate these roles with node types ${c}adminpa .", array("${c}adminpa" => $adminpa)) . '</li>';
+      $output .= '<li>'. t("Update the site specific PayPal settings via !admin. Normally you only need to provide your PayPal Business Email.", array("!admin" => $admin)) .'</li>';
+      $output .= '<li>'. t("Create one or more Node Subscriptions using !new_sub .", array("!new_sub" => $new_sub)) .'</li>';
+      $output .= '<li>'. t("Associate these roles with node types !adminpa .", array("!adminpa" => $adminpa)) .'</li>';
       $output .= '</ul>';
       $output .= '</p>';
-      $output .= '<p>' . t('With new and existing nodes of node types associated with Node Subscriptions the contents will be private to the author until paid for.') . '</p>';
-      $output .= '<p>' . t('Once a user creates a new node a tab will appear allowing them to pay for the node with one of the available Node Subscriptions.') . '</p>';
-      $output .= '<p>' . t('Users can view the status of all nodes they have created requiring a subscription under "my account".') . '</p>';
+      $output .= '<p>'. t('With new and existing nodes of node types associated with Node Subscriptions the contents will be private to the author until paid for.') .'</p>';
+      $output .= '<p>'. t('Once a user creates a new node a tab will appear allowing them to pay for the node with one of the available Node Subscriptions.') .'</p>';
+      $output .= '<p>'. t('Users can view the status of all nodes they have created requiring a subscription under "my account".') .'</p>';
       $output .= '<br>';
       return $output;
 
@@ -114,96 +100,91 @@ function lm_paypal_paid_adverts_help($section) {
     // This appears at the start of the module admin page before the options
     case 'admin/settings/lm_paypal_paid_adverts':
     // This appears at the start of the paid_adverts admin page before the options
-    case 'admin/lm_paypal/paid_adverts':
+    case 'admin/settings/lm_paypal/paid_adverts':
       $output = $_lm_paypal_welcome;
 
-      $output .= '<p>'. t("For detailed help please read ${c}help_pa", array("${c}help_pa" => $help_pa)) .'</p>';
+      $output .= '<p>'. t("For detailed help please read !help_pa", array("!help_pa" => $help_pa)) .'</p>';
       return $output;
   }
 }
 
 /**
+ * Implementation of hook_perm().
+ * Return a list of the access control permissions that this module defines
+ */
+function lm_paypal_paid_adverts_perm() {
+  return array('access unpaid adverts');
+}
+
+/**
+ * Implementation of hook_init().
+ */
+function lm_paypal_paid_adverts_init() {
+  // Borrowed from book.module
+  // This appears as a tab on the edit page which is ideal as you shouldn't
+  // pay for an adverts until after it is created.
+  //  This is called for every menu display so try and keep the costs down!
+}
+
+/**
  * Implementation of hook_menu().
  */
-function lm_paypal_paid_adverts_menu($may_cache) {
+function lm_paypal_paid_adverts_menu() {
   _lm_paypal_paid_adverts_ini();
-  global $user;
-  global $_lm_paypal_paid_adverts_type_subs;
-  global $_lm_paypal_drupal_major;
-
-  $type_subs = $_lm_paypal_paid_adverts_type_subs;
-
   $items = array();
 
-  if ($may_cache) {
-    if ($_lm_paypal_drupal_major > 4) {
-      // New to Drupal 5 - hook_settings gone so settings is a normal page
-      $items[] = array(
-        'path' => 'admin/lm_paypal/paid_adverts_settings',
-        'title' => t('LM PayPal Paid Advert Settings'),
-        'callback' => 'drupal_get_form',
-        'callback arguments' => array('lm_paypal_paid_adverts_settings_form'),
-        'access' => user_access('administer site configuration'),
-        'type' => MENU_NORMAL_ITEM,
-        'weight' => 2,
-        // New to Drupal 5 - every path has a description
-        'description' => t('PayPal Paid Advert interface configuration.'),
-      );
-    }
-    $items[] = array(
-      'path' => 'admin/lm_paypal/paid_adverts',
-      'title' => t('LM PayPal Show Paid Adverts'),
-      'callback' => 'lm_paypal_paid_adverts_list_nodes',
-      'access' => user_access('administer lm_paypal'),
-      'weight' => -2,
-      // New to Drupal 5 - every path has a description
-      'description' => t('Show all PayPal Paid Adverts.'),
-    );
-  }
-  else {
-    // Borrowed from book.module
-    // This appears as a tab on the edit page which is ideal as you shouldn't
-    // pay for an adverts until after it is created.
-    //  This is called for every menu display so try and keep the costs down!
-    if (arg(0) == 'node' && is_numeric(arg(1))) {
-      $nid = arg(1);
-      $node = node_load($nid);
-      $has_sub = lm_paypal_paid_adverts_has_sub($node, $subid, $paidfor);
-      if ($has_sub) {
-        // Allow admin or the node owner to view the PayPal tab
-        if ($user->uid == 1 || $node->uid == $user->uid) {
-          if (!$paidfor) {
-            $title = t('PayPal Publish');
-          }
-          else {
-            $title = t('Published');
-          }
-          $items[] = array(
-            'path' => 'node/'. $nid .'/PayPal',
-            'title' => $title,
-            'callback' => 'lm_paypal_paid_adverts_payment',
-            'callback arguments' => array($nid),
-            'type' => MENU_LOCAL_TASK,
-            'weight' => 4,
-          );
-        }
-      }
-    }
-  }
+  $items['admin/settings/lm_paypal/paid_adverts_settings'] = array(
+    'title' => t('Paid Advert Settings'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lm_paypal_paid_adverts_settings_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => 2,
+    'description' => t('PayPal Paid Advert interface configuration.'),
+  );
+
+  $items['admin/settings/lm_paypal/paid_adverts'] = array(
+    'title' => t('Show Paid Adverts'),
+    'page callback' => 'lm_paypal_paid_adverts_list_nodes',
+    'access arguments' => array('administer lm_paypal'),
+    'weight' => -2,
+    'description' => t('Show all PayPal Paid Adverts.'),
+  );
+
+  $items['node/%node/lm_paypal'] = array(
+    'title' => 'PayPal Publication',
+    'page callback' => '_lm_paypal_paid_adverts_payment',
+    'page arguments' => array(1),
+    'access callback' => '_lm_paypal_paid_adverts_paypal_access',
+    'access arguments' => array(1),
+    'type' => MENU_LOCAL_TASK,
+  );
 
   return $items;
 }
 
-// Ugly magic to hide lm_paypal_settings from Drupal 5.0 as it spots its
-// existance and refuses to access the real page.
-if (strncmp(VERSION, '4', 1) == 0) {
-  /**
-   * Implementation of hook_settings()
-   * Note: hook_settings not used in Drupal 5.
-   */
-  function lm_paypal_paid_adverts_settings() {
-    return lm_paypal_paid_adverts_settings_form();
+/**
+ * Check whether the user has access to this node tab item.
+ * (see the hook_menu() function for the definition of the tab)
+ *
+ * In our case this means whether the node is a pay for node
+ * and the user is the owner (or the admin/moderators).
+ *
+ * @param $node
+ *   the pre-loaded node to check for accessibility
+ */
+function _lm_paypal_paid_adverts_paypal_access($node)
+{
+  global $user;
+
+  $has_sub = lm_paypal_paid_adverts_has_sub($node, $subid, $paidfor);
+  if ($has_sub) {
+    // Allow admin & moderators or the node owner to view the PayPal tab
+    if ($user->uid == 1 || user_access('access unpaid adverts') || $node->uid == $user->uid) {
+      return TRUE;
+    }
   }
+  return FALSE;
 }
 
 /**
@@ -212,52 +193,53 @@ if (strncmp(VERSION, '4', 1) == 0) {
 function lm_paypal_paid_adverts_settings_form() {
   _lm_paypal_paid_adverts_ini();
   global $_lm_paypal_paid_adverts_type_subs;
-  global $_lm_paypal_drupal_major;
 
   if (!user_access('administer lm_paypal')) {
     drupal_access_denied();
     return;
   }
 
-  $form['#base'] = 'lm_paypal_paid_adverts_settings_form';
+  $form['#submit'] = array('lm_paypal_paid_adverts_settings_form_submit');
 
-  $form ['header'] = array(
-    '#value' => '<h2>' . t('Associate node subscriptions with node types.') . '</h2>',
+  $form['header'] = array(
+    '#value' => '<h2>'. t('Associate node subscriptions with node types.') .'</h2>',
   );
 
-  $form ['note'] = array(
-    '#value' => '<em>' . t('Once a subscription is associated with a node type when new nodes of that type are created they will be PRIVATE to the author until paid for.') . '</em>',
+  $form['note'] = array(
+    '#value' => '<p><em>'. t('Once a subscription is associated with a node type when new nodes of that type are created they will be PRIVATE to the author until paid for.') .'</em></p>',
   );
 
   // Note: Drupal 5 pass 'names' to get a type,name array (Drupal 4 ignores it)
   $node_types = node_get_types('names');
   $node_subs = lm_paypal_subscription_node_subs();
   if (count($node_subs) <= 0) {
-    $form ['none'] = array(
-      '#value' => t('No node subscriptions defined.'),
+    $form['none'] = array(
+      '#value' => '<p>'. t('No node subscriptions defined.') .'</p>',
     );
   }
   else {
-    $type_subs = $_lm_paypal_paid_adverts_type_subs;
+    // Sadly when these form items are passed to submit they are no
+    // longer nested. So they are flattened and mixed with the other items.
+    // By sticking 'NT' at the start I can tell them apart.
     foreach ($node_types as $node_type => $node_name) {
-      // Sadly when these form items are passed to submit they are no
-      // longer nested. So they are flattened and mixed with the other items.
-      // By sticking 'NT' at the start I can tell them apart.
-      $form ['lm_paypal_paid_adverts_node_subs']['NT'.$node_type] = array(
+      $default_value = $_lm_paypal_paid_adverts_type_subs[$node_type];
+      if($default_value == null) {
+        $default_value = array();
+      }
+      $form['lm_paypal_paid_adverts_node_subs']['NT'. $node_type] = array(
         '#type' => 'checkboxes',
         '#title' => $node_name,
         '#options' => $node_subs,
-        '#default_value' => $type_subs[$node_type],
-        '#description' => t('Subscriptions, if any, available to publish nodes of this type.'),
+        '#default_value' => $default_value,
+        '#description' => '',
+        //'#description' => t('If checked, requires an active paid subscription for nodes of this type.'),
       );
     }
   }
 
-  if ($_lm_paypal_drupal_major > 4) {
-    // Borrowed from system_settings_form()
-    $form['buttons']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration') );
-    $form['buttons']['reset'] = array('#type' => 'submit', '#value' => t('Reset to defaults') );
-  }
+  // Borrowed from system_settings_form()
+  $form['buttons']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration') );
+  $form['buttons']['reset'] = array('#type' => 'submit', '#value' => t('Reset to defaults') );
 
   return $form;
 }
@@ -270,17 +252,19 @@ function lm_paypal_paid_adverts_settings_form() {
  * @param $values
  *   An array containing the name,value pairs from the form
  */
-function lm_paypal_paid_adverts_settings_form_submit($form_id, $values) {
+function lm_paypal_paid_adverts_settings_form_submit($form, &$form_state) {
   _lm_paypal_paid_adverts_ini();
   global $_lm_paypal_paid_adverts_type_subs;
 
+  $values = $form_state['values'];
+
   // Find all the type sub's by looking for any key that matches NTtype
   foreach ($values as $key => $val) {
-    if (strncmp($key,"NT",2) != 0) {
+    if (strncmp($key, "NT", 2) != 0) {
       // Not an NTtype skip it
       continue;
     }
-    $type = substr($key,2);
+    $type = substr($key, 2);
     // Make sure it is an array and then
     if (is_array($val) && count($val) > 0) {
       // Copy over any set entries
@@ -306,38 +290,33 @@ function lm_paypal_paid_adverts_settings_form_submit($form_id, $values) {
  * @param $nid
  *   Node whose details should be displayed
  */
-function lm_paypal_paid_adverts_payment($nid) {
+function _lm_paypal_paid_adverts_payment($node) {
   _lm_paypal_paid_adverts_ini();
   global $_lm_paypal_paid_adverts_type_subs;
-  global $_lm_paypal_drupal_major;
 
   $type_subs = $_lm_paypal_paid_adverts_type_subs;
+  $ts = $type_subs[$node->type];
+  if (!is_array($ts) || count($ts) <= 0) {
+    // unfortunate, but in D6 we cannot avoid the tab for everyone depending on the node type
+    return '<p>' . t('This node does not require a subscription. Please, ignore the PayPal Publication tab.') . '</p>';
+  }
 
-  $paidfor = lm_paypal_node_subscribed($nid, $subid);
+  $paidfor = lm_paypal_node_subscribed($node->nid, $subid);
   if ($paidfor) {
     $sub = lm_paypal_subscribe($subid, 23);
-    $c = ($_lm_paypal_drupal_major > 4 ? '!' : '%');
-    return t("This article has been paid for by the subscription: ${c}sub", array("${c}sub" => $sub));
+    return t("This article has been paid for by the subscription: !sub. Thank you.", array("!sub" => $sub));
   }
 
-  $output .= '<p>' . t('Not yet paid for. To make this article viewable by others you need to pay with PayPal. Please take out <em>ONE</em> of the subscriptions below.') . '</p>';
+  $output .= '<p>'. t('Not yet paid for. To make this article viewable by others you need to pay with PayPal. Please take out <em>ONE</em> of the subscriptions below.') .'</p>';
 
-  $node = node_load($nid);
-  $ts = $type_subs[$node->type];
-  if (is_array($ts) && count($ts) > 0) {
-    foreach ($ts as $type => $sub) {
-      $output .= lm_paypal_subscribe($sub, 15, '', $nid);
-    }
-  }
-  else {
-    watchdog(
-      LM_PAYPAL_PAID_ADVERTS,
-      t('Attemping to pay for node %nid but no subscriptions available', array('%nid' => $nid)),
-      WATCHDOG_WARNING);
+  foreach ($ts as $type => $sub) {
+    $output .= lm_paypal_subscribe($sub, 15, '', $node->nid);
   }
 
   return $output;
 }
+
+
 
 /**
  * Implementation of hook_user().
@@ -345,16 +324,22 @@ function lm_paypal_paid_adverts_payment($nid) {
 function lm_paypal_paid_adverts_user($op, &$edit, &$account, $category = NULL) { 
   _lm_paypal_paid_adverts_ini();
   global $_lm_paypal_debug;
+  global $user;
 
   // In the "my account" view area show all paid_adverts
   if ($op == 'view' && (user_access('administer lm_paypal') || $user->uid == $account->uid)) {
-    $output = lm_paypal_paid_adverts_list_nodes($account->uid,10);
-    $items [] = array(
-      'title' => '',
-      'value' => $output);
-    $ret_ads = array(t('Paypal Paid Adverts') => $items);
+    $output = lm_paypal_paid_adverts_list_nodes($account->uid, 10);
 
-    return $ret_ads;
+    $account->content['paid_adverts'] = array(
+      '#type' => 'user_profile_category',
+      '#title' => t('PayPal Paid Adverts'),
+      '#weight' => 6, // under History which is 5.
+    );
+    $account->content['paid_adverts']['subs'] = array(
+      '#type' => 'user_profile_item',
+      '#title' => t('Adverts you paid with us:'),
+      '#value' => $output,
+    );
   }
 }
 
@@ -370,10 +355,12 @@ function lm_paypal_paid_adverts_user($op, &$edit, &$account, $category = NULL) {
  * @return
  *   TRUE if the node does require a subscription
  */
-function lm_paypal_paid_adverts_has_sub($node, &$subid, &$paidfor)
-{
+function lm_paypal_paid_adverts_has_sub($node, &$subid, &$paidfor) {
   _lm_paypal_paid_adverts_ini();
   global $_lm_paypal_paid_adverts_type_subs;
+
+  $subid = null;
+  $paidfor = null;
 
   $type_subs = $_lm_paypal_paid_adverts_type_subs;
 
@@ -388,8 +375,7 @@ function lm_paypal_paid_adverts_has_sub($node, &$subid, &$paidfor)
   return TRUE;
 }
 
-function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50)
-{
+function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50) {
   _lm_paypal_paid_adverts_ini();
   global $_lm_paypal_paid_adverts_type_subs;
 
@@ -400,8 +386,8 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50)
   }
 
   $header = array(
+    array('data' => t('#'), 'field' => 'n.nid', 'sort' => 'desc'),
     array('data' => t('User'), 'field' => 'u.name'),
-    array('data' => t('Node'), 'field' => 'n.nid', 'sort' => 'desc'),
     array('data' => t('Title'), 'field' => 'n.title'),
     array('data' => t('Type'), 'field' => 'n.type'),
     array('data' => t('Published')),
@@ -414,16 +400,17 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50)
   }
   // Turn it into a string to be used in an "IN" clause
   $tstr = '(';
+  $nts = 0;
   foreach ($ts as $t => $v) {
-    if ($nTs > 0) {
+    if ($nts > 0) {
       $tstr .= ',';
     }
-    $tstr .= "'" . $t . "'";
-    $nTs ++;
+    $tstr .= "'". $t ."'";
+    ++$nts;
   }
   $tstr .= ')';
 
-  if ($nTs > 0) {
+  if ($nts > 0) {
     if ($uid == 0) {
       $sql = db_rewrite_sql("SELECT n.nid, u.name, n.title, n.type FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.status = 1 AND n.type IN $tstr");
     }
@@ -444,12 +431,26 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50)
         $pub = t('published');
       }
       else {
-        $pub = l(t('not published'),"node/$n->nid/PayPal");
+        $pub = l(t('not published'), "node/$n->nid/lm_paypal",
+                array(
+                  'attributes' => array(
+                    'alt' => t('Link to the page allowing you to publish this ad.'),
+                    'title' => t('Click to pay for this ad to be published immediately.'),
+                  ),
+                ));
       }
+      $link_to_node = l($n->nid, "node/$n->nid",
+        array(
+          'attributes' => array(
+            'alt' => t('Link to the ad so you can check it out.'),
+            'title' => t('Click on this identifier to read your ad.'),
+          ),
+        )
+      );
       $rows[] = array('data' =>
         array(
+          $link_to_node,
           $n->name,
-          l(check_plain($n->nid), "node/$n->nid"),
           check_plain($n->title),
           check_plain($node_types[$n->type]),
           $pub,
@@ -459,7 +460,7 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50)
   }
 
   if (!$rows) {
-    $rows[] = array(array('data' => t('No paid adverts.'), 'colspan' => 4));
+    $rows[] = array(array('data' => t('No paid adverts.'), 'colspan' => 5));
   }
 
   $output .= theme('table', $header, $rows);
@@ -474,7 +475,7 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50)
  */
 function lm_paypal_paid_adverts_nodeapi(&$node, $op, $a3, $a4) {
   _lm_paypal_paid_adverts_ini();
-  global $_lm_paypal_drupal_major;
+  global $_lm_paypal_paid_adverts_type_subs;
   global $user;
 
   $title_len = 10;
@@ -486,53 +487,57 @@ function lm_paypal_paid_adverts_nodeapi(&$node, $op, $a3, $a4) {
     $short_title = $node->title;
   }
 
-  if ($_lm_paypal_drupal_major > 4) {
-    $overwrite = array();
-    // Drupal 5
-    switch ($op) {
-      case 'load':
-        if ($user->uid == 1) {
-          return;
+  $overwrite = array();
+  switch ($op) {
+    case 'load':
+      $has_sub = lm_paypal_paid_adverts_has_sub($node, $subid, $paidfor);
+      if (!$has_sub) {
+        return;
+      }
+      if (!$paidfor) {
+        if (!$subid) {
+          // Select the first identifier as the subscription identifier.
+          // In a perfect world, you should not have multiple subscriptions for
+          // one node type also it is allowed by the module...
+          $ts = $_lm_paypal_paid_adverts_type_subs[$node->type];
+          $subid = reset($ts);
         }
-        $has_sub = lm_paypal_paid_adverts_has_sub($node, $subid, $paidfor);
-        if (!$has_sub) {
-          return;
-        }
-        if ($node->uid != $user->uid && !$paidfor) {
-          // Make sure nothing useful is visible
-          $overwrite['title'] = $short_title;
-          $overwrite['teaser'] = $overwrite['body'] = t('<em>Not yet published.</em>');
-          return $overwrite;
+        $msg = t('This classified ad for subscription #' . $subid . ' is still unpaid. '
+               . 'Other users will not be able to access it.');
+      }
+
+      if ($user->uid == 1 || node_access('update', $node)
+            || user_access('access unpaid adverts') || user_access('administer lm_paypal')) {
+        if (!$paidfor) {
+          // Allow the theme to show the admin/moderators that
+          // different adverts were not paid for yet.
+          if ($user->uid == 1 || user_access('administer lm_paypal')) {
+            // And to people who can administer LM Paypal,
+            // show a button to mark this node as paid.
+            drupal_set_message($msg, 'error');
+            $link = l(t('Mark as Paid'),
+                           "admin/settings/lm_paypal/subscriber_pay/$subid/{$node->nid}/{$node->uid}",
+                           array('attributes' => array('title' => t('Click on this link to mark this node as paid without having to go to PayPal.'))));
+            drupal_set_message($link, 'error');
+          }
         }
         return;
-    }
-  }
-  else {
-    // Drupal 4
-    switch ($op) {
-      case 'view':
-        if ($user->uid == 1) {
-          return;
-        }
-        $has_sub = lm_paypal_paid_adverts_has_sub($node, $subid, $paidfor);
-        if (!$has_sub) {
-          return;
-        }
-        if ($node->uid != $user->uid && !$paidfor) {
-          // Make sure noting useful is visible
-          $node->title = $short_title;
-          $node->teaser = $node->body = t('<em>Not yet published.</em>');
-        }
-        break;
-
-      case 'submit':
-        $has_sub = lm_paypal_paid_adverts_has_sub($node, $subid, $paidfor);
-        if ($has_sub && !$paidfor) {
-          // A teaser might show unpaid content
-          $node->teaser = '';
-        }
-        break;
-    }
+      }
+      if ($node->uid != $user->uid && !$paidfor) {
+        // Make sure nothing useful is visible
+        $overwrite['title'] = $short_title;
+        $overwrite['teaser'] = $overwrite['body'] = t('<em>Not yet published.</em>');
+        return $overwrite;
+      }
+      if (!$paidfor) {
+        // Add a link for the user to be able to put a charge to pay for this node
+        drupal_set_message($msg, 'error');
+        $link = l(t('Click here to publish this node now.'),
+                        "node/{$node->nid}/lm_paypal",
+                        array('attributes' => array('title' => t('For us to publicly publish this node, we require that you pay the ad charge.'))));
+        drupal_set_message($link, 'error');
+      }
+      return;
   }
 }
 
@@ -552,12 +557,11 @@ function lm_paypal_paid_adverts_cron() {
 /**
  * Implementation of hook_form_alter().
  */
-function lm_paypal_paid_adverts_form_alter($form_id, $form) {
+function lm_paypal_paid_adverts_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'system_modules' && !$_POST) {
     // Make sure that both lm_paypal and lm_paypal_subscriptions are defined
     $me = 'lm_paypal_paid_adverts';
-    $dep = array('lm_paypal','lm_paypal_subscriptions');
-    lm_paypal_system_module_validate($form,$me,$dep);
+    $dep = array('lm_paypal', 'lm_paypal_subscriptions');
+    lm_paypal_system_module_validate($form, $me, $dep);
   }
 }
-?>

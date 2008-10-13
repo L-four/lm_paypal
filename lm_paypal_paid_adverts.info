@@ -1,5 +1,7 @@
 ; $Id$
-name = lm_paypal_paid_adverts
-description = "Provides PayPal paid advert pages (requires lm_paypal and lm_paypal_subscriptions)."
-package = "LM_PayPal"
-dependencies = lm_paypal lm_paypal_subscriptions
+name = "LM Paypal Paid Adverts"
+description = "Provides PayPal paid advert pages."
+package = "LM PayPal"
+core = 6.x
+dependencies[] = lm_paypal
+dependencies[] = lm_paypal_subscriptions
