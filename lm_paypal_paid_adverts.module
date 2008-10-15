@@ -7,7 +7,7 @@
  * Enables users to create pages only displayed when paid for with PayPal
  */
 
-define(LM_PAYPAL_PAID_ADVERTS, 'LM_PayPal_PaidAd');
+define('LM_PAYPAL_PAID_ADVERTS', 'LM_PayPal_PaidAd');
 
 /**
  * Initialize global variables

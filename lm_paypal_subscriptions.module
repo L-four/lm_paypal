@@ -28,35 +28,35 @@
 // On deleting a user issue a cancel on any subscriptions - can't do that from
 //  here, can only cancel on PayPal
 
-define(LM_PAYPAL_SUBSCRIPTIONS, 'LM_PayPal_Subs');
+define('LM_PAYPAL_SUBSCRIPTIONS', 'LM_PayPal_Subs');
 
 // Don't change these here! Use the admin interface at admin/settings/lm_paypal_subscriptions
-define(LM_PAYPAL_SUBSCRIPTIONS_INPROGRESS_DEFAULT, '/lm_paypal/subscriptions_inprogress');
-define(LM_PAYPAL_SUBSCRIPTIONS_MENU_REBUILD_DEFAULT, FALSE);
+define('LM_PAYPAL_SUBSCRIPTIONS_INPROGRESS_DEFAULT', '/lm_paypal/subscriptions_inprogress');
+define('LM_PAYPAL_SUBSCRIPTIONS_MENU_REBUILD_DEFAULT', FALSE);
 
-define(LM_PAYPAL_SUBSCRIPTIONS_UID_ADMIN_DEFAULT, 1);
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONSUB_DEFAULT, 1);
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONSUB_SUBJECT, 'New subscriber %Username to %Subscription%Node on %Site');
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONSUB_BODY, 'The user %Username has subscribed to %Subscription%Node on %Site on %Date');
+define('LM_PAYPAL_SUBSCRIPTIONS_UID_ADMIN_DEFAULT', 1);
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONSUB_DEFAULT', 1);
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONSUB_SUBJECT', 'New subscriber %Username to %Subscription%Node on %Site');
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONSUB_BODY', 'The user %Username has subscribed to %Subscription%Node on %Site on %Date');
 
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONEND_DEFAULT, 1);
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONEND_SUBJECT, 'User %Username leaves %Subscription%Node on %Site');
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONEND_BODY, 'The user %Username has ended their subscription to %Subscription%Node on %Site on %Date by %End');
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONEND_DEFAULT', 1);
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONEND_SUBJECT', 'User %Username leaves %Subscription%Node on %Site');
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONEND_BODY', 'The user %Username has ended their subscription to %Subscription%Node on %Site on %Date by %End');
 
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONSUB_DEFAULT, 0);
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONSUB_SUBJECT_DEFAULT, 'Welcome to %Subscription%Node');
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONSUB_BODY_DEFAULT, 'Hello %Username and welcome to your new subscription %Subscription%Node on %Site');
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONSUB_DEFAULT', 0);
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONSUB_SUBJECT_DEFAULT', 'Welcome to %Subscription%Node');
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONSUB_BODY_DEFAULT', 'Hello %Username and welcome to your new subscription %Subscription%Node on %Site');
 
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONNEAREND_DEFAULT, 0);
-define(LM_PAYPAL_SUBSCRIPTIONS_NEAREND_DAYS_DEFAULT, 5);
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONNEAREND_SUBJECT_DEFAULT, 'Your subscription %Subscription ends soon');
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONNEAREND_BODY_DEFAULT, 'Hello %Username your subscription to %Subscription on %Site ends in %Days days.');
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONNEAREND_DEFAULT', 0);
+define('LM_PAYPAL_SUBSCRIPTIONS_NEAREND_DAYS_DEFAULT', 5);
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONNEAREND_SUBJECT_DEFAULT', 'Your subscription %Subscription ends soon');
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONNEAREND_BODY_DEFAULT', 'Hello %Username your subscription to %Subscription on %Site ends in %Days days.');
 
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_DEFAULT, 0);
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_SUBJECT_DEFAULT, 'Goodbye from %Subscription');
-define(LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_BODY_DEFAULT, 'Hello %Username and thank you for being a subscriber to %Subscription on %Site. We hope you will join us again.');
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_DEFAULT', 0);
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_SUBJECT_DEFAULT', 'Goodbye from %Subscription');
+define('LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_BODY_DEFAULT', 'Hello %Username and thank you for being a subscriber to %Subscription on %Site. We hope you will join us again.');
 
-define(LM_PAYPAL_SUBSCRIPTIONS_TERMS_DEFAULT, '');
+define('LM_PAYPAL_SUBSCRIPTIONS_TERMS_DEFAULT', '');
 
 // In theory a subscription will go:
 // signedup, live, EOT (end of term) or cancelled
@@ -66,13 +66,13 @@ define(LM_PAYPAL_SUBSCRIPTIONS_TERMS_DEFAULT, '');
 //  be blocked
 // If the subscription amount is zero (probably for a trial period) then
 //  no payment will arrive
-define(LM_PAYPAL_SUBSCRIPTIONS_STATUS_DEAD, 0);
-define(LM_PAYPAL_SUBSCRIPTIONS_STATUS_LIVE, 1); // dont change this one!
-define(LM_PAYPAL_SUBSCRIPTIONS_STATUS_SIGNEDUP, 2);
-define(LM_PAYPAL_SUBSCRIPTIONS_STATUS_PAID, 3);
-define(LM_PAYPAL_SUBSCRIPTIONS_STATUS_CANCELLED, 4);
-define(LM_PAYPAL_SUBSCRIPTIONS_STATUS_EOT, 5);
-define(LM_PAYPAL_SUBSCRIPTIONS_STATUS_BLOCKED, 6);
+define('LM_PAYPAL_SUBSCRIPTIONS_STATUS_DEAD, 0);
+define('LM_PAYPAL_SUBSCRIPTIONS_STATUS_LIVE, 1); // dont change this one!
+define('LM_PAYPAL_SUBSCRIPTIONS_STATUS_SIGNEDUP, 2);
+define('LM_PAYPAL_SUBSCRIPTIONS_STATUS_PAID, 3);
+define('LM_PAYPAL_SUBSCRIPTIONS_STATUS_CANCELLED, 4);
+define('LM_PAYPAL_SUBSCRIPTIONS_STATUS_EOT, 5);
+define('LM_PAYPAL_SUBSCRIPTIONS_STATUS_BLOCKED, 6);
 
 /**
  * Initialize global variables.

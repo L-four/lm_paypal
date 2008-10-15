@@ -15,10 +15,10 @@
  * see the LICENSE.txt file for more details.
  */
 
-define(LM_PAYPAL_DONATIONS, 'LM_PayPal_Donat');
+define('LM_PAYPAL_DONATIONS', 'LM_PayPal_Donat');
 
 // Don't change these here! Use the admin interface at admin/settings/lm_paypal
-define(LM_PAYPAL_DONATIONS_THANKS_DEFAULT, '/lm_paypal/donations_thanks');
+define('LM_PAYPAL_DONATIONS_THANKS_DEFAULT', '/lm_paypal/donations_thanks');
 
 /**
  * Initialize global variables
@@ -119,7 +119,7 @@ if (function_exists(\'lm_paypal_donate\')) {
     case 'admin/settings/lm_paypal/donations':
     // New to Drupal 5 - settings has moved
     case 'admin/settings/lm_paypal/donations_settings':
-      $output .= $_lm_paypal_welcome;
+      $output = $_lm_paypal_welcome;
 
       $output .= '<p>'. t("For detailed help please read !help_dons", array("!help_dons" => $help_dons)) .'</p>';
       return $output;
@@ -411,7 +411,7 @@ function lm_paypal_donations_user($op, &$edit, &$account, $category = NULL) {
   _lm_paypal_donations_ini();
   global $_lm_paypal_debug;
 
-  $uid = $account->uid;
+  $uid = isset($account->uid) ? $account->uid : 0;
 
   // In the "my account" view area show all donations
   if ($op == 'view' && (user_access('administer lm_paypal') || $user->uid == $account->uid)) {
@@ -478,8 +478,8 @@ function lm_paypal_donations($uid, $per_page = 50) {
     $tablesort .= ', datepaid DESC';
   }
 
-  // placeholder until I figure out what would be good to filter on
-  $status = $_SESSION['lm_paypal_dons_filter'];
+  // FIXME: figure out what would be good to filter on
+  // $status = $_SESSION['lm_paypal_dons_filter'];
   $status = 'all';
   if ($status != 'all') {
     if ($uid != 0) {
@@ -497,6 +497,7 @@ function lm_paypal_donations($uid, $per_page = 50) {
     $result = pager_query($sql . $tablesort, $per_page);
   }
 
+  $rows = array();
   while ($don = db_fetch_object($result)) {
     $rows[] = array('data' =>
       array(
@@ -508,13 +509,9 @@ function lm_paypal_donations($uid, $per_page = 50) {
       ),
     );
   }
-
-  if (!$rows) {
+  if (empty($rows)) {
     $rows[] = array(array('data' => t('No donations found.'), 'colspan' => 3));
   }
 
-  $output .= theme('table', $header, $rows);
-  $output .= theme('pager', NULL, $per_page, 0);
-
-  return $output;
+  return theme('table', $header, $rows) . theme('pager', NULL, $per_page, 0);
 }
