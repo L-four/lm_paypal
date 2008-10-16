@@ -71,53 +71,53 @@ function _lm_paypal_ini() {
   //$_lm_paypal_welcome .= '<p><b>'. t('These modules are still undergoing development so it is strongly advised that you to test them out against the PayPal Sandbox first.') .'</b></p>';
 
   $_lm_paypal_currency_option = array(
-  // '' => t('default currency'),  Force a currency to be specified
-  'USD' => t('U.S. Dollar'),
-  'GBP' => t('Pound Sterling'),
-  'EUR' => t('Euro'),
-  'AUD' => t('Australian Dollar'),
-  'CAD' => t('Canadian Dollar'),
-  'JPY' => t('Japanese Yen'),
-  'CHF' => t('Swiss Franc'),
-  'CZK' => t('Czech Koruna'),
-  'DKK' => t('Danish Krone'),
-  'HKD' => t('Hong Kong Dollar'),
-  'HUF' => t('Hungarian Forint'),
-  'NOK' => t('Norwegian Krone'),
-  'NZD' => t('New Zealand Dollar'),
-  'PLN' => t('Polish Zloty'),
-  'SEK' => t('Swedish Krona'),
-  'SGD' => t('Singapore Dollar'),
+    // '' => t('default currency'),  Force a currency to be specified
+    'USD' => t('U.S. Dollar'),
+    'GBP' => t('Pound Sterling'),
+    'EUR' => t('Euro'),
+    'AUD' => t('Australian Dollar'),
+    'CAD' => t('Canadian Dollar'),
+    'JPY' => t('Japanese Yen'),
+    'CHF' => t('Swiss Franc'),
+    'CZK' => t('Czech Koruna'),
+    'DKK' => t('Danish Krone'),
+    'HKD' => t('Hong Kong Dollar'),
+    'HUF' => t('Hungarian Forint'),
+    'NOK' => t('Norwegian Krone'),
+    'NZD' => t('New Zealand Dollar'),
+    'PLN' => t('Polish Zloty'),
+    'SEK' => t('Swedish Krona'),
+    'SGD' => t('Singapore Dollar'),
   );
 
   $_lm_paypal_currency_syms = array(
-  '' => '?',
-  'AUD' => 'A$',
-  'CAD' => 'Can$',
-  //'EUR' => '&euro;',  This causes problems depending on the fonts
-  // available and the version of the browser used
-  'EUR' => 'Euro',
-  'GBP' => '&#163;',
-  'JPY' => '&#165;',
-  'USD' => '$',
-  'CHF' => 'CHF',   // Yes - it really is writen as CHF
-  'CZK' => 'Kc',
-  'DKK' => 'kr',
-  'HKD' => 'HK$',
-  'HUF' => 'Ft',
-  'NOK' => 'kr',
-  'NZD' => 'NZ$',
-  'PLN' => 'zl',  // I cannot find the HTML character for a crossed l
-  'SEK' => 'kr',
-  'SGD' => 'S$',
+    '' => '?',
+    'AUD' => 'A$',
+    'CAD' => 'Can$',
+    //'EUR' => '&euro;',  This causes problems depending on the fonts
+    // available and the version of the browser used
+    'EUR' => 'Euro',
+    'GBP' => '&#163;',
+    'JPY' => '&#165;',
+    'USD' => '$',
+    'CHF' => 'CHF',   // Yes - it really is writen as CHF
+    'CZK' => 'Kc',
+    'DKK' => 'kr',
+    'HKD' => 'HK$',
+    'HUF' => 'Ft',
+    'NOK' => 'kr',
+    'NZD' => 'NZ$',
+    'PLN' => 'zl',  // I cannot find the HTML character for a crossed l
+    'SEK' => 'kr',
+    'SGD' => 'S$',
   );
 
   $_lm_paypal_period_units_option = array(
-  //'' => t('default'),
-  'D' => t('Days'),
-  'W' => t('Weeks'),
-  'M' => t('Months'),
-  'Y' => t('Years'),
+    //'' => t('default'),
+    'D' => t('Days'),
+    'W' => t('Weeks'),
+    'M' => t('Months'),
+    'Y' => t('Years'),
   );
 
   // Call all the _ini functions of all the lm_paypal modules.
@@ -303,7 +303,6 @@ function lm_paypal_id($id = '') {
 
 /**
  * Provide the admin settings page.
- * Note: New to Drupal 5
  */
 function lm_paypal_admin_settings() {
   $form = lm_paypal_settings_form();
@@ -333,58 +332,58 @@ function lm_paypal_settings_form() {
 
   // Show these in order of most likely to be changed
   $form['lm_paypal_business'] = array(
-  '#type' => 'textfield',
-  '#title' => t('LM PayPal Business/Premier Email'),
-  '#default_value' => $_lm_paypal_business,
-  '#maxlength' => 100,
-  '#required' => TRUE,
-  '#validate' => array('lm_paypal_is_email_shaped' => array(0)),
-  '#description' => t('The PayPal Business/Premier Email for the current website: %site_name', array('%site_name' => $site_name)),
+    '#type' => 'textfield',
+    '#title' => t('LM PayPal Business/Premier Email'),
+    '#default_value' => $_lm_paypal_business,
+    '#maxlength' => 100,
+    '#required' => TRUE,
+    '#validate' => array('lm_paypal_is_email_shaped' => array(0)),
+    '#description' => t('The PayPal Business/Premier Email for the current website: %site_name', array('%site_name' => $site_name)),
   );
 
   $form['lm_paypal_host'] = array(
-  '#type' => 'textfield',
-  '#title' => t('LM PayPal Host'),
-  '#default_value' => $_lm_paypal_host,
-  '#maxlength' => 100,
-  '#required' => TRUE,
-  '#description' => t('The host to send PayPal requests to usually www.paypal.com (when testing use www.sandbox.paypal.com)'),
+    '#type' => 'textfield',
+    '#title' => t('LM PayPal Host'),
+    '#default_value' => $_lm_paypal_host,
+    '#maxlength' => 100,
+    '#required' => TRUE,
+    '#description' => t('The host to send PayPal requests to usually www.paypal.com (when testing use www.sandbox.paypal.com)'),
   );
 
   $form['lm_paypal_ipns_max_age'] = array(
-  '#type' => 'textfield',
-  '#title' => t('LM PayPal Max Age IPNS'),
-  '#default_value' => $_lm_paypal_ipns_max_age,
-  '#maxlength' => 10,
-  '#required' => TRUE,
-  '#validate' => array('lm_paypal_is_integer_between' => array(1)),
-  '#description' => t('Maximum age of an old IPN record in hours before it is deleted. Minimum is 1.'),
+    '#type' => 'textfield',
+    '#title' => t('LM PayPal Max Age IPNS'),
+    '#default_value' => $_lm_paypal_ipns_max_age,
+    '#maxlength' => 10,
+    '#required' => TRUE,
+    '#validate' => array('lm_paypal_is_integer_between' => array(1)),
+    '#description' => t('Maximum age of an old IPN record in hours before it is deleted. Minimum is 1.'),
   );
 
   $form['lm_paypal_js_hide_email'] = array(
-  '#type' => 'checkbox',
-  '#title' => t('LM PayPal Javascript Hide Email'),
-  '#default_value' => $_lm_paypal_js_hide_email,
-  '#description' => t('Use some Javascript to obscure the email address in forms.'),
+    '#type' => 'checkbox',
+    '#title' => t('LM PayPal Javascript Hide Email'),
+    '#default_value' => $_lm_paypal_js_hide_email,
+    '#description' => t('Use some Javascript to obscure the email address in forms.'),
   );
 
   $form['lm_paypal_obey_test_ipns'] = array(
-  '#type' => 'checkbox',
-  '#title' => t('LM PayPal Obey Test IPNS'),
-  '#default_value' => $_lm_paypal_obey_test_ipns,
-  '#description' => t('Obey test IPNS, from PayPal Sandbox, as if real'),
+    '#type' => 'checkbox',
+    '#title' => t('LM PayPal Obey Test IPNS'),
+    '#default_value' => $_lm_paypal_obey_test_ipns,
+    '#description' => t('Obey test IPNS, from PayPal Sandbox, as if real'),
   );
 
   $form['lm_paypal_debug'] = array(
-  '#type' => 'checkbox',
-  '#title' => t('LM PayPal Debug'),
-  '#default_value' => $_lm_paypal_debug,
-  '#description' => t('Enabled verbose debugging output of LM PayPal'),
+    '#type' => 'checkbox',
+    '#title' => t('LM PayPal Debug'),
+    '#default_value' => $_lm_paypal_debug,
+    '#description' => t('Enabled verbose debugging output of LM PayPal'),
   );
 
   $form['submit'] = array(
-  '#type' => 'submit',
-  '#value' => t('Update settings'),
+    '#type' => 'submit',
+    '#value' => t('Update settings'),
   );
 
   return $form;
@@ -456,100 +455,100 @@ function lm_paypal_ipn_in() {
 
   // Don't bother with these fields - but don't flag them as errors
   static $ignore_fields = array(
-  'notify_version',
-  'receipt_id',
-  'charset',
+    'notify_version',
+    'receipt_id',
+    'charset',
   );
   // These fields, if present, should be saved in the ipn log
   static $ipn_fields = array(
-  'txn_id',
-  'test_ipn',
-  'verify_sign',
-  'address_city',
-  'address_country',
-  'address_country_code',
-  'address_name',
-  'address_state',
-  'address_status',
-  'address_street',
-  'address_zip',
-  'first_name',
-  'last_name',
-  'payer_business_name',
-  'payer_email',
-  'payer_id',
-  'payer_status',
-  'residence_country',
-  'business',
-  'item_name',
-  'item_number',
-  'quantity',
-  'shipping',
-  'receiver_email',
-  'receiver_id',
-  'custom',
-  'invoice',
-  'memo',
-  'option_name1',
-  'option_name2',
-  'option_selection1',
-  'option_selection2',
-  'tax',
-  'parent_txn_id',
-  'payment_date',
-  'payment_status',
-  'payment_type',
-  'pending_reason',
-  'reason_code',
-  'mc_currency',
-  'payment_fee',
-  'payment_gross',
-  'mc_fee',
-  'mc_gross',
-  'settle_amount',
-  'settle_currency',
-  'exchange_rate',
-  'txn_type',
-  'subscr_date',
-  'subscr_effective',
-  'period1',
-  'period2',
-  'period3',
-  'amount1',
-  'amount2',
-  'amount3',
-  'mc_amount1',
-  'mc_amount2',
-  'mc_amount3',
-  'recurring',
-  'reattempt',
-  'retry_at',
-  'recur_times',
-  'subscr_id',
+    'txn_id',
+    'test_ipn',
+    'verify_sign',
+    'address_city',
+    'address_country',
+    'address_country_code',
+    'address_name',
+    'address_state',
+    'address_status',
+    'address_street',
+    'address_zip',
+    'first_name',
+    'last_name',
+    'payer_business_name',
+    'payer_email',
+    'payer_id',
+    'payer_status',
+    'residence_country',
+    'business',
+    'item_name',
+    'item_number',
+    'quantity',
+    'shipping',
+    'receiver_email',
+    'receiver_id',
+    'custom',
+    'invoice',
+    'memo',
+    'option_name1',
+    'option_name2',
+    'option_selection1',
+    'option_selection2',
+    'tax',
+    'parent_txn_id',
+    'payment_date',
+    'payment_status',
+    'payment_type',
+    'pending_reason',
+    'reason_code',
+    'mc_currency',
+    'payment_fee',
+    'payment_gross',
+    'mc_fee',
+    'mc_gross',
+    'settle_amount',
+    'settle_currency',
+    'exchange_rate',
+    'txn_type',
+    'subscr_date',
+    'subscr_effective',
+    'period1',
+    'period2',
+    'period3',
+    'amount1',
+    'amount2',
+    'amount3',
+    'mc_amount1',
+    'mc_amount2',
+    'mc_amount3',
+    'recurring',
+    'reattempt',
+    'retry_at',
+    'recur_times',
+    'subscr_id',
   );
   static $int_fields = array(
-  'id',
-  'timestamp',
-  'processed',
-  'test_ipn',
-  'address_status',
-  'quantity',
-  'shipping',
-  'payment_fee',
-  'payment_gross',
-  'mc_fee',
-  'mc_gross',
-  'settle_amount',
-  'exchange_rate',
-  'amount1',
-  'amount2',
-  'amount3',
-  'mc_amount1',
-  'mc_amount2',
-  'mc_amount3',
-  'recurring',
-  'reattempt',
-  'recur_times',
+    'id',
+    'timestamp',
+    'processed',
+    'test_ipn',
+    'address_status',
+    'quantity',
+    'shipping',
+    'payment_fee',
+    'payment_gross',
+    'mc_fee',
+    'mc_gross',
+    'settle_amount',
+    'exchange_rate',
+    'amount1',
+    'amount2',
+    'amount3',
+    'mc_amount1',
+    'mc_amount2',
+    'mc_amount3',
+    'recurring',
+    'reattempt',
+    'recur_times',
   );
 
   // Get ready to send the incoming query back to paypal to be verified
@@ -562,27 +561,27 @@ function lm_paypal_ipn_in() {
   // Process the incoming form results
   $fields = 0;
   foreach ($_POST as $key => $value) {
-  $req .= "&$key=" . urlencode(stripslashes($value));
-  if ($value == '' || in_array($key, $ignore_fields)) {
-    continue;
-  }
-  if (in_array($key, $ipn_fields)) {
-    $fields++;
-    $sql .= ", $key";
-    $v = db_escape_string($value);
-    if (!in_array($key, $int_fields)) {
-    $v = "'". $v ."'";
+    $req .= "&$key=" . urlencode(stripslashes($value));
+    if ($value == '' || in_array($key, $ignore_fields)) {
+      continue;
     }
-    $values .= ", $v";
-  }
-  else {
-    watchdog(LM_PAYPAL, 'IPN unknown field ignored: !key => !value', array('!key' => check_plain($key), '!value' => check_plain($value)));
-  }
+    if (in_array($key, $ipn_fields)) {
+      $fields++;
+      $sql .= ", $key";
+      $v = db_escape_string($value);
+      if (!in_array($key, $int_fields)) {
+        $v = "'". $v ."'";
+      }
+      $values .= ", $v";
+    }
+    else {
+      watchdog(LM_PAYPAL, 'IPN unknown field ignored: !key => !value', array('!key' => check_plain($key), '!value' => check_plain($value)));
+    }
   }
 
   if ($fields == 0) {
-  watchdog(LM_PAYPAL, 'IPN but no fields, ignored', array(), WATCHDOG_WARNING);
-  return '';
+    watchdog(LM_PAYPAL, 'IPN but no fields, ignored', array(), WATCHDOG_WARNING);
+    return '';
   }
   watchdog(LM_PAYPAL, 'lm_paypal_ipn_in pre-validate', NULL);
   $sql .= ') VALUES ('. $values .')';
@@ -594,12 +593,12 @@ function lm_paypal_ipn_in() {
 
   $fp = fsockopen($_lm_paypal_host, 80, $errno, $errstr, LM_PAYPAL_VALIDATE_TIMEOUT);
   if (!$fp) {
-  watchdog(LM_PAYPAL, 'Cannot validate with host: %host', array('%host' => check_plain($_lm_paypal_host)), WATCHDOG_ERROR);
-  // Return an HTTP error and hopefully PayPal will resend the ipn to me
-  // later on and then I can try validating again! Maybe PayPal is very busy
-  // or there is a network problem at the moment
-  drupal_set_header('HTTP/1.0 404 Not Found');
-  return '';
+    watchdog(LM_PAYPAL, 'Cannot validate with host: %host', array('%host' => check_plain($_lm_paypal_host)), WATCHDOG_ERROR);
+    // Return an HTTP error and hopefully PayPal will resend the ipn to me
+    // later on and then I can try validating again! Maybe PayPal is very busy
+    // or there is a network problem at the moment
+    drupal_set_header('HTTP/1.0 404 Not Found');
+    return '';
   }
   stream_set_timeout($fp, LM_PAYPAL_VALIDATE_TIMEOUT);
 
@@ -607,7 +606,7 @@ function lm_paypal_ipn_in() {
   fputs($fp, $ph . $req);
   // Read the response line at a time. The last line is the response.
   while (!feof($fp)) {
-  $ret = fgets($fp, 1024);
+    $ret = fgets($fp, 1024);
   }
   fclose($fp);
 
@@ -617,24 +616,24 @@ function lm_paypal_ipn_in() {
 
   $insert = db_query($sql);
   if (!$insert) {
-  watchdog(LM_PAYPAL, 'IPN in failed to run sql: %sql', array('%sql' => check_plain($sql)), WATCHDOG_ERROR);
-  // Return an HTTP error and hopefully PayPal will resend the ipn to me
-  // later on and then I can try again! Maybe PayPal is very busy
-  // or there is a network problem at the moment
-  drupal_set_header('HTTP/1.0 404 Not Found');
+    watchdog(LM_PAYPAL, 'IPN in failed to run sql: %sql', array('%sql' => check_plain($sql)), WATCHDOG_ERROR);
+    // Return an HTTP error and hopefully PayPal will resend the ipn to me
+    // later on and then I can try again! Maybe PayPal is very busy
+    // or there is a network problem at the moment
+    drupal_set_header('HTTP/1.0 404 Not Found');
   }
   else {
-  $last = db_last_insert_id('lm_paypal_ipns', 'id');
-  watchdog(LM_PAYPAL, 'lm_paypal_ipn_in $last = '. $last, NULL);
-  $link = l(t('view'), "admin/settings/lm_paypal/id/$last");
+    $last = db_last_insert_id('lm_paypal_ipns', 'id');
+    watchdog(LM_PAYPAL, 'lm_paypal_ipn_in $last = '. $last, NULL);
+    $link = l(t('view'), "admin/settings/lm_paypal/id/$last");
 
-  if ($verified) {
-    watchdog(LM_PAYPAL, 'IPN incoming %type', array('%type' => check_plain($_POST['txn_type'])), WATCHDOG_NOTICE, $link);
-    lm_paypal_process_in($last);
-  }
-  else {
-    watchdog(LM_PAYPAL, 'IPN incoming NOT VERIFIED %type got %ret', array('%type' => check_plain($_POST['txn_type']), '%ret' => check_plain($ret)), WATCHDOG_ERROR, $link);
-  }
+    if ($verified) {
+      watchdog(LM_PAYPAL, 'IPN incoming %type', array('%type' => check_plain($_POST['txn_type'])), WATCHDOG_NOTICE, $link);
+      lm_paypal_process_in($last);
+    }
+    else {
+      watchdog(LM_PAYPAL, 'IPN incoming NOT VERIFIED %type got %ret', array('%type' => check_plain($_POST['txn_type']), '%ret' => check_plain($ret)), WATCHDOG_ERROR, $link);
+    }
   }
 
   return 'IPN: Only PayPal will ever see this page - humans go away!';
@@ -768,41 +767,41 @@ function lm_paypal_process_in_web_accept($ipn) {
     $uid = 0;
     if ($_lm_paypal_debug) {
       watchdog(
-      LM_PAYPAL,
-      'No uid, try to lookup payer_email',
-      array(),
-      WATCHDOG_WARNING,
-      $link);
+        LM_PAYPAL,
+        'No uid, try to lookup payer_email',
+        array(),
+        WATCHDOG_WARNING,
+        $link);
     }
     $users = db_query("SELECT uid FROM {users} WHERE LOWER(mail) = LOWER('%s')", $ipn->payer_email);
     $user = db_fetch_object($users);
     if (!$user) {
       watchdog(
-      LM_PAYPAL,
-      'IPN web_accept no uid presuming uid 0, cannot find payer_email: %email',
-      array('%email' => check_plain($ipn->payer_email)),
-      WATCHDOG_WARNING,
-      $link);
+        LM_PAYPAL,
+        'IPN web_accept no uid presuming uid 0, cannot find payer_email: %email',
+        array('%email' => check_plain($ipn->payer_email)),
+        WATCHDOG_WARNING,
+        $link);
       $uid = 0;
     }
     else {
       $uid = $user->uid;
       watchdog(
-      LM_PAYPAL,
-      'IPN web_accept no uid, found payer_email %email for uid %uid',
-      array('%email' => check_plain($ipn->payer_email), '%uid' => $uid),
-      WATCHDOG_WARNING,
-      $link);
+        LM_PAYPAL,
+        'IPN web_accept no uid, found payer_email %email for uid %uid',
+        array('%email' => check_plain($ipn->payer_email), '%uid' => $uid),
+        WATCHDOG_WARNING,
+        $link);
     }
   }
   else if (!is_numeric($uid) || intval($uid) != $uid || $uid < 0) {
     watchdog(
-    LM_PAYPAL,
-    'Invalid uid, ignoring IPN: %uid',
-    array('%uid' => $uid),
-    WATCHDOG_WARNING,
-    $link);
-    return;
+        LM_PAYPAL,
+        'Invalid uid, ignoring IPN: %uid',
+        array('%uid' => $uid),
+        WATCHDOG_WARNING,
+        $link);
+        return;
   }
 
   // If I receive a web_accept without a uid then presume it came from anon
@@ -840,12 +839,12 @@ function lm_paypal_process_in_web_accept($ipn) {
   }
   else if (!is_numeric($item_number) || intval($item_number) != $item_number || $item_number < 0) {
     watchdog(
-    LM_PAYPAL,
-    'Invalid item_number, ignoring IPN: %item_number',
-    array('%item_number' => check_plain($item_number)),
-    WATCHDOG_WARNING,
-    $link);
-    return;
+      LM_PAYPAL,
+      'Invalid item_number, ignoring IPN: %item_number',
+      array('%item_number' => check_plain($item_number)),
+      WATCHDOG_WARNING,
+      $link);
+      return;
   }
 
   return lm_paypal_web_accept_invoke($ipn, $link, $uid, $other, $item_number);
@@ -865,11 +864,11 @@ function lm_paypal_web_accept_invoke($ipn, $link, $uid, $other, $item_number) {
   }
 
   watchdog(
-  LM_PAYPAL,
-  'No web_accept processor registered for this item_number: %item_number',
-  array('%item_number' => check_plain($item_number)),
-  WATCHDOG_WARNING,
-  $link);
+    LM_PAYPAL,
+    'No web_accept processor registered for this item_number: %item_number',
+    array('%item_number' => check_plain($item_number)),
+    WATCHDOG_WARNING,
+    $link);
 }
 
 /**
@@ -1020,20 +1019,20 @@ function lm_paypal_nccc2str($n, $ccc) {
 
 function lm_paypal_ipns_filter() {
   $names = array(
-  'all' => t('all messages'),
-  'web_accept' => t('donation/sent money (web_accept)'),
-  'subscr_%' => t('all subscription IPNs'),
-  'subscr_signup' => t('subscription signup'),
-  'subscr_payment' => t('subscription payment'),
-  'subscr_cancel' => t('subscription cancel'),
-  'subscr_eot' => t('subscription eot'),
+    'all' => t('all messages'),
+    'web_accept' => t('donation/sent money (web_accept)'),
+    'subscr_%' => t('all subscription IPNs'),
+    'subscr_signup' => t('subscription signup'),
+    'subscr_payment' => t('subscription payment'),
+    'subscr_cancel' => t('subscription cancel'),
+    'subscr_eot' => t('subscription eot'),
   );
 
   if (empty($_SESSION['lm_paypal_ipns_filter'])) {
     $_SESSION['lm_paypal_ipns_filter'] = 'all';
   }
 
-  $form['#submit'] = 'lm_paypal_ipns_submit';
+  $form['#submit'] = array('lm_paypal_ipns_submit');
 
   $form['filter'] = array(
   '#type' => 'select',
@@ -1062,10 +1061,10 @@ function lm_paypal_ipns() {
   $output = drupal_get_form('lm_paypal_ipns_filter');
 
   $header = array(
-  array('data' => t('Id'), 'field' => 'id'),
-  array('data' => t('Date'), 'field' => 'timestamp', 'sort' => 'desc'),
-  array('data' => t('Txn Type'), 'field' => 'txn_type'),
-  array('data' => t('User'), 'field' => 'custom'),
+    array('data' => t('Id'), 'field' => 'id'),
+    array('data' => t('Date'), 'field' => 'timestamp', 'sort' => 'desc'),
+    array('data' => t('Txn Type'), 'field' => 'txn_type'),
+    array('data' => t('User'), 'field' => 'custom'),
   );
 
   $sql = "SELECT id, timestamp, txn_type, custom FROM {lm_paypal_ipns}";
@@ -1093,13 +1092,13 @@ function lm_paypal_ipns() {
   while ($ipn = db_fetch_object($result)) {
     $uid = $ipn->custom & 0xFFFF;
     $other = ($ipn->custom >> 16) & 0xFFFF;
-    $rows[] = array('data' =>
-    array(
-    l($ipn->id, "admin/settings/lm_paypal/id/$ipn->id"),
-    format_date($ipn->timestamp, 'small'),
-    check_plain($ipn->txn_type),
-    $uid . ($other == '' ? '' : " ($other)"),
-    ),
+    $rows[] = array(
+      'data' => array(
+        l($ipn->id, "admin/settings/lm_paypal/id/$ipn->id"),
+        format_date($ipn->timestamp, 'small'),
+        check_plain($ipn->txn_type),
+        $uid . ($other == '' ? '' : " ($other)"),
+      ),
     );
   }
 
@@ -1169,13 +1168,14 @@ function lm_paypal_mail_user($to_uid, $about_uid, $subject, $message, $vars) {
   $from = variable_get('site_mail', ini_get('sendmail_from'));
 
   $variables = array(
-  '%Username' => $about_user->name,
-  '%Login' => $about_user->login,
-  '%Site' => variable_get('site_name', 'drupal'),
-  '%Uri' => $base_url,
-  '%Uri_brief' => substr($base_url, strlen('http://')),
-  '%Mailto' => $to,
-  '%Date' => format_date(time()));
+    '%Username' => $about_user->name,
+    '%Login' => $about_user->login,
+    '%Site' => variable_get('site_name', 'drupal'),
+    '%Uri' => $base_url,
+    '%Uri_brief' => substr($base_url, strlen('http://')),
+    '%Mailto' => $to,
+    '%Date' => format_date(time()),
+  );
   $variables = $variables + $vars;
 
   $body = strtr(t($message), $variables);
