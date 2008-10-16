@@ -222,9 +222,8 @@ function lm_paypal_subscriptions_menu() {
     'page arguments' => array('lm_paypal_subscriptions_admin_settings'),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
-    'weight' => 1,
-    'description' => 'PayPal subscriptions interface configuration.',
     'weight' => 31,
+    'description' => 'PayPal subscriptions interface configuration.',
   );
 
   // Subscription admin
@@ -232,9 +231,8 @@ function lm_paypal_subscriptions_menu() {
     'title' => 'Subscriptions',
     'page callback' => 'lm_paypal_view_subscriptions',
     'access arguments' => array('administer lm_paypal'),
-    'weight' => -3,
-    'description' => 'View PayPal subscriptions.',
     'weight' => 32,
+    'description' => 'View PayPal subscriptions.',
   );
 
   $items['admin/settings/lm_paypal/subscriptions/new'] = array(
@@ -276,8 +274,8 @@ function lm_paypal_subscriptions_menu() {
     'title' => 'Mark as paid',
     'page callback' => 'lm_paypal_subscriber_pay',
     'access arguments' => array('administer lm_paypal'),
-    'description' => 'Mark a node as paid bypassing Paypal.',
     'weight' => 33,
+    'description' => 'Mark a node as paid bypassing Paypal.',
   );
 
   // User page to subscribe
@@ -1980,7 +1978,7 @@ function lm_paypal_process_in_subscr($ipn) {
     $subs = db_query($sql, $ipn->subscr_id);
     $ss = db_fetch_object($subs);
     if (!$ss) {
-      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Unable to fetch the subscriber object', NULL , WATCHDOG_ERROR, $link);
+      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Unable to fetch the subscriber object', NULL, WATCHDOG_ERROR, $link);
       // Maybe its a temporary error? Reject this and when PayPal retries
       // it might work!
       drupal_set_header('HTTP/1.0 404 Not Found');
@@ -2111,7 +2109,7 @@ function _lm_paypal_subscriptions_validate($ipn, $so, $link) {
   if ($ipn->recurring != $so->src) {
     watchdog(
       LM_PAYPAL_SUBSCRIPTIONS,
-      'Recurrence mismatch (supplied %supplied,expected %expected), blocking subscription',
+      'Recurrence mismatch (supplied %supplied, expected %expected), blocking subscription',
       array('%supplied' => check_plain($ipn->recurring), '%expected' => check_plain($so->src)),
       WATCHDOG_ERROR,
       $link);
@@ -2122,7 +2120,7 @@ function _lm_paypal_subscriptions_validate($ipn, $so, $link) {
   if ($ipn->recur_times != $so->srt) {
     watchdog(
       LM_PAYPAL_SUBSCRIPTIONS,
-      'Recur times mismatch (supplied %supplied,expected %expected), blocking subscription',
+      'Recur times mismatch (supplied %supplied, expected %expected), blocking subscription',
       array('%supplied' => check_plain($ipn->recur_times), '%expected' => check_plain($so->srt)),
       WATCHDOG_ERROR,
       $link);
@@ -2595,9 +2593,8 @@ function lm_paypal_subscriber_edit_submit($form, &$form_state) {
     $msg = t('Failed to update subscriber sql: %sql', array('%sql' => check_plain($sql)));
     watchdog(LM_PAYPAL_SUBSCRIPTIONS, check_plain($msg), NULL, WATCHDOG_ERROR);
     drupal_set_message($msg);
-    // TODO: where to go to on error!
-    // return t('Failed to update subscriber');
     form_set_error(NULL, 'Failed to update subscriber');
+    return;
   }
 
   if ($_lm_paypal_debug) {
@@ -2707,8 +2704,8 @@ function lm_paypal_subscriber_pay_submit($form, &$form_state) {
     );
     watchdog(LM_PAYPAL_SUBSCRIPTIONS, check_plain($msg), NULL, WATCHDOG_ERROR);
     drupal_set_message($msg);
-    // TODO: where do we go on error?
     form_set_error('Failed to mark node as paid by subscriber');
+    return;
   }
 
   $subscr_id = ':auto:node:'. $nid;
@@ -2716,9 +2713,8 @@ function lm_paypal_subscriber_pay_submit($form, &$form_state) {
     $msg = t('Failed to mark node as paid by subscriber (by adding subscriber to that node).');
     watchdog(LM_PAYPAL_SUBSCRIPTIONS, check_plain($msg), NULL, WATCHDOG_ERROR);
     drupal_set_message($msg);
-    // TODO: where do we go on error?
-    // return t();
     form_set_error(NULL, 'Failed to mark node as paid by subscriber');
+    return;
   }
 
   // retrieve the usid now
@@ -2732,8 +2728,8 @@ function lm_paypal_subscriber_pay_submit($form, &$form_state) {
     $msg = t('Could not retrieve the subscribtion identifier sql: %sql', array('%sql' => check_plain($sql)));
     watchdog(LM_PAYPAL_SUBSCRIPTIONS, check_plain($msg), NULL, WATCHDOG_ERROR);
     drupal_set_message($msg);
-    // TODO: where do we go on error?
     form_set_error(NULL, 'Failed to mark node as paid by subscriber');
+    return;
   }
   $usid = $sb->usid;
 

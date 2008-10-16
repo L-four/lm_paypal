@@ -26,6 +26,7 @@ function lm_paypal_subscriptions_uninstall() {
   drupal_uninstall_schema('lm_paypal_subscriptions');
   variable_del('lm_paypal_subscriptions_inprogress');
   variable_del('lm_paypal_subscriptions_menu_rebuild');
+  variable_del('lm_paypal_subscriptions_menu_label');
 }
 
 /*
@@ -69,18 +70,20 @@ function lm_paypal_subscriptions_schema() {
         'type' => 'int',
         'not null' => TRUE,
         'description' => 'The current status of this subscriber.'),
-      'subscr_id' => array('type' => 'varchar',
+      'subscr_id' => array(
+        'type' => 'varchar',
         'length' => 20,
         'description' => 'Paypal subscription identifier.'),
-      'email_sent' => array('type' => 'int',
+      'email_sent' => array(
+        'type' => 'int',
         'size' => 'tiny',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0),
     ),
     'indexes' => array(
-        'uid' => array('uid'),
-        'subscr_id' => array('subscr_id')
+      'uid' => array('uid'),
+      'subscr_id' => array('subscr_id')
     ),
     'primary key' => array('usid'),
     'description' => 'The table to record subscribers.'
@@ -109,6 +112,7 @@ function lm_paypal_subscriptions_schema() {
         'description' => 'The name of the item this subscription is for.'),
       'description' => array(
         'type' => 'text',
+        'default' => '',
         'description' => 'Description of the subscription in question.'),
       'a1' => array(
         'type' => 'numeric',
@@ -136,7 +140,8 @@ function lm_paypal_subscriptions_schema() {
         'type' => 'char',
         'length' => 1,
         'description' => 'The parameter t2 from Paypal..'),
-      'a3' => array('type' => 'numeric',
+      'a3' => array(
+        'type' => 'numeric',
         'precision' => 10,
         'scale' => 2,
         'description' => 'The parameter a3 from Paypal.'),
