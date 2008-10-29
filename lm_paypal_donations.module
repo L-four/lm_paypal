@@ -294,7 +294,7 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
       $sa = "$cs <input name=\"amount\" size=\"3\" value=\"$a\">\n";
     }
     else {
-      $sa .= '<select name="amount">';
+      $sa = '<select name="amount">';
       foreach ($amount as $ad) {
         $def = 0;
         if (is_array($ad)) {
@@ -415,14 +415,16 @@ function lm_paypal_donations_user($op, &$edit, &$account, $category = NULL) {
 
   // In the "my account" view area show all donations
   if ($op == 'view' && (user_access('administer lm_paypal') || $user->uid == $account->uid)) {
-    $output .= lm_paypal_donations($uid, $per_page = 10);
-
-    $ditems [] = array(
-      'title' => '',
-      'value' => $output);
-    $ret_dons = array(t('Paypal Donations') => $ditems);
-
-    return $ret_dons;
+    $account->content['lm_paypal_donations'] = array(
+      '#type' => 'user_profile_category',
+      '#title' => t('Paypal Donations'),
+      '#weight' => 7,
+    );
+    $account->content['lm_paypal_donations']['donations'] = array(
+      '#type' => 'user_profile_item',
+      '#title' => t('Donations:'),
+      '#value' => lm_paypal_donations($uid, $per_page = 10),
+    );
   }
 }
 
