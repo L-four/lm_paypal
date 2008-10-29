@@ -112,7 +112,6 @@ function lm_paypal_subscriptions_schema() {
         'description' => 'The name of the item this subscription is for.'),
       'description' => array(
         'type' => 'text',
-        'default' => '',
         'description' => 'Description of the subscription in question.'),
       'a1' => array(
         'type' => 'numeric',
