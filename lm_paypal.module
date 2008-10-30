@@ -14,11 +14,6 @@
  * see the LICENSE.txt file for more details.
  */
 
-//TODO:
-// change all the output blocks so they can be themed more easily
-// Summarise money in/out - or should I just point people at PayPals pages?
-//
-
 define('LM_PAYPAL', 'LM_PayPal');
 
 // Don't change these here! Use the admin interface at admin/settings/lm_paypal

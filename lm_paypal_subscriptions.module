@@ -16,18 +16,6 @@
  * see the LICENSE.txt file for more details.
  */
 
-//TODO:
-// Admin option to add a user to a sub with an auto unsub at end of period
-//  probably best to do this with an option under edit user otherwise hard to
-//  find the user to add
-// Add a subscr_modify based option to create buttons to extend a subscription
-// find a way to export all subscriptions from paypal and consolidate them
-//  against those in this module
-// change all the output blocks so they can be themed more easily
-// go thru all the fields in the ips table and see what is actually needed
-// On deleting a user issue a cancel on any subscriptions - can't do that from
-//  here, can only cancel on PayPal
-
 define('LM_PAYPAL_SUBSCRIPTIONS', 'LM_PayPal_Subs');
 
 // Don't change these here! Use the admin interface at admin/settings/lm_paypal_subscriptions
