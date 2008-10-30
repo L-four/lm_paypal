@@ -726,8 +726,6 @@ function lm_paypal_subscription_terms_form($form_state, $subid, $terms) {
     '#value' => t('I agree'),
   );
 
-dsm("lm_paypal_subscription_terms_form = ". print_r($form, TRUE));
-
   return $form;
 }
 
@@ -2594,7 +2592,6 @@ function lm_paypal_subscriber_edit_submit($form, &$form_state) {
  *   The subscriber to edit
  */
 function lm_paypal_subscriber_pay_form($form_state, $subid = NULL, $nid = NULL, $uid = NULL) {
-  dsm("lm_paypal_subscriber_pay_form(\$form_state, $subid, $nid, $uid)");
   _lm_paypal_subscriptions_ini();
   global $_lm_paypal_subscriptions_stati;
 
