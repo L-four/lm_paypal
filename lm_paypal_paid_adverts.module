@@ -117,16 +117,6 @@ function lm_paypal_paid_adverts_perm() {
 }
 
 /**
- * Implementation of hook_init().
- */
-function lm_paypal_paid_adverts_init() {
-  // Borrowed from book.module
-  // This appears as a tab on the edit page which is ideal as you shouldn't
-  // pay for an adverts until after it is created.
-  //  This is called for every menu display so try and keep the costs down!
-}
-
-/**
  * Implementation of hook_menu().
  */
 function lm_paypal_paid_adverts_menu() {
@@ -282,6 +272,8 @@ function lm_paypal_paid_adverts_settings_form_submit($form, &$form_state) {
   }
   $_lm_paypal_paid_adverts_type_subs = $type_subs;
   variable_set('lm_paypal_paid_adverts_type_subs', serialize($type_subs));
+
+  drupal_set_message("Paid Advert settings updated");
 }
 
 /**
@@ -328,8 +320,6 @@ function lm_paypal_paid_adverts_user($op, &$edit, &$account, $category = NULL) {
 
   // In the "my account" view area show all paid_adverts
   if ($op == 'view' && (user_access('administer lm_paypal') || $user->uid == $account->uid)) {
-    $output = lm_paypal_paid_adverts_list_nodes($account->uid, 10);
-
     $account->content['paid_adverts'] = array(
       '#type' => 'user_profile_category',
       '#title' => t('PayPal Paid Adverts'),
@@ -338,7 +328,7 @@ function lm_paypal_paid_adverts_user($op, &$edit, &$account, $category = NULL) {
     $account->content['paid_adverts']['subs'] = array(
       '#type' => 'user_profile_item',
       '#title' => t('Adverts you paid with us:'),
-      '#value' => $output,
+      '#value' => lm_paypal_paid_adverts_list_nodes($account->uid, 10),
     );
   }
 }

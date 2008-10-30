@@ -8,7 +8,7 @@
  * PayPal donations interface.
  *
  * Lee McLoughlin <lee@lmmrtech.com>. July 2006
- * This is a Drupal 4.7 module to dynamically generate PayPal buttons and
+ * This is a Drupal module to dynamically generate PayPal buttons and
  * processes incoming PayPal IPN messages.
  *
  * This module is licensed under  Gnu General Public License Version 2
@@ -145,7 +145,7 @@ function lm_paypal_donations_menu() {
   $items['admin/settings/lm_paypal/donations_settings'] = array(
     'title' => 'LM PayPal Donations Settings',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lm_paypal_donations_admin_settings'),
+    'page arguments' => array('lm_paypal_donations_settings_form'),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 21,
@@ -172,15 +172,6 @@ function lm_paypal_donations_menu() {
 }
 
 /**
- * Provide the admin settings page.
- * Note: New to Drupal 5
- */
-function lm_paypal_donations_admin_settings() {
-  $form = lm_paypal_donations_settings_form();
-  return system_settings_form($form);
-}
-
-/**
  * Settings form.
  */
 function lm_paypal_donations_settings_form() {
@@ -201,7 +192,7 @@ function lm_paypal_donations_settings_form() {
     '#description' => t('The page the user is sent to by paypal after a donation. The default is %link but you might want to point it at a page you have created yourself.', array('%link' => LM_PAYPAL_DONATIONS_THANKS_DEFAULT)),
   );
 
-  return $form;
+  return system_settings_form($form);
 }
 
 /**

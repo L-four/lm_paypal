@@ -8,7 +8,7 @@
  * PayPal Subscriptions interface.
  *
  * Lee McLoughlin <lee@lmmrtech.com>. July 2006
- * This is a Drupal 4.7 module to handle PayPal subscriptions.
+ * This is a Drupal module to handle PayPal subscriptions.
  *
  * It requires the lm_paypal module to be installed, enabled and configured.
  *
@@ -219,7 +219,7 @@ function lm_paypal_subscriptions_menu() {
   $items['admin/settings/lm_paypal/subscriptions_settings'] = array(
     'title' => 'Subscriptions Settings',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lm_paypal_subscriptions_admin_settings'),
+    'page arguments' => array('lm_paypal_subscriptions_settings_form'),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 31,
@@ -297,11 +297,6 @@ function lm_paypal_subscriptions_menu() {
   return $items;
 }
 
-function lm_paypal_subscriptions_admin_settings() {
-  $form = lm_paypal_subscriptions_settings_form();
-  return system_settings_form($form);
-}
-
 /**
  */
 function lm_paypal_subscriptions_settings_form() {
@@ -330,7 +325,7 @@ function lm_paypal_subscriptions_settings_form() {
     '#description' => t('On a user being added to/removed from a subscription rebuild the menu cache. Needed only if user logout/login fails to get the right menu items.'),
   );
 
-  return $form;
+  return system_settings_form($form);
 }
 
 /**
@@ -341,9 +336,7 @@ function lm_paypal_subscriptions_settings_form() {
  */
 function lm_paypal_subscription_node_subs() {
   $node_subs = array();
-  $output = '';
-  $sql = 'SELECT subid, item_name FROM {lm_paypal_subscriptions} WHERE status = 1 AND kind = 1';
-  $subs = db_query($sql);
+  $subs = db_query('SELECT subid, item_name FROM {lm_paypal_subscriptions} WHERE status = 1 AND kind = 1');
 
   while ($so = db_fetch_object($subs)) {
     $node_subs[$so->subid] = $so->item_name;
@@ -365,8 +358,7 @@ function lm_paypal_subscription_node_subs() {
  *   TRUE only if the node has a live subscription
  */
 function lm_paypal_node_subscribed($nid, &$subid) {
-  $sql = "SELECT * FROM {lm_paypal_subscribers} WHERE status = 1 AND nid = %d";
-  $sbs = db_query($sql, $nid);
+  $sbs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE status = 1 AND nid = %d", $nid);
   $sb = db_fetch_object($sbs);
 
   if (!$sb) {
@@ -438,8 +430,7 @@ function lm_paypal_subscribe($subid = NULL, $display = 15, $button_url = '', $ni
       return t("You must !login or !register to subscribe", array("!login" => $login, "!register" => $register));
     }
 
-    $sql = "SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d AND status = 1";
-    $subs = db_query($sql, $subid);
+    $subs = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d AND status = 1", $subid);
     $so = db_fetch_object($subs);
     if (! $so) {
       watchdog(
@@ -569,8 +560,7 @@ function lm_paypal_subscribe($subid = NULL, $display = 15, $button_url = '', $ni
 
   // Output a list of all the live role or group subscriptions
   $output = '';
-  $sql = 'SELECT subid, item_name, description, status FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2)';
-  $subs = db_query($sql);
+  $subs = db_query('SELECT subid, item_name, description, status FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2)');
 
   if (($display & 64) != 0) {
     $nsubs = 0;
@@ -673,8 +663,7 @@ function lm_paypal_user_subscribed($subid, $account = NULL) {
   }
 
   // kind 0 is a role subscription, kind 2 is a group
-  $sql = "SELECT uid, subid, status, kind FROM {lm_paypal_subscribers} WHERE uid = %d AND subid = %d AND status = 1 AND (kind = 0 OR kind = 2)";
-  $subs = db_query($sql, $uid, $subid);
+  $subs = db_query("SELECT uid, subid, status, kind FROM {lm_paypal_subscribers} WHERE uid = %d AND subid = %d AND status = 1 AND (kind = 0 OR kind = 2)", $uid, $subid);
 
   $ss = db_fetch_object($subs);
   if (! $ss) {
@@ -722,10 +711,8 @@ function lm_paypal_subscription_terms_form($form_state, $subid, $terms) {
 
   $_SESSION['lm_paypal_I_agree'] = '';
 
-  $terms = check_plain($terms);
-
   $form['terms'] = array(
-    '#value' => t('<h2>Terms and Conditions</h2><p>') . $terms .
+    '#value' => t('<h2>Terms and Conditions</h2><p>') . check_plain($terms) .
     t('</p><p><em>Before you can subscribe you must agree to these terms and conditions</em></p>'),
   );
 
@@ -738,6 +725,8 @@ function lm_paypal_subscription_terms_form($form_state, $subid, $terms) {
     '#type' => 'submit',
     '#value' => t('I agree'),
   );
+
+dsm("lm_paypal_subscription_terms_form = ". print_r($form, TRUE));
 
   return $form;
 }
@@ -795,8 +784,7 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
 
   if ($edit) {
     // Look up the default values
-    $sql = "SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d";
-    $subs = db_query($sql, $subid);
+    $subs = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d", $subid);
 
     $so = db_fetch_object($subs);
     if (! $so) {
@@ -1342,9 +1330,10 @@ function lm_paypal_subscription_edit_submit($form, &$form_state) {
   $fields = 0;
   foreach ($keys as $key) {
     // Skip rid for OG subscription as it is meaningless
+    // Skip rid for Node subscriptions (may be null/empty)
     // Also note that I cheat and reuse the db rid field for the OG gid and
     // insert into it below by renaming gid to rid - yucky but quick to write
-    if ($kind == 2 && $key == 'rid') {
+    if (($kind == 1 || $kind == 2) && $key == 'rid') {
       continue;
     }
     // Ditto for role and node subs - ignore gid
@@ -1500,8 +1489,7 @@ function lm_paypal_view_subscriptions() {
   $create = "<p>$link</p>";
 
   // Output a list of all the existing subscriptions
-  $sql = 'SELECT subid, item_name, description, status, kind, rid FROM {lm_paypal_subscriptions}';
-  $subs = db_query($sql);
+  $subs = db_query('SELECT subid, item_name, description, status, kind, rid FROM {lm_paypal_subscriptions}');
 
   $output .= '<h2>'. t('Subscriptions') .'</h2>';
   $header = array(t('subid'), t('kind'), t('item_name'), t('description'), t('role'), t('group'), t('status'), t('subscribers'));
@@ -1585,8 +1573,7 @@ function lm_paypal_subscription($subid = '', $display = 0) {
   $roles = lm_paypal_subscribable_roles(TRUE);
   $groups = lm_paypal_subscribable_groups();
 
-  $sql = "SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d AND status = 1";
-  $subs = db_query($sql, $subid);
+  $subs = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d AND status = 1", $subid);
 
   if ($display != 0) {
     $output = '';
@@ -1749,8 +1736,7 @@ function lm_paypal_subscription_days($so) {
  *   A string describing the result of the deletion.
  */
 function lm_paypal_subscription_delete($subid) {
-  $sql = "DELETE FROM {lm_paypal_subscriptions} WHERE subid = %d";
-  db_query($sql, $subid);
+  db_query("DELETE FROM {lm_paypal_subscriptions} WHERE subid = %d", $subid);
 
   $msg = t('Deleted subscription %subid', array('%subid' => $subid));
   watchdog(LM_PAYPAL_SUBSCRIPTIONS, $msg, NULL);
@@ -1805,8 +1791,7 @@ function lm_paypal_process_in_subscr($ipn) {
   $node = t(" on node !nid", array("!nid" => $nid));
 
   // Look up the subscription
-  $sql = "SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d AND status = 1";
-  $r = db_query($sql, $subid);
+  $r = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d AND status = 1", $subid);
   $so = db_fetch_object($r);
   if (! $so) {
     watchdog(
@@ -1839,8 +1824,7 @@ function lm_paypal_process_in_subscr($ipn) {
 
     // Is this an existing subscription (sometimes payments come before
     // signups so this is possible).
-    $sql = "SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'";
-    $subs = db_query($sql, $ipn->subscr_id);
+    $subs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'", $ipn->subscr_id);
     $ss = db_fetch_object($subs);
 
     if (!$ss) {
@@ -1940,8 +1924,7 @@ function lm_paypal_process_in_subscr($ipn) {
 
     // This should be an existing subscription (but sometimes payments come
     // before signups).
-    $sql = "SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'";
-    $subs = db_query($sql, $ipn->subscr_id);
+    $subs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'", $ipn->subscr_id);
     $ss = db_fetch_object($subs);
 
     if (!$ss) {
@@ -1954,11 +1937,13 @@ function lm_paypal_process_in_subscr($ipn) {
       switch ($ss->status) {
         case LM_PAYPAL_SUBSCRIPTIONS_STATUS_BLOCKED:
           watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to pay to blocked subscription, ignored', NULL, WATCHDOG_ERROR, $link);
+          break;
 
         case LM_PAYPAL_SUBSCRIPTIONS_STATUS_DEAD:
         case LM_PAYPAL_SUBSCRIPTIONS_STATUS_CANCELLED:
         case LM_PAYPAL_SUBSCRIPTIONS_STATUS_EOT:
           watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to pay ended subscription, ignored %status', array('%status' => $ss->status), WATCHDOG_ERROR, $link);
+          break;
       }
     }
 
@@ -1974,8 +1959,7 @@ function lm_paypal_process_in_subscr($ipn) {
     }
 
     // Check I know this subscr_id
-    $sql = "SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'";
-    $subs = db_query($sql, $ipn->subscr_id);
+    $subs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'", $ipn->subscr_id);
     $ss = db_fetch_object($subs);
     if (!$ss) {
       watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Unable to fetch the subscriber object', NULL, WATCHDOG_ERROR, $link);
@@ -2252,8 +2236,7 @@ function lm_paypal_subscriber_set_status($subscr_id, $status) {
  */
 function lm_paypal_add_subscriber($kind, $uid, $nid, $subid, $subscr_id, $status) {
   // Add them to subscribers or update their existing record
-  $sql = "SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'";
-  $subs = db_query($sql, $subscr_id);
+  $subs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'", $subscr_id);
   if (!db_result($subs)) {
     // Not present in subscribers: insert
     $sql = "INSERT INTO {lm_paypal_subscribers} (";
@@ -2311,8 +2294,6 @@ function lm_paypal_subscriptions_user($op, &$edit, &$account, $category = NULL) 
   // but only for admin looking at other users or the user themself
 
   if ($op == 'view' && (user_access('administer lm_paypal') || $user->uid == $account->uid)) {
-    $output = lm_paypal_subscribe(NULL, 32, '', NULL, $account);
-
     $account->content['subscriptions'] = array(
       '#type' => 'user_profile_category',
       '#title' => t('Subscriptions'),
@@ -2321,7 +2302,7 @@ function lm_paypal_subscriptions_user($op, &$edit, &$account, $category = NULL) 
     $account->content['subscriptions']['subs'] = array(
       '#type' => 'user_profile_item',
       '#title' => t('Current subscription status:'),
-      '#value' => $output,
+      '#value' => lm_paypal_subscribe(NULL, 32, '', NULL, $account),
     );
   }
 }
@@ -2334,8 +2315,7 @@ function lm_paypal_subscriptions_block($op = 'list', $delta = 0, $edit = array()
   if ($op == 'list') {
     // Output a list of all the live subscriptions (Role or Group)
     $blocks = array();
-    $sql = "SELECT subid, item_name, status FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2)";
-    $subs = db_query($sql);
+    $subs = db_query("SELECT subid, item_name, status FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2)");
     while ($so = db_fetch_object($subs)) {
       $blocks[$so->subid]['info'] = t('PayPal Subscription: %name', array('%name' => $so->item_name));
     }
@@ -2359,8 +2339,7 @@ function lm_paypal_subscriptions_block($op = 'list', $delta = 0, $edit = array()
       return;
     }
 
-    $sql = "SELECT * FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2) AND subid = %d";
-    $subs = db_query($sql, $subid);
+    $subs = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2) AND subid = %d", $subid);
     $so = db_fetch_object($subs);
     $block['subject'] = t('PayPal Subscription:%name', array('%name' => check_plain($so->item_name)));
     $output .= lm_paypal_subscribe($subid, 2+8);
@@ -2529,8 +2508,7 @@ function lm_paypal_subscriber_edit_form($form_state, $usid = '') {
   _lm_paypal_subscriptions_ini();
   global $_lm_paypal_subscriptions_stati;
 
-  $sql = "SELECT * FROM {lm_paypal_subscribers} WHERE usid = %d";
-  $subs = db_query($sql, $usid);
+  $subs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE usid = %d", $usid);
 
   $sb = db_fetch_object($subs);
   if (! $sb) {
@@ -2616,6 +2594,7 @@ function lm_paypal_subscriber_edit_submit($form, &$form_state) {
  *   The subscriber to edit
  */
 function lm_paypal_subscriber_pay_form($form_state, $subid = NULL, $nid = NULL, $uid = NULL) {
+  dsm("lm_paypal_subscriber_pay_form(\$form_state, $subid, $nid, $uid)");
   _lm_paypal_subscriptions_ini();
   global $_lm_paypal_subscriptions_stati;
 
@@ -2749,11 +2728,9 @@ function lm_paypal_user_gain_role($uid, $rid) {
   _lm_paypal_subscriptions_ini();
   global $_lm_paypal_subscriptions_menu_rebuild;
 
-  $sql = "SELECT * FROM {users_roles} WHERE uid = %d AND rid = %d";
-  $roles = db_query($sql, $uid, $rid);
+  $roles = db_query("SELECT * FROM {users_roles} WHERE uid = %d AND rid = %d", $uid, $rid);
   if (!db_result($roles)) {
-    $sql = "INSERT INTO {users_roles} (uid, rid) VALUES (%d, %d)";
-    $insert = db_query($sql, $uid, $rid);
+    $insert = db_query("INSERT INTO {users_roles} (uid, rid) VALUES (%d, %d)", $uid, $rid);
     if (!$insert) {
       watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Failed to add user to role (uid %uid, rid %rid)', array('%uid' => $uid, '%rid' => $rid), WATCHDOG_ERROR);
       return;
@@ -2781,8 +2758,7 @@ function lm_paypal_user_loose_role($uid, $rid) {
   _lm_paypal_subscriptions_ini();
   global $_lm_paypal_subscriptions_menu_rebuild;
 
-  $sql = "SELECT * FROM {lm_paypal_subscriptions} d INNER JOIN {lm_paypal_subscribers} s ON d.subid = s.subid WHERE uid = %d AND rid = %d AND s.status = 1 AND d.kind = 0";
-  $also = db_query($sql, $uid, $rid);
+  $also = db_query("SELECT * FROM {lm_paypal_subscriptions} d INNER JOIN {lm_paypal_subscribers} s ON d.subid = s.subid WHERE uid = %d AND rid = %d AND s.status = 1 AND d.kind = 0", $uid, $rid);
   if (db_result($also)) {
     if ($_lm_paypal_debug) {
       watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'User keeps role because of other subscriptions (uid %uid, rid %rid)', array('%uid' => $uid, '%rid' => $rid));
@@ -2790,8 +2766,7 @@ function lm_paypal_user_loose_role($uid, $rid) {
     return;
   }
 
-  $sql = "DELETE FROM {users_roles} WHERE uid = %d AND rid = %d";
-  db_query($sql, $uid, $rid);
+  db_query("DELETE FROM {users_roles} WHERE uid = %d AND rid = %d", $uid, $rid);
 
   if ($_lm_paypal_debug) {
     watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Drop user from role (uid %uid, rid %rid)', array('%uid' => $uid, '%rid' => $rid));
@@ -2839,8 +2814,7 @@ function lm_paypal_user_loose_group($uid, $gid) {
   _lm_paypal_subscriptions_ini();
   global $_lm_paypal_subscriptions_menu_rebuild;
 
-  $sql = "SELECT * FROM {lm_paypal_subscriptions} d INNER JOIN {lm_paypal_subscribers} s ON d.subid = s.subid WHERE uid = %d AND rid = %d AND s.status = 1 AND d.kind = 2";
-  $also = db_query($sql, $uid, $rid);
+  $also = db_query("SELECT * FROM {lm_paypal_subscriptions} d INNER JOIN {lm_paypal_subscribers} s ON d.subid = s.subid WHERE uid = %d AND rid = %d AND s.status = 1 AND d.kind = 2", $uid, $rid);
   if (db_result($also)) {
     if ($_lm_paypal_debug) {
       watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'User keeps group because of other subscriptions (uid %uid, gid %gid)', array('%uid' => $uid, '%gid' => $gid));
@@ -2874,8 +2848,7 @@ function lm_paypal_subscriptions_cron() {
   // Look for any subscriber who is near the end of their subscription
 
   // Find all live subscriptions
-  $sql = 'SELECT * FROM {lm_paypal_subscriptions} WHERE status = 1';
-  $subs = db_query($sql);
+  $subs = db_query('SELECT * FROM {lm_paypal_subscriptions} WHERE status = 1');
 
   while ($so = db_fetch_object($subs)) {
     $item_name = $so->item_name;
@@ -2908,8 +2881,7 @@ function lm_paypal_subscriptions_cron() {
     $subid = $so->subid;
 
     // Find all the subscribers to this subscription
-    $sql = "SELECT * FROM {lm_paypal_subscribers} WHERE status = 1 AND subid = %d";
-    $sbs = db_query($sql, $subid);
+    $sbs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE status = 1 AND subid = %d", $subid);
 
     while ($sb = db_fetch_object($sbs)) {
       if ($sb->email_sent) {
@@ -2942,8 +2914,7 @@ function lm_paypal_subscriptions_cron() {
           $variables);
 
         // Remember we've sent them an email!
-        $sql = "UPDATE {lm_paypal_subscribers} SET email_sent = 1 WHERE usid = %d";
-        $update = db_query($sql, $usid);
+        $update = db_query("UPDATE {lm_paypal_subscribers} SET email_sent = 1 WHERE usid = %d", $usid);
         if (!$update) {
           watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Failed to update to subscribers email_sent', array(), WATCHDOG_ERROR);
         }

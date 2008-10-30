@@ -8,7 +8,7 @@
  * PayPal interface.
  *
  * Lee McLoughlin <lee@lmmrtech.com>. July 2006
- * This is a Drupal 4.7 module to processes incoming PayPal IPN messages.
+ * This is a Drupal module to processes incoming PayPal IPN messages.
  *
  * This module is licensed under  Gnu General Public License Version 2
  * see the LICENSE.txt file for more details.
@@ -220,7 +220,7 @@ function lm_paypal_menu() {
   $items['admin/settings/lm_paypal/settings'] = array(
     'title' => 'IPN Settings',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lm_paypal_admin_settings'),
+    'page arguments' => array('lm_paypal_settings_form'),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 0,
@@ -282,8 +282,7 @@ function lm_paypal_id($id = '') {
   // Output the transaction as a table of fields/values (skip the empty ones)
   $output = '<h2>'. t('Transaction %id', array('%id' => $id)) .'</h2>';
   $header = array(t('field'), t('value'));
-  $sql = "SELECT * FROM {lm_paypal_ipns} WHERE id = %d";
-  $ipns = db_query($sql, $id);
+  $ipns = db_query("SELECT * FROM {lm_paypal_ipns} WHERE id = %d", $id);
   $ipn = db_fetch_array($ipns);
   foreach ($ipn as $key => $value) {
     if ($value == '') {
@@ -302,14 +301,6 @@ function lm_paypal_id($id = '') {
 }
 
 /**
- * Provide the admin settings page.
- */
-function lm_paypal_admin_settings() {
-  $form = lm_paypal_settings_form();
-  return system_settings_form($form);
-}
-
-/**
  * Return the main LM PayPal settings form.
  */
 function lm_paypal_settings_form() {
@@ -323,8 +314,8 @@ function lm_paypal_settings_form() {
   global $_lm_paypal_js_hide_email;
 
   if (!user_access('administer lm_paypal')) {
-  drupal_access_denied();
-  return;
+    drupal_access_denied();
+    return;
   }
 
   // $site_name = variable_get('site_name', 'drupal');
@@ -386,7 +377,7 @@ function lm_paypal_settings_form() {
     '#value' => t('Update settings'),
   );
 
-  return $form;
+  return system_settings_form($form);
 }
 
 /**
@@ -652,8 +643,7 @@ function lm_paypal_process_in($id) {
   global $_lm_paypal_business;
   global $_lm_paypal_obey_test_ipns;
 
-  $sql = "SELECT * FROM {lm_paypal_ipns} WHERE id = %d";
-  $r = db_query($sql, $id);
+  $r = db_query("SELECT * FROM {lm_paypal_ipns} WHERE id = %d", $id);
   $ipn = db_fetch_object($r);
   if (! $ipn) {
     watchdog(LM_PAYPAL, 'process_in cannot find ipn: %id', array('%id' => $id), WATCHDOG_ERROR);
@@ -669,11 +659,11 @@ function lm_paypal_process_in($id) {
 
   if (strcasecmp(trim($ipn->receiver_email), trim($_lm_paypal_business)) != 0) {
     watchdog(
-    LM_PAYPAL,
-    'Incoming IPN received email does not match business email (received %received, business %business)',
-    array('%received' => check_plain($ipn->receiver_email), '%business' => check_plain($_lm_paypal_business)),
-    WATCHDOG_ERROR,
-    $link);
+      LM_PAYPAL,
+      'Incoming IPN received email does not match business email (received %received, business %business)',
+      array('%received' => check_plain($ipn->receiver_email), '%business' => check_plain($_lm_paypal_business)),
+      WATCHDOG_ERROR,
+      $link);
     return;
   }
 
@@ -737,11 +727,11 @@ function lm_paypal_process_in_web_accept($ipn) {
 
   if (lm_paypal_already_processed($ipn->txn_id)) {
     watchdog(
-    LM_PAYPAL,
-    'This transaction has already been processed, ignored: %id',
-    array('%id' => check_plain($ipn->txn_id)),
-    WATCHDOG_WARNING,
-    $link);
+      LM_PAYPAL,
+      'This transaction has already been processed, ignored: %id',
+      array('%id' => check_plain($ipn->txn_id)),
+      WATCHDOG_WARNING,
+      $link);
     return;
   }
 
@@ -749,11 +739,11 @@ function lm_paypal_process_in_web_accept($ipn) {
 
   if ($ipn->payment_status == 'Pending') {
     watchdog(
-    LM_PAYPAL,
-    'Ignoring IPN with status: Pending. Check your PayPal account to see why it is pending. Note: pending_reason: %reason',
-    array('%reason' => check_plain($ipn->pending_reason)),
-    WATCHDOG_ERROR,
-    $link);
+      LM_PAYPAL,
+      'Ignoring IPN with status: Pending. Check your PayPal account to see why it is pending. Note: pending_reason: %reason',
+      array('%reason' => check_plain($ipn->pending_reason)),
+      WATCHDOG_ERROR,
+      $link);
     return;
   }
 
@@ -796,12 +786,12 @@ function lm_paypal_process_in_web_accept($ipn) {
   }
   else if (!is_numeric($uid) || intval($uid) != $uid || $uid < 0) {
     watchdog(
-        LM_PAYPAL,
-        'Invalid uid, ignoring IPN: %uid',
-        array('%uid' => $uid),
-        WATCHDOG_WARNING,
-        $link);
-        return;
+      LM_PAYPAL,
+      'Invalid uid, ignoring IPN: %uid',
+      array('%uid' => $uid),
+      WATCHDOG_WARNING,
+      $link);
+    return;
   }
 
   // If I receive a web_accept without a uid then presume it came from anon
@@ -811,11 +801,11 @@ function lm_paypal_process_in_web_accept($ipn) {
     $user = db_fetch_object($users);
     if (!$user) {
       watchdog(
-      LM_PAYPAL,
-      'IPN web_accept unknown uid, presuming uid 0: %uid',
-      array('%uid' => check_plain($uid)),
-      WATCHDOG_ERROR,
-      $link);
+        LM_PAYPAL,
+        'IPN web_accept unknown uid, presuming uid 0: %uid',
+        array('%uid' => check_plain($uid)),
+        WATCHDOG_ERROR,
+        $link);
       $uid = 0;
     }
   }
@@ -844,7 +834,7 @@ function lm_paypal_process_in_web_accept($ipn) {
       array('%item_number' => check_plain($item_number)),
       WATCHDOG_WARNING,
       $link);
-      return;
+    return;
   }
 
   return lm_paypal_web_accept_invoke($ipn, $link, $uid, $other, $item_number);
@@ -904,8 +894,7 @@ function lm_paypal_web_accept_register($function_name = NULL, $min = NULL, $max 
  *  The ipn to be marked.
  */
 function lm_paypal_mark_processed($ipn) {
-  $sql = "UPDATE {lm_paypal_ipns} SET processed = 1 WHERE id = %d";
-  $update = db_query($sql, $ipn->id);
+  $update = db_query("UPDATE {lm_paypal_ipns} SET processed = 1 WHERE id = %d", $ipn->id);
   // TODO: Check for error
 }
 
@@ -913,10 +902,7 @@ function lm_paypal_already_processed($txn_id) {
   // Has this transaction already been processed?
   // Changed to allow for echecks which can be payment_status = 'Pending' for
   //  quite a while
-  // OLD:
-  //$sql = "SELECT * FROM {lm_paypal_ipns} WHERE txn_id = '%s' and processed = '1'";
-  $sql = "SELECT * FROM {lm_paypal_ipns} WHERE txn_id = '%s' and processed = '1' and payment_status = 'Completed'";
-  $r = db_query($sql, $txn_id);
+  $r = db_query("SELECT * FROM {lm_paypal_ipns} WHERE txn_id = '%s' and processed = '1' and payment_status = 'Completed'", $txn_id);
   return (db_result($r) != FALSE);
 }
 
@@ -1191,19 +1177,6 @@ function lm_paypal_mail_user($to_uid, $about_uid, $subject, $message, $vars) {
   drupal_mail('lm_paypal', 'notify', $to, user_preferred_language($to_account), $params);
 }
 
-function lm_paypal_mail($key, &$message, $params) {
-  // TODO: stuff needs moving here from above function!
-  $language = $message['language'];
-  $subject = $params['subject'];
-  $body = $params['body'];
-  switch ($key) {
-    case 'notify':
-      $message['subject'] = $subject;
-      $message['body'] = $body;
-      break;
-  }
-}
-
 function lm_paypal_add_js() {
   static $js_add = TRUE;
 
@@ -1226,6 +1199,5 @@ function lm_paypal_cron() {
   }
 
   $max_age = time() - ($_lm_paypal_ipns_max_age * 3600);
-  $sql = "DELETE FROM {lm_paypal_ipns} WHERE timestamp < %d";
-  db_query($sql, $max_age);
+  db_query("DELETE FROM {lm_paypal_ipns} WHERE timestamp < %d", $max_age);
 }

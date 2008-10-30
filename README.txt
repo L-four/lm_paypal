@@ -1,4 +1,4 @@
-This is a Drupal 4.7 set of modules to provide donations, paid role or group
+This is a set of modules to provide donations, paid role or group
 subscriptions and paid node posting via PayPal.
 
 These modules are provided with NO warranty or liability stated or implied.
