@@ -1016,10 +1016,10 @@ function lm_paypal_ipns_filter() {
   $form['#submit'] = array('lm_paypal_ipns_submit');
 
   $form['filter'] = array(
-  '#type' => 'select',
-  '#title' => t('Filter IPN type'),
-  '#options' => $names,
-  '#default_value' => $_SESSION['lm_paypal_ipns_filter'],
+    '#type' => 'select',
+    '#title' => t('Filter IPN type'),
+    '#options' => $names,
+    '#default_value' => $_SESSION['lm_paypal_ipns_filter'],
   );
   $form['#action'] = url('admin/settings/lm_paypal/ipns');
 

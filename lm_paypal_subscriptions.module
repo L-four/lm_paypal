@@ -926,11 +926,14 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('If set this is the URL the user is returned to after completing the transaction at PayPal. If can be used to override the default "thank you" page with a page of your own.'),
   );
 
-  $form['trial_header'] = array(
-    '#value' => '<br/><h2>'. t('Optional Trial Periods') .'</h2>',
+  $form['trial'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Optional Trial Periods'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
 
-  $form['a1'] = array(
+  $form['trial']['a1'] = array(
     '#type' => 'textfield',
     '#title' => t('Trial amount 1'),
     '#maxlength' => 10,
@@ -938,7 +941,7 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('This is the price of the first trial period. For a free trial set this to 0'),
   );
 
-  $form['p1'] = array(
+  $form['trial']['p1'] = array(
     '#type' => 'textfield',
     '#title' => t('Trial period 1'),
     '#maxlength' => 10,
@@ -946,7 +949,7 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('This is the length of the first trial period. The number is modified by the trial period 1 units'),
   );
 
-  $form['t1'] = array(
+  $form['trial']['t1'] = array(
     '#type' => 'select',
     '#title' => t('Trial period 1 units'),
     '#options' => $_lm_paypal_period_units_option,
@@ -954,7 +957,7 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('This is the units of trial period 1'),
   );
 
-  $form['a2'] = array(
+  $form['trial']['a2'] = array(
     '#type' => 'textfield',
     '#title' => t('Trial amount 2'),
     '#maxlength' => 10,
@@ -962,7 +965,7 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('This is the price of the second trial period. For a free trial set this to 0'),
   );
 
-  $form['p2'] = array(
+  $form['trial']['p2'] = array(
     '#type' => 'textfield',
     '#title' => t('Trial period 2'),
     '#maxlength' => 10,
@@ -970,7 +973,7 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('This is the length of the second trial period. The number is modified by the trial period 2 units'),
   );
 
-  $form['t2'] = array(
+  $form['trial']['t2'] = array(
     '#type' => 'select',
     '#title' => t('Trial period 2 units'),
     '#options' => $_lm_paypal_period_units_option,
@@ -978,11 +981,14 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('This is the units of trial period 2'),
   );
 
-  $form['admin_emails_header'] = array(
-    '#value' => '<br/><h2>'. t('Email administrator options') .'</h2>',
+  $form['email_admin'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Email administrator options'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
 
-  $form['uid_admin'] = array(
+  $form['email_admin']['uid_admin'] = array(
     '#type' => 'textfield',
     '#title' => t('UID Admin'),
     '#maxlength' => 10,
@@ -990,32 +996,40 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('UID of this subscriptions administrator'),
   );
 
-  $form['send_admin_onsub'] = array(
+  $form['email_admin']['send_admin_onsub'] = array(
     '#type' => 'checkbox',
     '#title' => t('Email admin on subscription'),
     '#default_value' => $so->send_admin_onsub,
     '#description' => t('Email this subscriptions administrator when someone subscribes'),
   );
 
-  $form['send_admin_onend'] = array(
+  $form['email_admin']['send_admin_onend'] = array(
     '#type' => 'checkbox',
     '#title' => t('Email admin on subscription end'),
     '#default_value' => $so->send_admin_onend,
     '#description' => t('Email this subscriptions administrator when someones subscription ends by either cancel or end-of-term'),
   );
 
-  $form['send_user_header'] = array(
-    '#value' => '<br/><h2>'. t('Email subscriber options') .'</h2>'. t('The following variables can be used in the subject and body of messages:<ul><li>%Subscription - the subscriptions name</li><li>%Username - the subscribers name</li><li>%Login - the subscribers login</li><li>%Site - this sites name</li><li>%Uri - this uri</li><li>%Uri_brief - this uri stripped of http://</li><li>%Mailto - target of this email</li><li>%Date - the curent date/time</li></ul>'),
+  $form['email_user'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Email subscriber options'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
   );
 
-  $form['send_user_onsub'] = array(
+  $form['email_user']['send_user_header1'] = array(
+    '#value' => '<p>'. t('The following variables can be used in the subject and body of messages:') .'</p>' .
+      '<ul><li>%Subscription - the subscriptions name</li><li>%Username - the subscribers name</li><li>%Login - the subscribers login</li><li>%Site - this sites name</li><li>%Uri - this uri</li><li>%Uri_brief - this uri stripped of http://</li><li>%Mailto - target of this email</li><li>%Date - the curent date/time</li></ul>',
+  );
+
+  $form['email_user']['send_user_onsub'] = array(
     '#type' => 'checkbox',
     '#title' => t('Email user on subscription'),
     '#default_value' => $so->send_user_onsub,
     '#description' => t('Email the user when they subscribe'),
   );
 
-  $form['send_user_onsub_subject'] = array(
+  $form['email_user']['send_user_onsub_subject'] = array(
     '#type' => 'textfield',
     '#title' => t('New subscription email subject'),
     '#maxlength' => 80,
@@ -1023,7 +1037,7 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('Subject of email sent to a user on a new subscription'),
   );
 
-  $form['send_user_onsub_body'] = array(
+  $form['email_user']['send_user_onsub_body'] = array(
     '#type' => 'textarea',
     '#title' => t('New subscription email body'),
     '#maxlength' => 200,
@@ -1031,18 +1045,18 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('Body of email sent to a user on a new subscription'),
   );
 
-  $form['onnearend_header'] = array(
+  $form['email_user']['onnearend_header'] = array(
      '#value' => t('<br/>'),
   );
 
-  $form['send_user_onnearend'] = array(
+  $form['email_user']['send_user_onnearend'] = array(
     '#type' => 'checkbox',
     '#title' => t('Email user near subscription end'),
     '#default_value' => $so->send_user_onnearend,
     '#description' => t('Email the user when their subscription ends or is cancelled'),
   );
 
-  $form['nearend_days'] = array(
+  $form['email_user']['nearend_days'] = array(
     '#type' => 'textfield',
     '#title' => t('Days near end to email subscriber'),
     '#maxlength' => 10,
@@ -1051,11 +1065,11 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('Days before end of subscription to email subscriber'),
   );
 
-  $form['onnearend_note'] = array(
-    '#value' => t('An extra variable %Days, days to end of subscription, is also available'),
+  $form['email_user']['onnearend_note'] = array(
+    '#value' => '<p>'. t('An extra variable %Days, days to end of subscription, is also available') .'</p>',
   );
 
-  $form['send_user_onnearend_subject'] = array(
+  $form['email_user']['send_user_onnearend_subject'] = array(
     '#type' => 'textfield',
     '#title' => t('Subscription near end email subject'),
     '#maxlength' => 80,
@@ -1063,7 +1077,7 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('Subject of email sent to a user near end of a subscription'),
   );
 
-  $form['send_user_onnearend_body'] = array(
+  $form['email_user']['send_user_onnearend_body'] = array(
     '#type' => 'textarea',
     '#title' => t('Subscription near end email body'),
     '#maxlength' => 200,
@@ -1071,22 +1085,22 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('Body of email sent to a user near end of a subscription'),
   );
 
-  $form['onend_header'] = array(
+  $form['email_user']['onend_header'] = array(
     '#value' => t('<br/>'),
   );
 
-  $form['send_user_onend'] = array(
+  $form['email_user']['send_user_onend'] = array(
     '#type' => 'checkbox',
     '#title' => t('Email user on subscription end'),
     '#default_value' => $so->send_user_onend,
     '#description' => t('Email the user when their subscription ends or is cancelled'),
   );
 
-  $form['send_user_onend_note'] = array(
-    '#value' => t('An extra variable %End, reason for end of subscription, is also available'),
+  $form['email_user']['send_user_onend_note'] = array(
+    '#value' => '<p>'. t('An extra variable %End, reason for end of subscription, is also available') .'</p>',
   );
 
-  $form['send_user_onend_subject'] = array(
+  $form['email_user']['send_user_onend_subject'] = array(
     '#type' => 'textfield',
     '#title' => t('Subscription end email subject'),
     '#maxlength' => 80,
@@ -1094,7 +1108,7 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#description' => t('Subject of email sent to a user on a subscription end or cancellation'),
   );
 
-  $form['send_user_onend_body'] = array(
+  $form['email_user']['send_user_onend_body'] = array(
     '#type' => 'textarea',
     '#title' => t('Subscription end email body'),
     '#maxlength' => 200,
@@ -1468,21 +1482,26 @@ function lm_paypal_view_subscriptions() {
     return $output;
   }
 
-  $link = l(t('View All Subscribers to All Subscriptions'), 'admin/settings/lm_paypal/subscribers/0');
-  $view_all = "<p>$link</p>";
-
-  $link = l(t('Create New Subscription'), 'admin/settings/lm_paypal/subscriptions/new');
-  $create = "<p>$link</p>";
+  $output .= '<h2>'. t('Subscriptions') .'</h2>';
+  $header = array(
+    array('data' => t('ID'), 'field' => 'subid'),
+    array('data' => t('Type'), 'field' => 'kind'),
+    array('data' => t('Name'), 'field' => 'item_name'),
+    array('data' => t('Description'), 'field' => 'description'),
+    array('data' => t('Role')), // rid
+    array('data' => t('Group')), // ?
+    array('data' => t('Status'), 'field' => 'status'),
+    array('data' => t('Subscribers'))
+  );
 
   // Output a list of all the existing subscriptions
-  $subs = db_query('SELECT subid, item_name, description, status, kind, rid FROM {lm_paypal_subscriptions}');
+  $tablesort = tablesort_sql($header);
+  $subs = db_query('SELECT subid, item_name, description, status, kind, rid FROM {lm_paypal_subscriptions}'. $tablesort);
 
-  $output .= '<h2>'. t('Subscriptions') .'</h2>';
-  $header = array(t('subid'), t('kind'), t('item_name'), t('description'), t('role'), t('group'), t('status'), t('subscribers'));
   while ($so = db_fetch_object($subs)) {
     $kind = $so->kind;
-    $linkso = l($so->subid, "admin/settings/lm_paypal/subscription/$so->subid");
-    $item_name = check_plain($so->item_name);
+    $linkso = $so->subid;
+    $item_name = l($so->item_name, "admin/settings/lm_paypal/subscription/$so->subid");
     $description = $so->description;
     $status = ($so->status ? 'live' : 'defunct');
     $group = '';
@@ -1490,7 +1509,7 @@ function lm_paypal_view_subscriptions() {
     if ($kind == 0) {
       $kind = t('Role');
       $linksb = l(t('subscribers'), "admin/settings/lm_paypal/subscribers/$so->subid");
-      $role = $roles[$so->rid];
+      $role = l($roles[$so->rid], "admin/user/permissions/$so->rid");
     }
     else if ($kind == 1) {
       $kind = t('Node');
@@ -1503,9 +1522,14 @@ function lm_paypal_view_subscriptions() {
     }
     $rows[] = array('data' => array($linkso, $kind, $item_name, $description, $role, $group, $status, $linksb));
   }
+
   $output .= theme('table', $header, $rows);
-  $output .= $view_all;
-  $output .= $create;
+
+  $link = l(t('View All Subscribers to All Subscriptions'), 'admin/settings/lm_paypal/subscribers/0');
+  $output .= "<p>$link</p>";
+
+  $link = l(t('Create New Subscription'), 'admin/settings/lm_paypal/subscriptions/new');
+  $output .= "<p>$link</p>";
 
   return $output;
 }

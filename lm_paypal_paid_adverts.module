@@ -402,10 +402,10 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50) {
 
   if ($nts > 0) {
     if ($uid == 0) {
-      $sql = db_rewrite_sql("SELECT n.nid, u.name, n.title, n.type FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.status = 1 AND n.type IN $tstr");
+      $sql = db_rewrite_sql("SELECT n.nid, n.uid, u.name, n.title, n.type FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.status = 1 AND n.type IN $tstr");
     }
     else {
-      $sql = db_rewrite_sql("SELECT n.nid, u.name, n.title, n.type FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.uid = %d AND n.status = 1 AND n.type IN $tstr");
+      $sql = db_rewrite_sql("SELECT n.nid, n.uid, u.name, n.title, n.type FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.uid = %d AND n.status = 1 AND n.type IN $tstr");
     }
 
     $tablesort = tablesort_sql($header);
@@ -429,7 +429,8 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50) {
                   ),
                 ));
       }
-      $link_to_node = l($n->nid, "node/$n->nid",
+
+      $link_to_node = l($n->title, "node/$n->nid",
         array(
           'attributes' => array(
             'alt' => t('Link to the ad so you can check it out.'),
@@ -437,11 +438,12 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50) {
           ),
         )
       );
+
       $rows[] = array('data' =>
         array(
+          $n->nid,
+          l($n->name, "user/$n->uid"),
           $link_to_node,
-          $n->name,
-          check_plain($n->title),
           check_plain($node_types[$n->type]),
           $pub,
         ),
