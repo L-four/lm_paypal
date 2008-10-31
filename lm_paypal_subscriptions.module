@@ -1040,7 +1040,6 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
   $form['email_user']['send_user_onsub_body'] = array(
     '#type' => 'textarea',
     '#title' => t('New subscription email body'),
-    '#maxlength' => 200,
     '#default_value' => $so->send_user_onsub_body,
     '#description' => t('Body of email sent to a user on a new subscription'),
   );
@@ -1080,7 +1079,6 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
   $form['email_user']['send_user_onnearend_body'] = array(
     '#type' => 'textarea',
     '#title' => t('Subscription near end email body'),
-    '#maxlength' => 200,
     '#default_value' => $so->send_user_onnearend_body,
     '#description' => t('Body of email sent to a user near end of a subscription'),
   );
@@ -1111,7 +1109,6 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
   $form['email_user']['send_user_onend_body'] = array(
     '#type' => 'textarea',
     '#title' => t('Subscription end email body'),
-    '#maxlength' => 200,
     '#default_value' => $so->send_user_onend_body,
     '#description' => t('Body of email sent to a user on a subscription end or cancellation'),
   );
@@ -1119,7 +1116,6 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
   $form['terms'] = array(
     '#type' => 'textarea',
     '#title' => t('Terms and conditions'),
-    '#maxlength' => 2000,
     '#default_value' => $so->terms,
     '#description' => t('Terms and conditions the user must agree to. If empty no terms or conditions are required.'),
   );
