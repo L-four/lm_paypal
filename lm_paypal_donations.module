@@ -264,7 +264,6 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
   global $_lm_paypal_host;
   global $_lm_paypal_business;
   global $_lm_paypal_donations_thanks;
-  global $_lm_paypal_js_hide_email;
 
   if (!user_access('access lm_paypal_donate')) {
     return t('Access to PayPal donation buttons denied');
@@ -330,22 +329,9 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
 
   $notify_url = url('lm_paypal/ipn', array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
 
-  // If email hiding is enabled then turn on this javascript
-  //  and add an onsubmit action
-  $onsub = '';
-  if ($_lm_paypal_js_hide_email) {
-    lm_paypal_add_js();
-    $at = strpos($biz, '@');
-    $person = substr($biz, 0, $at);
-    $host = substr($biz, $at + 1, strlen($biz));
-    $biz = '';
-
-    $onsub = "onsubmit=\"lm_paypal_setbiz(this,'$person','$host')\"";
-  }
-
   // Output a form that will redirect the user to PayPal - note all the fields
   // are hidden so only the submit appears
-  $form = "\n<form action=\"http://$_lm_paypal_host/cgi-bin/webscr\" method=\"post\" $onsub>\n";
+  $form = "\n<form action=\"http://$_lm_paypal_host/cgi-bin/webscr\" method=\"post\">\n";
 
   if (isset($sa)) {
     if ($amount_label != '') {

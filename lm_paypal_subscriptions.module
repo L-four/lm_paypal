@@ -387,7 +387,6 @@ function lm_paypal_subscribe($subid = NULL, $display = 15, $button_url = '', $ni
   global $_lm_paypal_host;
   global $_lm_paypal_business;
   global $_lm_paypal_subscriptions_inprogress;
-  global $_lm_paypal_js_hide_email;
 
   if (!is_null($account)) {
     // I am looking at an account other than current user.
@@ -472,20 +471,7 @@ function lm_paypal_subscribe($subid = NULL, $display = 15, $button_url = '', $ni
     // Output a form that will redirect the user to PayPal - note all the fields
     // are hidden so only the submit appears
 
-    // If email hiding is enabled then turn on this javascript
-    //  and add an onsubmit action
-    $onsub = '';
-    if ($_lm_paypal_js_hide_email) {
-      lm_paypal_add_js();
-      $at = strpos($biz, '@');
-      $person = substr($biz, 0, $at);
-      $host = substr($biz, $at + 1, strlen($biz));
-      $biz = '';
-
-      $onsub = "onsubmit=\"lm_paypal_setbiz(this,'$person','$host')\"";
-    }
-
-    $form = "\n<form action=\"https://$_lm_paypal_host/cgi-bin/webscr\" method=\"post\" $onsub>\n";
+    $form = "\n<form action=\"https://$_lm_paypal_host/cgi-bin/webscr\" method=\"post\">\n";
 
     $form .= "<input type=\"hidden\" name=\"cmd\" value=\"_xclick-subscriptions\">\n";
     $form .= "<input type=\"hidden\" name=\"business\" value=\"$biz\">\n";
