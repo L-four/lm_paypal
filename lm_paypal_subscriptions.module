@@ -208,7 +208,7 @@ function lm_paypal_subscriptions_menu() {
     'title' => 'Subscriptions Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_subscriptions_settings_form'),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer lm_paypal'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 31,
     'description' => 'PayPal subscriptions interface configuration.',
@@ -291,11 +291,6 @@ function lm_paypal_subscriptions_settings_form() {
   _lm_paypal_subscriptions_ini();
   global $_lm_paypal_subscriptions_inprogress;
   global $_lm_paypal_subscriptions_menu_rebuild;
-
-  if (!user_access('administer lm_paypal')) {
-    drupal_access_denied();
-    return;
-  }
 
   $form['lm_paypal_subscriptions_inprogress'] = array(
     '#type' => 'textfield',

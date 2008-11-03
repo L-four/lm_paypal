@@ -213,7 +213,7 @@ function lm_paypal_menu() {
     'title' => 'IPN Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_settings_form'),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer lm_paypal'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 0,
     'description' => 'PayPal IPN interface configuration.',
@@ -303,11 +303,6 @@ function lm_paypal_settings_form() {
   global $_lm_paypal_ipns_max_age;
   global $_lm_paypal_obey_test_ipns;
   global $_lm_paypal_ipns_max_age;
-
-  if (!user_access('administer lm_paypal')) {
-    drupal_access_denied();
-    return;
-  }
 
   // $site_name = variable_get('site_name', 'drupal');
   $site_name = url('', array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));

@@ -146,7 +146,7 @@ function lm_paypal_donations_menu() {
     'title' => 'LM PayPal Donations Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_donations_settings_form'),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer lm_paypal'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 21,
     'description' => 'PayPal donations interface configuration.',
@@ -177,11 +177,6 @@ function lm_paypal_donations_menu() {
 function lm_paypal_donations_settings_form() {
   _lm_paypal_donations_ini();
   global $_lm_paypal_donations_thanks;
-
-  if (!user_access('administer lm_paypal')) {
-    drupal_access_denied();
-    return;
-  }
 
   $form ['lm_paypal_donations_thanks'] = array(
     '#type' => 'textfield',

@@ -127,7 +127,7 @@ function lm_paypal_paid_adverts_menu() {
     'title' => 'Paid Advert Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_paid_adverts_settings_form'),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer lm_paypal'),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 11,
     'description' => 'PayPal Paid Advert interface configuration.',
@@ -182,11 +182,6 @@ function _lm_paypal_paid_adverts_paypal_access($node) {
 function lm_paypal_paid_adverts_settings_form() {
   _lm_paypal_paid_adverts_ini();
   global $_lm_paypal_paid_adverts_type_subs;
-
-  if (!user_access('administer lm_paypal')) {
-    drupal_access_denied();
-    return;
-  }
 
   $form['#submit'] = array('lm_paypal_paid_adverts_settings_form_submit');
 
