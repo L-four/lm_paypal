@@ -202,7 +202,7 @@ function lm_paypal_menu() {
   $items['admin/settings/lm_paypal'] = array(
     'title' => 'LM PayPal',
     'page callback' => 'system_admin_menu_block_page',
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer lm_paypal'),
     'type' => MENU_NORMAL_ITEM,
     'description' => 'LM PayPal is a set of modules that interface to PayPal.com and provide subscriptions (paid role memberships), donations (tip jar), and paid node publishing (classified adverts)',
     'file' => 'system.admin.inc',
