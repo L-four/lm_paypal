@@ -1532,13 +1532,10 @@ function lm_paypal_subscription($subid = '', $display = 0) {
     'rid' => 'Role',
     'a1' => 'Trial amount 1',
     'p1' => 'Trial period 1',
-    't1' => 'Trial period 1 units',
     'a2' => 'Trial amount 2',
     'p2' => 'Trial period 2',
-    't2' => 'Trial period 2 units',
     'a3' => 'Regular rate',
     'p3' => 'Regular billing cycle',
-    't3' => 'Regular billing cycle units',
     'src' => 'Recurring payments',
     'srt' => 'Recurring times',
     'currency_code' => 'Currency',
@@ -1598,20 +1595,17 @@ function lm_paypal_subscription($subid = '', $display = 0) {
         $output .= '<p>';
       }
       if ($so->p1 != '' && $so->p1 > 0) {
-        $tu = lm_paypal_unit2str($so->t1);
         $amount = lm_paypal_nccc2str($so->a1, $so->currency_code);
-        $duration = check_plain($so->p1) .' '. $tu;
+        $duration = lm_paypal_unit2str($so->p1, $so->t1);
         $output .= t('First trial period %amount for %duration.', array('%amount' => $amount, '%duration' => $duration));
       }
       if ($so->p2 != '' && $so->p2 > 0) {
-        $tu = lm_paypal_unit2str($so->t2);
         $amount = lm_paypal_nccc2str($so->a2, $so->currency_code);
-        $duration = check_plain($so->p2) .' '. $tu;
+        $duration = lm_paypal_unit2str($so->p2, $so->t2);
         $output .= t('Second trial period %amount for %duration.', array('%amount' => $amount, '%duration' => $duration));
       }
-      $tu = lm_paypal_unit2str($so->t3);
       $amount = lm_paypal_nccc2str($so->a3, $so->currency_code);
-      $duration = check_plain($so->p3) .' '. $tu;
+      $duration = lm_paypal_unit2str($so->p3, $so->t3);
       $output .= t('Rate %amount for %duration. ', array('%amount' => $amount, '%duration' => $duration));
       if ($so->src) {
         if ($so->srt != '') {
@@ -1671,8 +1665,13 @@ function lm_paypal_subscription($subid = '', $display = 0) {
     else if ($key == 'rid') {
       $value = $roles [$value];
     }
+    else if (strncmp($key, 'p', 1) == 0 && strlen($key) == 2) {
+      // use 'p' (period-count) and 't' (period-unit) to format a period
+      $unit = $sub['t'. substr($key,1)];
+      $value = lm_paypal_unit2str($value, $unit);
+    }
     else if (strncmp($key, 't', 1) == 0 && strlen($key) == 2) {
-      $value = lm_paypal_unit2str($value);
+      continue; // skip t (period-unit) fields
     }
     $k = $field_names [$key];
     if ($k == '') {

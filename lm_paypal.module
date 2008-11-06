@@ -104,6 +104,7 @@ function _lm_paypal_ini() {
     'SGD' => 'S$',
   );
 
+  // Note: NOT used to format messages for the user. See lm_paypal_unit2str()
   $_lm_paypal_period_units_option = array(
     //'' => t('default'),
     'D' => t('Days'),
@@ -888,16 +889,27 @@ function lm_paypal_already_processed($txn_id) {
 /**
  * Finds the option value corresponding to a period unit
  *
+ * @param $count
+ *   The number of units
  * @param $unit
  *   A period unit such 'D' or 'W'
  * @return
- *   The string representation of the unit such as 'Day' or 'Week'
+ *   The string representation of the unit such as '1 day' or '3 weeks'
  */
-function lm_paypal_unit2str($unit) {
-  _lm_paypal_ini();
-  global $_lm_paypal_period_units_option;
-
-  return $_lm_paypal_period_units_option [$unit];
+function lm_paypal_unit2str($count, $unit) {
+  switch ($unit) {
+    case 'D':
+      return format_plural($count, '1 day', '@count days');
+    case 'W':
+      return format_plural($count, '1 week', '@count weeks');
+    case 'M':
+      return format_plural($count, '1 month', '@count months');
+    case 'Y':
+      return format_plural($count, '1 year', '@count years');
+    default:
+      drupal_set_message("Unknown unit-type: $unit", 'error');
+      return $count .' '. $unit;
+  }
 }
 
 /**
