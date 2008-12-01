@@ -1168,6 +1168,17 @@ function lm_paypal_mail_user($to_uid, $about_uid, $subject, $message, $vars) {
   drupal_mail('lm_paypal', 'notify', $to, user_preferred_language($to_account), $params);
 }
 
+function lm_paypal_mail($key, &$message, $params) {	 
+  // TODO: stuff needs moving here from above function!
+  switch ($key) {
+    case 'notify':
+      // $language = $message['language'];
+      $message['subject'] = $params['subject'];
+      $message['body'] = $params['body'];
+      break;
+  }
+} 
+
 /**
  * Implementation of hook_cron().
  */
