@@ -35,8 +35,8 @@ function _lm_paypal_ini() {
   global $_lm_paypal_welcome;  // Welcome message
   global $_lm_paypal_host;  // Where to send paypal requests/verifies to
   global $_lm_paypal_business;  // what is my business email
-  global $_lm_paypal_obey_test_ipns;  // Treat test ipn messages as real
-  global $_lm_paypal_ipns_max_age;  // How many hours to keep old ipns for
+  global $_lm_paypal_obey_test_ipns;  // Treat test IPN messages as real
+  global $_lm_paypal_ipns_max_age;  // How many hours to keep old IPNs for
   global $_lm_paypal_currency_option;
   global $_lm_paypal_period_units_option;
   global $_lm_paypal_currency_syms;
@@ -175,7 +175,7 @@ function lm_paypal_help($path, $arg) {
       $output .= '<p>'. t("If you have not done so already you will need to configure the LM PayPal modules and your PayPal business account.  Please follow the instructions !help.", array("!help" => $help)) .'</p>';
       return $output;
 
-      // This appears at the start of the ipns viewing page before the options
+      // This appears at the start of the IPNs viewing page before the options
     case 'admin/settings/lm_paypal/ipns':
       $output = $_lm_paypal_welcome;
 
@@ -221,7 +221,7 @@ function lm_paypal_menu() {
     'weight' => 1,
   );
 
-  // Display all the saved ipns
+  // Display all the saved IPNs
   $items['admin/settings/lm_paypal/ipns'] = array(
     'title' => 'Saved IPNs',
     'page callback' => 'lm_paypal_ipns',
@@ -230,7 +230,7 @@ function lm_paypal_menu() {
     'description' => 'Show details of all saved PayPal IPN\'s',
   );
 
-  // Display the details of a saved ipn - internal
+  // Display the details of a saved IPN - internal
   $items['admin/settings/lm_paypal/id'] = array(
     'title' => 'Show ID Details',
     'type' => MENU_CALLBACK,
@@ -254,12 +254,12 @@ function lm_paypal_menu() {
 }
 
 /**
- * Display a saved ipn.
+ * Display a saved IPN.
  *
  * @param $id
- *   Required. The id of the ipn to display.
+ *   Required. The id of the IPN to display.
  * @return
- *   The string containing the details of the ipn.
+ *   The string containing the details of the IPN.
  */
 function lm_paypal_id($id = '') {
   _lm_paypal_ini();
@@ -430,7 +430,7 @@ function lm_paypal_ipn_in() {
     'receipt_id',
     'charset',
   );
-  // These fields, if present, should be saved in the ipn log
+  // These fields, if present, should be saved in the IPN log
   static $ipn_fields = array(
     'txn_id',
     'test_ipn',
@@ -565,7 +565,7 @@ function lm_paypal_ipn_in() {
   $fp = fsockopen($_lm_paypal_host, 80, $errno, $errstr, LM_PAYPAL_VALIDATE_TIMEOUT);
   if (!$fp) {
     watchdog(LM_PAYPAL, 'Cannot validate with host: %host', array('%host' => check_plain($_lm_paypal_host)), WATCHDOG_ERROR);
-    // Return an HTTP error and hopefully PayPal will resend the ipn to me
+    // Return an HTTP error and hopefully PayPal will resend the IPN to me
     // later on and then I can try validating again! Maybe PayPal is very busy
     // or there is a network problem at the moment
     drupal_set_header('HTTP/1.0 404 Not Found');
@@ -588,7 +588,7 @@ function lm_paypal_ipn_in() {
   $insert = db_query($sql);
   if (!$insert) {
     watchdog(LM_PAYPAL, 'IPN in failed to run sql: %sql', array('%sql' => check_plain($sql)), WATCHDOG_ERROR);
-    // Return an HTTP error and hopefully PayPal will resend the ipn to me
+    // Return an HTTP error and hopefully PayPal will resend the IPN to me
     // later on and then I can try again! Maybe PayPal is very busy
     // or there is a network problem at the moment
     drupal_set_header('HTTP/1.0 404 Not Found');
@@ -611,10 +611,10 @@ function lm_paypal_ipn_in() {
 }
 
 /**
- * Process a newly arrived ipn message that has been verified and saved.
+ * Process a newly arrived IPN message that has been verified and saved.
  *
  * @param $id
- *  The id of the saved ipn to be processed.
+ *  The id of the saved IPN to be processed.
  */
 function lm_paypal_process_in($id) {
   _lm_paypal_ini();
@@ -675,7 +675,7 @@ function lm_paypal_process_in($id) {
 }
 
 /**
- * Process a newly arrived send_money ipn message
+ * Process a newly arrived send_money IPN message
  *
  * @param $ipn
  */
@@ -691,7 +691,7 @@ function lm_paypal_process_in_send_money($ipn) {
 }
 
 /**
- * Process a newly arrived web_accept ipn message
+ * Process a newly arrived web_accept IPN message
  *
  * @param $ipn
  */
@@ -868,10 +868,10 @@ function lm_paypal_web_accept_register($function_name = NULL, $min = NULL, $max 
 }
 
 /**
- * Mark a saved ipn as processed.
+ * Mark a saved IPN as processed.
  *
  * @param $ipn
- *  The ipn to be marked.
+ *  The IPN to be marked.
  */
 function lm_paypal_mark_processed($ipn) {
   $update = db_query("UPDATE {lm_paypal_ipns} SET processed = 1 WHERE id = %d", $ipn->id);
@@ -1025,7 +1025,7 @@ function lm_paypal_ipns_filter() {
 }
 
 /**
- * View all saved ipns
+ * View all saved IPNs
  *
  * Mostly borrowed from watchdog.module.
  */
@@ -1168,7 +1168,7 @@ function lm_paypal_mail_user($to_uid, $about_uid, $subject, $message, $vars) {
   drupal_mail('lm_paypal', 'notify', $to, user_preferred_language($to_account), $params);
 }
 
-function lm_paypal_mail($key, &$message, $params) {	 
+function lm_paypal_mail($key, &$message, $params) {
   // TODO: stuff needs moving here from above function!
   switch ($key) {
     case 'notify':
@@ -1177,7 +1177,7 @@ function lm_paypal_mail($key, &$message, $params) {
       $message['body'] = $params['body'];
       break;
   }
-} 
+}
 
 /**
  * Implementation of hook_cron().

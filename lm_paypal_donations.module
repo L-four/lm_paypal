@@ -191,7 +191,7 @@ function lm_paypal_donations_settings_form() {
 }
 
 /**
- * Process a newly arrived donation ipn message
+ * Process a newly arrived donation IPN message
  *
  * @param $ipn
  *   The IPN message

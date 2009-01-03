@@ -1731,10 +1731,10 @@ function lm_paypal_subscription_delete($subid) {
 }
 
 /**
- * Process a newly arrived subscription ipn message
+ * Process a newly arrived subscription IPN message
  *
  * @param $ipn
- *   The ipn containing a subscription message.
+ *   The IPN containing a subscription message.
  */
 function lm_paypal_process_in_subscr($ipn) {
   _lm_paypal_subscriptions_ini();
@@ -2029,7 +2029,7 @@ function lm_paypal_process_in_subscr($ipn) {
  * @param $so
  *   subsciption object
  * @param $link
- *   A link to this ipn for display in watchdogs
+ *   A link to this IPN for display in watchdogs
  * @return
  *   TRUE if a successful match, FALSE otherwise
  */
@@ -2108,7 +2108,7 @@ function _lm_paypal_subscriptions_validate($ipn, $so, $link) {
  * @param $msg
  *   A message to prepend to error output
  * @param $link
- *   A link to this ipn for display in watchdogs
+ *   A link to this IPN for display in watchdogs
  * @param $subscr_id
  *   Subscribers id
  * @param $ipn_amount

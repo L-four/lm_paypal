@@ -17,7 +17,7 @@
  */
 
 // TODO: Once I've been running lm_paypal for a while work out which
-// ipn fields are unnecessary and remove them.
+// IPN fields are unnecessary and remove them.
 
 function lm_paypal_install() {
   drupal_install_schema('lm_paypal');
