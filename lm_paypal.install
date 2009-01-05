@@ -7,8 +7,6 @@
  *
  * Install or update the PayPal interface.
  *
- * Lee McLoughlin <lee@lmmrtech.com>. July 2006
- *
  * These database fields are from:
  *  https://www.paypal.com/en_US/pdf/PP_OrderManagement_IntegrationGuide.pdf
  * See also:
@@ -34,6 +32,10 @@ function lm_paypal_uninstall() {
 }
 
 function lm_paypal_schema() {
+  // This table definition corresponds to the HTTP POST sent to the site by
+  // paypal.com.  This appears to change every so often, without any notification,
+  // breaking live sites.
+  // See https://www.paypal.com/IntegrationCenter/ic_ipn-pdt-variable-reference.html
   $schema['lm_paypal_ipns'] = array(
     'fields' => array(
       'id'                    => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE, 'description' => 'My ID for received IPNs'),
@@ -43,7 +45,10 @@ function lm_paypal_schema() {
       'processed'             => array('type' => 'int', 'size' => 'tiny', 'default' => 0, 'description' => 'set if processed'),
 
       'test_ipn'              => array('type' => 'int', 'size' => 'tiny', 'description' => 'only set by sandbox to 1'),
-      'verify_sign'           => array('type' => 'varchar', 'length' => 120),
+      'notify_version'        => array('type' => 'varchar', 'length' => 20, 'description' => 'the version number of Instant Payment Notification that makes the post.'),
+      'verify_sign'           => array('type' => 'varchar', 'length' => 120, 'description' => 'an encrypted string used to validate the authenticity of the transaction.'),
+
+      'ipn'                   => array('type' => 'text', 'size' => 'medium', 'description' => 'The full HTTP POST data for the IPN from paypal.'),
 
       # Website Payments Standard, Website Payments Pro, and Refund Information
       # SOME FIELDS OMITTED
@@ -54,7 +59,7 @@ function lm_paypal_schema() {
       'pending_reason'        => array('type' => 'varchar', 'length' => 20, 'description' => 'address,authorization,echeck,intl,multicurrency,unilateral,upgrade,verify,other'),
       'reason_code'           => array('type' => 'varchar', 'length' => 20, 'description' => 'chargeback,guarantee,buyer-complaint,refund,other'),
 
-      # Buyer Information
+      # Buyer Information (verified 4 Jan 08)
       'payer_email'           => array('type' => 'varchar', 'length' => 127, 'description' => 'Customers primary email address. Use this email to provide any credits.'),
       'first_name'            => array('type' => 'varchar', 'length' => 64, 'description' => 'Customers first name'),
       'last_name'             => array('type' => 'varchar', 'length' => 64, 'description' => 'Customers last name'),
@@ -66,21 +71,27 @@ function lm_paypal_schema() {
       'address_country'       => array('type' => 'varchar', 'length' => 64, 'description' => 'Country of customers address.'),
       'address_country_code'  => array('type' => 'varchar', 'length' => 2, 'description' => 'Two-character ISO 3166 country code'),
       'address_state'         => array('type' => 'varchar', 'length' => 40, 'description' => 'State of customers address'),
-      'address_status'        => array('type' => 'int', 'size' => 'tiny', 'description' => 'Customer provided a confirmed/unconfirmed address.'),
+      'address_status'        => array('type' => 'varchar', 'length' => 40, 'description' => 'Customer provided a confirmed|unconfirmed address.'),
       'payer_id'              => array('type' => 'varchar', 'length' => 13, 'description' => 'Unique customer ID.'),
-      'payer_status'          => array('type' => 'varchar', 'length' => 40, 'description' => 'Customer has a Verified|Unverified PayPal account.'),
+      'payer_status'          => array('type' => 'varchar', 'length' => 40, 'description' => 'Customer has a verified|unverified PayPal account.'),
+      'contact_phone'        => array('type' => 'varchar', 'length' => 20, 'description' => 'CustomerÕs telephone number.'),
       'residence_country'     => array('type' => 'varchar', 'length' => 2, 'description' => 'Two-character ISO 3166 country code'),
 
-      # Business Information
+      # Basic Information (verified 4 Jan 08)
       'business'              => array('type' => 'varchar', 'length' => 127, 'description' => 'Email address or account ID of the payment recipient (that is, the merchant). Equivalent to the values of receiver_email (if payment is sent to primary account) and business set in the Website Payment HTML.  NOTE: The value of this variable is normalized to lowercase characters.'),
       'item_name'             => array('type' => 'varchar', 'length' => 127, 'description' => 'Item name as passed by you, the merchant. Or, if not passed by you, as entered by your customer. If this is a shopping cart transaction, PayPal will append the number of the item (e.g., item_name1, item_name2).'),
-      'quantity'              => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
-      'shipping'              => array('type' => 'numeric', 'precision' => 10, 'scale' => 2),
       'item_number'           => array('type' => 'varchar', 'length' => 127, 'description' => 'Pass-through variable for you to track purchases. It will get passed back to you at the completion of the payment. If omitted, no variable will be passed back to you.'),
+      'quantity'              => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0, 'description' => 'Quantity as entered by your customer or as passed by you, the merchant.'),
       'receiver_email'        => array('type' => 'varchar', 'length' => 127, 'description' => 'Primary email address of the payment recipient (that is, the merchant). If the payment is sent to a non-primary email address on your PayPal account, the receiver_email is still your primary email.  NOTE: The value of this variable is normalized to lowercase characters.'),
       'receiver_id'           => array('type' => 'varchar', 'length' => 13, 'description' => 'Unique account ID of the payment recipient (i.e., the merchant).  This is the same as the recipient\'s referral ID.'),
 
+
+
       # Advanced and Custom Information
+
+            'shipping'              => array('type' => 'numeric', 'precision' => 10, 'scale' => 2, 'description' => 'Shipping charges associated with this transaction.'),
+
+
       'custom'                => array('type' => 'varchar', 'length' => 255, 'description' => 'Custom value as passed by you, the merchant. These are passthrough variables that are never presented to your customer'),
       'invoice'               => array('type' => 'varchar', 'length' => 127, 'description' => 'Passthrough variable you can use to identify your Invoice Number for this purchase. If omittted, no variable is passed back.'),
       'memo'                  => array('type' => 'varchar', 'length' => 255, 'description' => 'Memo as entered by your customer in PayPal Website Payments note field.'),
@@ -96,7 +107,7 @@ function lm_paypal_schema() {
       'payment_gross'         => array('type' => 'numeric', 'precision' => 10, 'scale' => 2, 'description' => 'Full USD amount of the customer\'s payment, before transaction fee is subtracted. Will be empty for non-USD payments. This is a legacy field replaced by mc_gross. If this amount is negative, it signifies a refund or reversal, and either of those payment statuses can be for the full or partial amount of the original transaction.'),
       'mc_fee'                => array('type' => 'numeric', 'precision' => 10, 'scale' => 2, 'description' => 'Transaction fee associated with the payment. mc_gross minus mc_fee equals the amount deposited into the receiver_email account. Equivalent to payment_fee for USD payments. If this amount is negative, it signifies a refund or reversal, and either of those payment statuses can be for the full or partial amount of the original transaction fee.'),
       'mc_gross'              => array('type' => 'numeric', 'precision' => 10, 'scale' => 2, 'description' => ' Full amount of the customer\'s payment, before transaction fee is subtracted. Equivalent to payment_gross for USD payments. If this amount is negative, it signifies a refund or reversal, and either of those payment statuses can be for the full or partial amount of the original transaction.'),
-      'settle_amount'         => array('type' => 'numeric', 'precision' => 10, 'scale' => 2, 'description' => 'Amount that is deposited into the accounts primary balance after a currency conversion from automatic conversion (through your Payment Receiving Preferences) or manual conversion (through manually accepting a payment).'),
+      'settle_amount'         => array('type' => 'numeric', 'precision' => 10, 'scale' => 2, 'description' => 'Amount that is deposited into the accounts primary baal nce after a currency conversion from automatic conversion (through your Payment Receiving Preferences) or manual conversion (through manually accepting a payment).'),
       'settle_currency'       => array('type' => 'varchar', 'length' => 3, 'description' => 'Three character currency code.'),
       'exchange_rate'         => array('type' => 'numeric', 'precision' => 12, 'scale' => 6, 'description' => 'Exchange rate used if a currency conversion occurred.'),
 
@@ -124,6 +135,7 @@ function lm_paypal_schema() {
       'recur_times'           => array('type' => 'int', 'description' => 'The number of payment installments that will occur at the regular rate.'),
       'subscr_id'             => array('type' => 'varchar', 'length' => 20, 'description' => 'ID generated by PayPal for the subscriber.'),
     ),
+    'description' => 'Store instant payment notifications from paypal.com',
     'indexes' => array(
       'txn_id' => array('txn_id'),
     ),
@@ -142,6 +154,23 @@ function lm_paypal_update_6000() {
 
 function lm_paypal_update_6001() {
   $ret = array();
+  // Date field needs to be 28 characters
   db_change_field($ret, 'lm_paypal_ipns', 'payment_date', 'payment_date', array('type' => 'varchar', 'length' => 28));
+  return $ret;
+}
+
+function lm_paypal_update_6002() {
+  $ret = array();
+  // address_status changed to char-40
+  db_change_field($ret, 'lm_paypal_ipns', 'address_status', 'address_status', array('type' => 'varchar', 'length' => 40));
+  // TODO: replace old "int" values with 'confirmed' or 'unconfirmed'. What were they?
+
+  // add new field paypal docs
+  db_add_field($ret, 'lm_paypal_ipns', 'contact_phone', array('type' => 'varchar', 'length' => 20));
+
+  // Add notify_version and IPN text because paypal keep changing formats on us
+  db_add_field($ret, 'lm_paypal_ipns', 'notify_version', array('type' => 'varchar', 'length' => 20));
+  db_add_field($ret, 'lm_paypal_ipns', 'ipn', array('type' => 'text', 'size' => 'medium'));
+
   return $ret;
 }

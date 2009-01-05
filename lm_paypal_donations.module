@@ -7,12 +7,8 @@
  *
  * PayPal donations interface.
  *
- * Lee McLoughlin <lee@lmmrtech.com>. July 2006
- * This is a Drupal module to dynamically generate PayPal buttons and
- * processes incoming PayPal IPN messages.
- *
- * This module is licensed under  Gnu General Public License Version 2
- * see the LICENSE.txt file for more details.
+ * This is a Drupal module to dynamically generate PayPal buttons and processes
+ * incoming PayPal IPN messages.
  */
 
 define('LM_PAYPAL_DONATIONS', 'LM_PayPal_Donat');
@@ -128,7 +124,6 @@ if (function_exists(\'lm_paypal_donate\')) {
 
 /**
  * Implementation of hook_perm().
- * Return a list of the access control permissions that this module defines
  */
 function lm_paypal_donations_perm() {
   return array('access lm_paypal_donate', 'view lm_paypal_all_donations');

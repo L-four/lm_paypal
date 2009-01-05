@@ -7,13 +7,8 @@
  *
  * PayPal Subscriptions interface.
  *
- * Lee McLoughlin <lee@lmmrtech.com>. July 2006
- * This is a Drupal module to handle PayPal subscriptions.
- *
- * It requires the lm_paypal module to be installed, enabled and configured.
- *
- * This module is licensed under  Gnu General Public License Version 2
- * see the LICENSE.txt file for more details.
+ * This is a Drupal module to handle PayPal subscriptions. It requires the
+ * lm_paypal module to be installed, enabled and configured.
  */
 
 define('LM_PAYPAL_SUBSCRIPTIONS', 'LM_PayPal_Subs');
@@ -511,12 +506,16 @@ function lm_paypal_subscribe($subid = NULL, $display = 15, $button_url = '', $ni
     }
     $form .= "<input type=\"hidden\" name=\"sra\" value=\"1\">\n";
     $form .= "<input type=\"hidden\" name=\"no_note\" value=\"1\">\n";
+watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Update this $ipn->custom stuff', array(), WATCHDOG_ERROR);
+drupal_set_message("TODO test this new \$custom stuff", 'error');
     if ($so->kind == 0 || $so->kind == 2) {
-      $custom = $user->uid;
+      $custom = array('uid' => $user->uid);
     }
     if ($so->kind == 1) {
-      $custom = ($nid << 16) | ($user->uid & 0xFFFF);
+      $custom = array('nid' => $nid, 'other' => $nid, 'uid' => $user->uid);
     }
+    $custom = addslashes(serialize($custom)); // serialize the array
+
     $form .= "<input type=\"hidden\" name=\"custom\" value=\"$custom\">\n";
     //$form .= "<input type=\"hidden\" name=\"invoice\" value=\"invoicenumber\">\n";
     $form .= "<input type=\"hidden\" name=\"usr_manage\" value=\"0\">\n";
@@ -1756,6 +1755,7 @@ function lm_paypal_process_in_subscr($ipn) {
     return;
   }
 
+watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Update this $ipn->custom stuff', array(), WATCHDOG_ERROR);
   if ($ipn->item_number == '' || !is_numeric($ipn->item_number) ||
       $ipn->custom == '' || !is_numeric($ipn->custom)) {
     watchdog(
@@ -1770,6 +1770,7 @@ function lm_paypal_process_in_subscr($ipn) {
   $subid = $ipn->item_number;
   $custom = $ipn->custom;
 
+watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Update this $ipn->custom stuff', array(), WATCHDOG_ERROR);
   $uid = $custom & 0xFFFF;
   $other = ($custom >> 16) & 0xFFFF;
   $nid = $other; // This is usually true and doesn't hurt otherwise

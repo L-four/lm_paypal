@@ -6,8 +6,6 @@
  * @file
  *
  * Install or update the PayPal donations interface.
- *
- * Lee McLoughlin <lee@lmmrtech.com>. July 2006
  */
 
 function lm_paypal_donations_install() {
@@ -65,4 +63,3 @@ function lm_paypal_donations_schema() {
   );
   return $schema;
 }
-

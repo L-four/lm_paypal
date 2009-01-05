@@ -6,8 +6,6 @@
  * @file
  *
  * Install or update the PayPal Paid Adverts interface.
- *
- * Lee McLoughlin <lee@lmmrtech.com>. Aug 2006
  */
 
 /**
@@ -21,4 +19,3 @@ function lm_paypal_paid_adverts_install() {
  */
 function lm_paypal_paid_adverts_uninstall() {
 }
-

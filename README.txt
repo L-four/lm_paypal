@@ -1,3 +1,18 @@
+UPDATES:
+
+This version of LM Paypal is the first serious attempt to modernise the LM Paypal
+codebase, make it more flexible and reusable, and integrate better with other
+contributed modules.
+
+In particular, the module is/will-be updated to provide Actions and Triggers.
+
+See LM Paypal issue http://drupal.org/node/328730 for further discussion.
+
+==============================================================================
+
+
+OLD README:
+
 This is a set of modules to provide donations, paid role or group
 subscriptions and paid node posting via PayPal.
 
@@ -160,4 +175,4 @@ Ecommerce?
 If you are looking for a comprehensive ecommerce solution, this isn't it!
 
 If you are looking for a full ecommerce system then I suggest:
-http://drupal.org/project/ecommerce
+http://drupal.org/project/ubercart or http://drupal.org/project/ecommerce
