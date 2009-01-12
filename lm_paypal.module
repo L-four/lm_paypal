@@ -51,7 +51,7 @@ function lm_paypal_menu() {
     'page callback' => 'lm_paypal_ipns',
     'access arguments' => array('administer lm_paypal'),
     'type' => MENU_LOCAL_TASK,
-    'weight' => 1,
+    'weight' => 2,
   );
 
   // Display the details of a saved IPN - internal
@@ -529,15 +529,18 @@ function lm_paypal_process_in_web_accept($ipn) {
 }
 
 function lm_paypal_web_accept_invoke($ipn, $link, $uid, $other, $item_number) {
+
   // Find the correct web_accept processor
   $ranges = lm_paypal_web_accept_register();
-  foreach ($ranges as $r) {
-    $f = $r['fun'];
-    $min = $r['min'];
-    $max = $r['max'];
-    //watchdog(LM_PAYPAL,"found $f $min $max");
-    if ($min <= $item_number && $item_number <= $max) {
-      return $f($ipn, $link, $uid, $other, $item_number);
+  if ($ranges) {
+    foreach ($ranges as $r) {
+      $f = $r['fun'];
+      $min = $r['min'];
+      $max = $r['max'];
+      //watchdog(LM_PAYPAL,"found $f $min $max");
+      if ($min <= $item_number && $item_number <= $max) {
+        return $f($ipn, $link, $uid, $other, $item_number);
+      }
     }
   }
 
