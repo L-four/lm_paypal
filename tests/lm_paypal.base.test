@@ -1,6 +1,7 @@
 <?php
 // $Id$
 
+
 abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
 
   /**
@@ -17,6 +18,8 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
     $this->emptyWatchdog();
 
     // Setup basic config
+    variable_set('smtp_library', drupal_get_path('module', 'lm_paypal') . '/tests/lm_paypal.base.test');
+
     variable_set('lm_paypal_business', 'dummy@dummy.com');
     variable_set('lm_paypal_host', 'www.sandbox.paypal.com');
     variable_set('lm_paypal_ipns_max_age', 120);
@@ -36,13 +39,30 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
     parent::tearDown();
   }
 
+  /**
+   * Load an unserialize a file from the lm_paypal/tests/ directory.
+   * @param $filename
+   *   Basename of the file to load.
+   * @return mixed
+   *   The unserialized data from the given file.
+   */
   function loadTestIpn($filename) {
     $filename = drupal_get_path('module', 'lm_paypal') . '/tests/' . $filename;
     return unserialize(file_get_contents($filename, TRUE));
   }
 
+  /**
+   * Using a prepared IPN (from the IPN test simulator), and possibly some
+   * overrides, send this to the IPN service on the local Drupal install.
+   * @param $filename
+   *   Basename of the file to load.
+   * @param $overrides
+   *   Array of values to overwrite from the IPN before posting.
+   * @return array the IPN as submitted to the POST request.
+   */
   function postPreparedIpn($filename, $overrides = array()) {
     $post = $this->loadTestIpn($filename);
+    unset($post['protection_eligibility']);
 
     // Apply overrides from arguments.
     $post = array_merge($post, $overrides);
@@ -170,7 +190,7 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
     }
   }
 
-  function writeFile($data = NULL, $filename = 'out.html') {
+  function writeFile($filename = 'out.html', $data = NULL) {
     $data = ($data == NULL) ?  $this->drupalGetContent() : $data;
     $filename = file_directory_temp() . '/' . $filename;
     $this->assertTrue(file_put_contents($filename, $data), t('Wrote content to %filename', array('%filename' => $filename)));
@@ -185,4 +205,10 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
     }
   }
 
+}
+
+if (!function_exists('drupal_mail_wrapper')) {
+  function drupal_mail_wrapper($message) {
+    watchdog('mail', 'Sent email', NULL, WATCHDOG_WARNING);
+  }
 }

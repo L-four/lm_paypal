@@ -18,8 +18,7 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
     // Always call the setUp() function from the parent class.
     parent::setUp('lm_paypal_donations', 'block', 'php');
 
-    // Overwrite default users with new ones.
-    // TODO: modify the role instead?
+    // Create users.
     $admin_permissions = array(
       'administer lm_paypal',
       'access lm_paypal_donate',
@@ -92,7 +91,7 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
 
       $out = $this->curlExec(array(CURLOPT_URL => $action, CURLOPT_POST => TRUE, CURLOPT_POSTFIELDS => $post));
       $this->assertText('To access the PayPal Sandbox, please log in to ', 'PayPal Sandbox login page found');
-      // $this->writeFile($this->drupalGetContent(), "paypal-$i.html");
+      // $this->writeFile("paypal-$i.html");
     }
     */
   }

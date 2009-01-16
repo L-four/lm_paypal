@@ -149,7 +149,7 @@ function lm_paypal_donations_menu() {
     'weight' => 11,
   );
 
-  // admin - print all donations
+  // admin - print all donations - TODO: move to /admin? fix links to it
   $items['lm_paypal/donations'] = array(
     'title' => 'PayPal Donations',
     'page callback' => 'lm_paypal_all_donations',
@@ -365,6 +365,7 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
  *   A string containing the page contents.
  */
 function lm_paypal_donations_thanks() {
+  // TODO: make user configurable and/or themeable
   return t('<h2>Thank you!</h2><p>If the system is not too busy then your donation will arrive shortly. At worse it will only take a few hours.</p><p>Once again, thanks!</p>');
 }
 
