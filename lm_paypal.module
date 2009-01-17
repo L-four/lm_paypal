@@ -346,7 +346,8 @@ function lm_paypal_is_integer_between($formelement, $min=NULL, $max=NULL) {
  *   If $function_name is set then nothing is returned. If null then
  *   the entire registered array of ($fun, $min, $max) is returned.
  */
-function lm_paypal_web_accept_register($function_name = NULL, $min = NULL, $max = NULL) {
+/*
+ function lm_paypal_web_accept_register($function_name = NULL, $min = NULL, $max = NULL) {
   static $ranges = NULL;
 
   if (is_null($function_name)) {
@@ -358,6 +359,8 @@ function lm_paypal_web_accept_register($function_name = NULL, $min = NULL, $max 
   }
   $ranges[] = array('fun' => $function_name, 'min' => $min, 'max' => $max);
 }
+*/
+
 
 /**
  * Mark a saved IPN as processed.

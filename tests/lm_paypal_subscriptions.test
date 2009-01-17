@@ -176,6 +176,8 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
       // 'srt' // recurring times
       'currency_code' => 'USD',
       // 'return_url' => // override default
+      'send_admin_onsub' => FALSE,
+      'send_admin_onend' => FALSE,
     );
 
     $this->drupalPost($this->getUrl(), $subscription, t('Create subscription'));
@@ -263,7 +265,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     );
     variable_set('lm_paypal_skip_validation', FALSE);
     $this->assertNoWatchdogErrors(WATCHDOG_WARNING, FALSE);
-    $this->dumpWatchdogErrors(WATCHDOG_DEBUG);
+    // $this->dumpWatchdogErrors(WATCHDOG_DEBUG);
 
     // $this->assertWatchdogError('Update this $ipn->custom stuff', WATCHDOG_ERROR);
     // error_log("SUBSCRIPTION IPN = " . print_r($ipn, TRUE));

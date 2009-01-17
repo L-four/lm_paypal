@@ -52,9 +52,8 @@ function lm_paypal_ipn_in() {
     $link = l(t('view'), "admin/settings/lm_paypal/id/$ipn[id]");
 
     if ($validated) {
-      watchdog(LM_PAYPAL, 'IPN incoming %type', array('%type' => check_plain($_POST['txn_type'])), WATCHDOG_NOTICE, $link);
-      // TODO: replace with actions/triggers. pass $ipn?
-      lm_paypal_process_in($ipn['id']);
+      watchdog(LM_PAYPAL, 'IPN incoming %type', array('%type' => check_plain($ipn['txn_type'])), WATCHDOG_NOTICE, $link);
+      lm_paypal_process_in((object)$ipn);
     }
     else {
       watchdog(LM_PAYPAL, 'IPN incoming NOT VERIFIED %type got %ret', array('%type' => check_plain($_POST['txn_type']), '%ret' => check_plain($validate_result->data)), WATCHDOG_ERROR, $link);
@@ -80,19 +79,12 @@ function lm_paypal_ipn_in() {
  * @param $id
  *  The id of the saved IPN to be processed.
  */
-function lm_paypal_process_in($id) {
+function lm_paypal_process_in($ipn) {
   _lm_paypal_ini();
   global $_lm_paypal_debug;
   global $_lm_paypal_host;
   global $_lm_paypal_business;
   global $_lm_paypal_obey_test_ipns;
-
-  $r = db_query("SELECT * FROM {lm_paypal_ipns} WHERE id = %d", $id);
-  $ipn = db_fetch_object($r);
-  if (! $ipn) {
-    watchdog(LM_PAYPAL, 'process_in cannot find ipn: %id', array('%id' => $id), WATCHDOG_ERROR);
-    return;
-  }
 
   $link = l(t('view'), "admin/settings/lm_paypal/id/$ipn->id");
 
@@ -111,6 +103,39 @@ function lm_paypal_process_in($id) {
     return;
   }
 
+  // Every implementor of hook_lm_paypal_ipn($ipn) is free to take whatever
+  // actions they want, based on the IPN, and return a boolean describing
+  // whether they handled the IPN.  No attempt is made to prevent multiple
+  // modules handling the same IPN.
+  $results1 = module_invoke_all('lm_paypal_ipn', $ipn);
+
+  // Additionally, IPNs are displatched to a txn_type-specific hook.
+  $txn_type = preg_replace('/[^a-z0-9_]*/', '', $ipn->txn_type);
+  $results2 = module_invoke_all('lm_paypal_ipn_' . $txn_type, $ipn);
+
+  // Determine whether _some_ module handled the IPN, and warn if not.
+  $processed = FALSE;
+  foreach ($results1 as $res) {
+    if ($res) {
+      $processed = TRUE;
+      break;
+    }
+  }
+  if (!$processed) {
+    foreach ($results2 as $res) {
+      if ($res) {
+        $processed = TRUE;
+        break;
+      }
+    }
+  }
+
+  if (!$processed) {
+    watchdog(LM_PAYPAL, 'No processor for this IPN, ignoring: %type', array('%type' => check_plain($ipn->txn_type)), WATCHDOG_WARNING, $link);
+  }
+
+  return;
+/*
   // Don't check for processed txn_id's here as txn_id's are not provided
   // for all subscr messages. Check then in the message type specific processors
 
@@ -118,7 +143,7 @@ function lm_paypal_process_in($id) {
   // It's either lm_paypal_process_in_<type> (e.g.: ..._in_subscr_payment)
   // or if not then strip any trailing _XXX and try the remaining
   //  (e.g.: ..._in_subscr)
-  $in = 'lm_paypal_process_in_';
+   $in = 'lm_paypal_process_in_';
   $f = $in . $ipn->txn_type;
   if (function_exists($f)) {
     $res = $f($ipn);
@@ -134,39 +159,52 @@ function lm_paypal_process_in($id) {
       return $res;
     }
   }
-
-  watchdog(LM_PAYPAL, 'No processor for this IPN, ignoring: %type', array('%type' => check_plain($ipn->txn_type)), WATCHDOG_WARNING, $link);
+*/
 }
-
-
-
 
 /**
- * Process a newly arrived send_money IPN message
- *
- * @param $ipn
+ * Implementation of hook_lm_paypal_ipn.
  */
-function lm_paypal_process_in_send_money($ipn) {
-  _lm_paypal_ini();
-  global $_lm_paypal_debug;
+/*
+ function lm_paypal_lm_paypal_ipn($ipn) {
+  error_log("Called lm_paypal_lm_paypal_ipn($ipn->txn_id)");
+  return TRUE;
+}
+*/
 
-  if ($_lm_paypal_debug) {
-    watchdog(LM_PAYPAL, 'in_send_money (passing to web_accept)');
+/**
+ * Implementation of hook_lm_paypal_ipn_TXNTYPE.
+ * Process a send_money IPN message.
+ */
+function lm_paypal_lm_paypal_ipn_send_money($ipn) {
+  // error_log("Called lm_paypal_lm_paypal_ipn_send_money($ipn->txn_id)");
+  $debug = variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
+  if ($debug) {
+    watchdog(LM_PAYPAL, 'lm_paypal_lm_paypal_ipn_send_money (passing to web_accept)');
   }
-
   return lm_paypal_process_in_web_accept($ipn);
 }
+
+/**
+ * Implementation of hook_lm_paypal_ipn_TXNTYPE.
+ * Process a web_accept IPN message.
+ */
+function lm_paypal_lm_paypal_ipn_web_accept($ipn) {
+  // error_log("Called lm_paypal_lm_paypal_ipn_web_accept($ipn->txn_id)");
+  _lm_paypal_process_in_web_accept($ipn);
+  return TRUE;
+}
+
+
 
 /**
  * Process a newly arrived web_accept IPN message
  *
  * @param $ipn
  */
-function lm_paypal_process_in_web_accept($ipn) {
-  _lm_paypal_ini();
-  global $_lm_paypal_debug;
-
-  if ($_lm_paypal_debug) {
+function _lm_paypal_process_in_web_accept($ipn) {
+  $debug = variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
+  if ($debug) {
     watchdog(LM_PAYPAL, 'in_web_accept');
   }
 
@@ -286,7 +324,18 @@ function lm_paypal_process_in_web_accept($ipn) {
 }
 
 function lm_paypal_web_accept_invoke($ipn, $link, $uid, $other, $item_number) {
+  // error_log("lm_paypal_web_accept_invoke($ipn->txn_id)");
 
+  // HACK!  Remove this, and figure out how the web_accept path relates to top-
+  // level IPNs.
+  if (module_exists('lm_paypal_donations')) {
+    include_once drupal_get_path('module', 'lm_paypal_donations') . '/lm_paypal_donations.module';
+    if ($item_number == 0) {
+      return _lm_paypal_process_in_donate($ipn, $link, $uid, $other, $item_number);
+    }
+  }
+
+/*
   // Find the correct web_accept processor
   $ranges = lm_paypal_web_accept_register();
   if ($ranges) {
@@ -300,7 +349,7 @@ function lm_paypal_web_accept_invoke($ipn, $link, $uid, $other, $item_number) {
       }
     }
   }
-
+*/
   watchdog(
     LM_PAYPAL,
     'No web_accept processor registered for this item_number: %item_number',

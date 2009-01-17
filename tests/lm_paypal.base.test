@@ -1,6 +1,8 @@
 <?php
 // $Id$
 
+// Why is this required? Otherwise I get PHP errors
+include_once drupal_get_path('module', 'simpletest') . '/drupal_web_test_case.php';
 
 abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
 

@@ -32,7 +32,7 @@ function _lm_paypal_donations_ini() {
 
   $_lm_paypal_donations_thanks = variable_get('lm_paypal_donations_thanks', LM_PAYPAL_DONATIONS_THANKS_DEFAULT);
 
-  lm_paypal_web_accept_register('lm_paypal_process_in_donate', 0, 0);
+  // lm_paypal_web_accept_register('lm_paypal_process_in_donate', 0, 0);
 }
 
 /**
@@ -187,6 +187,25 @@ function lm_paypal_donations_settings_form() {
   return system_settings_form($form);
 }
 
+
+
+
+
+
+/**
+ * Implementation of hook_lm_paypal_ipn_TXNTYPE.
+ * Process a subscr IPN message.
+ */
+function lm_paypal_donations_lm_paypal_ipn_donate($ipn) {
+  // error_log("Called lm_paypal_donations_lm_paypal_ipn_donate($ipn->txn_id)");
+  _lm_paypal_process_in_donate($ipn); // Call legacy handler
+  return TRUE;
+}
+
+
+
+
+
 /**
  * Process a newly arrived donation IPN message
  *
@@ -201,7 +220,7 @@ function lm_paypal_donations_settings_form() {
  * @item_number
  *   The PayPal item_number
  */
-function lm_paypal_process_in_donate($ipn, $link, $uid, $other, $item_number) {
+function _lm_paypal_process_in_donate($ipn, $link, $uid, $other, $item_number) {
   _lm_paypal_donations_ini();
   global $_lm_paypal_debug;
 

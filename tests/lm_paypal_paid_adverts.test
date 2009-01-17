@@ -65,6 +65,8 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
       'p3' => 3, // regular billing cycle
       't3' => 'M', // regular billing cycle units DWMY
       'currency_code' => 'AUD',
+      'send_admin_onsub' => FALSE,
+      'send_admin_onend' => FALSE,
     );
     $this->drupalPost('admin/settings/lm_paypal/subscriptions/new', $subscription, t('Create subscription'));
 
@@ -173,7 +175,7 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
     );
     variable_set('lm_paypal_skip_validation', FALSE);
     $this->assertNoWatchdogErrors(WATCHDOG_WARNING, FALSE);
-    $this->dumpWatchdogErrors(WATCHDOG_DEBUG);
+    // $this->dumpWatchdogErrors(WATCHDOG_DEBUG);
 
 
     // View the node to see how it looks.

@@ -346,14 +346,6 @@ function lm_paypal_subscription_node_subs() {
  *   TRUE only if the node has a live subscription
  */
 function lm_paypal_node_subscribed($nid, &$subid) {
-  /*
-  error_log('Dumping all subscriptions');
-  $result = db_query("SELECT * FROM {lm_paypal_subscribers}");
-  while ($row = db_fetch_array($result)) {
-    error_log('ROW=' . print_r($row, TRUE));
-  }
-  */
-
   $sbs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE status = 1 AND nid = %d", $nid);
   $sb = db_fetch_object($sbs);
 
@@ -1715,6 +1707,23 @@ function lm_paypal_subscription_delete($subid) {
   return t('Deleted subscription');
 }
 
+
+
+/**
+ * Implementation of hook_lm_paypal_ipn_TXNTYPE.
+ * Process a subscr IPN message.
+ */
+function lm_paypal_subscriptions_lm_paypal_ipn($ipn) {
+  // error_log("Called lm_paypal_subscriptions_lm_paypal_ipn($ipn->txn_id, $ipn->txn_type)");
+  if (strpos($ipn->txn_type, 'subscr_') === 0) {
+    _lm_paypal_process_in_subscr($ipn); // Call legacy handler
+    return TRUE;
+  }
+}
+
+
+
+
 /**
  * Process a newly arrived subscription IPN message
  *
@@ -1723,7 +1732,7 @@ function lm_paypal_subscription_delete($subid) {
  *
  *   TODO: break up this long function, use switch statement wiht txn_type
  */
-function lm_paypal_process_in_subscr($ipn) {
+function _lm_paypal_process_in_subscr($ipn) {
   _lm_paypal_subscriptions_ini();
   global $_lm_paypal_debug;
 
@@ -1744,7 +1753,6 @@ function lm_paypal_process_in_subscr($ipn) {
   }
 
   $custom = unpack_ipn_custom($ipn);
-  // error_log("CUSTOM=" . print_r($custom, TRUE));
   if ($ipn->item_number == '' || !is_numeric($ipn->item_number) ||
       !isset($custom['uid']) || !is_numeric($custom['uid'])) {
     watchdog(
@@ -2231,7 +2239,7 @@ function lm_paypal_add_subscriber($kind, $uid, $nid, $subid, $subscr_id, $status
     // Update
     $object['status'] = $status;
     $update['subscr_id'] = $subscr_id;
-    error_log("UPDATE lm_paypal_add_subscriber($kind, $uid, $nid, $subid, $subscr_id, $status)");
+    // error_log("UPDATE lm_paypal_add_subscriber($kind, $uid, $nid, $subid, $subscr_id, $status)");
   }
   else {
     // Insert
@@ -2241,7 +2249,7 @@ function lm_paypal_add_subscriber($kind, $uid, $nid, $subid, $subscr_id, $status
     $object['subid'] = $subid;
     $object['subscr_id'] = $subscr_id;
     $object['status'] = $status;
-    error_log("INSERT lm_paypal_add_subscriber($kind, $uid, $nid, $subid, $subscr_id, $status)");
+    // error_log("INSERT lm_paypal_add_subscriber($kind, $uid, $nid, $subid, $subscr_id, $status)");
   }
 
   // Write the record and check the result.
