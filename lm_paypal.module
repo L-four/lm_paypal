@@ -1,5 +1,4 @@
 <?php
-
 // $Id$
 
 /**
@@ -19,8 +18,6 @@ function lm_paypal_perm() {
  * Implementation of hook_menu().
  */
 function lm_paypal_menu() {
-  // _lm_paypal_ini();
-
   $items = array();
 
   // use tabs for menus, main config on the default
@@ -102,6 +99,65 @@ define('LM_PAYPAL_IPNS_MAX_AGE_DEFAULT', 5 * 24); // Max hours to keep IPNS
 define('LM_PAYPAL_DEBUG_DEFAULT', FALSE);
 define('LM_PAYPAL_VALIDATE_TIMEOUT', 30);
 
+
+
+
+
+/**
+ * Get a list of currencies supported by PayPal, in a format suitable for
+ * looking up, or using as #options in a form.
+ */
+function _lm_paypal_get_currency_info($code = NULL) {
+  static $currency_info;
+  if (!isset($currency_info)) {
+    $currency_info = array(
+      'USD' => array('$', t('U.S. Dollar')),
+      'GBP' => array('&#163;', t('Pound Sterling')),
+      'EUR' => array('Euro', t('Euro')), // &euro; causes some font/browser issues
+      'AUD' => array('A$', t('Australian Dollar')),
+      'CAD' => array('Can$', t('Canadian Dollar')),
+      'JPY' => array('&#165;', t('Japanese Yen')),
+      'CHF' => array('CHF', t('Swiss Franc')), // Yes - it really is writen as CHF
+      'CZK' => array('Kc', t('Czech Koruna')),
+      'DKK' => array('kr', t('Danish Krone')),
+      'HKD' => array('HK$', t('Hong Kong Dollar')),
+      'HUF' => array('Ft', t('Hungarian Forint')),
+      'NOK' => array('kr', t('Norwegian Krone')),
+      'NZD' => array('NZ$', t('New Zealand Dollar')),
+      'PLN' => array('zl', t('Polish Zloty')), // I cannot find the HTML character for a crossed l
+      'SEK' => array('kr', t('Swedish Krona')),
+      'SGD' => array('S$', t('Singapore Dollar')),
+    );
+  }
+
+  return $code ? $currency_info[$code] : $currency_info;
+}
+
+
+function _lm_paypal_get_currencies() {
+  $currencies = array();
+  foreach (_lm_paypal_get_currency_info() as $code => $info) {
+    $currencies[$code] = $info[1];
+  }
+  return $currencies;
+}
+
+
+/**
+ * Finds the currency symbol corresponding to a three letter code
+ *
+ * @param $ccc
+ *   A three letter currency code such as USD
+ * @return
+ *   A currency symbol such as $
+ */
+function lm_paypal_ccc2symbol($ccc) {
+  $currency_info = _lm_paypal_get_currency_info($ccc);
+  return $currency_info[0];
+}
+
+
+
 /**
  * Initialize global variables
  * Note: Originally this was a hook_init() function but a user was getting
@@ -119,9 +175,7 @@ function _lm_paypal_ini() {
   global $_lm_paypal_business;  // what is my business email
   global $_lm_paypal_obey_test_ipns;  // Treat test IPN messages as real
   global $_lm_paypal_ipns_max_age;  // How many hours to keep old IPNs for
-  global $_lm_paypal_currency_option;
   global $_lm_paypal_period_units_option;
-  global $_lm_paypal_currency_syms;
 
   static $inited = 0;
 
@@ -139,49 +193,6 @@ function _lm_paypal_ini() {
   $_lm_paypal_welcome = '<p>'. t('Welcome to the LM PayPal modules for Drupal.') .'</p>';
 
   //$_lm_paypal_welcome .= '<p><b>'. t('These modules are still undergoing development so it is strongly advised that you to test them out against the PayPal Sandbox first.') .'</b></p>';
-
-  $_lm_paypal_currency_option = array(
-    // '' => t('default currency'),  Force a currency to be specified
-    'USD' => t('U.S. Dollar'),
-    'GBP' => t('Pound Sterling'),
-    'EUR' => t('Euro'),
-    'AUD' => t('Australian Dollar'),
-    'CAD' => t('Canadian Dollar'),
-    'JPY' => t('Japanese Yen'),
-    'CHF' => t('Swiss Franc'),
-    'CZK' => t('Czech Koruna'),
-    'DKK' => t('Danish Krone'),
-    'HKD' => t('Hong Kong Dollar'),
-    'HUF' => t('Hungarian Forint'),
-    'NOK' => t('Norwegian Krone'),
-    'NZD' => t('New Zealand Dollar'),
-    'PLN' => t('Polish Zloty'),
-    'SEK' => t('Swedish Krona'),
-    'SGD' => t('Singapore Dollar'),
-  );
-
-  $_lm_paypal_currency_syms = array(
-    '' => '?',
-    'AUD' => 'A$',
-    'CAD' => 'Can$',
-    //'EUR' => '&euro;',  This causes problems depending on the fonts
-    // available and the version of the browser used
-    'EUR' => 'Euro',
-    'GBP' => '&#163;',
-    'JPY' => '&#165;',
-    'USD' => '$',
-    'CHF' => 'CHF',   // Yes - it really is writen as CHF
-    'CZK' => 'Kc',
-    'DKK' => 'kr',
-    'HKD' => 'HK$',
-    'HUF' => 'Ft',
-    'NOK' => 'kr',
-    'NZD' => 'NZ$',
-    'PLN' => 'zl',  // I cannot find the HTML character for a crossed l
-    'SEK' => 'kr',
-    'SGD' => 'S$',
-  );
-
   // Note: NOT used to format messages for the user. See lm_paypal_unit2str()
   $_lm_paypal_period_units_option = array(
     //'' => t('default'),
@@ -320,237 +331,7 @@ function lm_paypal_is_integer_between($formelement, $min=NULL, $max=NULL) {
 }
 
 
-/**
- * Process a newly arrived IPN message that has been verified and saved.
- *
- * @param $id
- *  The id of the saved IPN to be processed.
- */
-function lm_paypal_process_in($id) {
-  _lm_paypal_ini();
-  global $_lm_paypal_debug;
-  global $_lm_paypal_host;
-  global $_lm_paypal_business;
-  global $_lm_paypal_obey_test_ipns;
 
-  $r = db_query("SELECT * FROM {lm_paypal_ipns} WHERE id = %d", $id);
-  $ipn = db_fetch_object($r);
-  if (! $ipn) {
-    watchdog(LM_PAYPAL, 'process_in cannot find ipn: %id', array('%id' => $id), WATCHDOG_ERROR);
-    return;
-  }
-
-  $link = l(t('view'), "admin/settings/lm_paypal/id/$ipn->id");
-
-  if ($ipn->test_ipn != '' && !$_lm_paypal_obey_test_ipns) {
-    watchdog(LM_PAYPAL, 'test_ipn received - ignoring', array(), WATCHDOG_WARNING, $link);
-    return;
-  }
-
-  if (strcasecmp(trim($ipn->receiver_email), trim($_lm_paypal_business)) != 0) {
-    watchdog(
-      LM_PAYPAL,
-      'Incoming IPN received email does not match business email (received %received, business %business)',
-      array('%received' => check_plain($ipn->receiver_email), '%business' => check_plain($_lm_paypal_business)),
-      WATCHDOG_ERROR,
-      $link);
-    return;
-  }
-
-  // Don't check for processed txn_id's here as txn_id's are not provided
-  // for all subscr messages. Check then in the message type specific processors
-
-  // Find a processor.
-  // It's either lm_paypal_process_in_<type> (e.g.: ..._in_subscr_payment)
-  // or if not then strip any trailing _XXX and try the remaining
-  //  (e.g.: ..._in_subscr)
-  $in = 'lm_paypal_process_in_';
-  $f = $in . $ipn->txn_type;
-  if (function_exists($f)) {
-    $res = $f($ipn);
-    module_invoke_all('lm_paypal_process_in', $ipn, $f, $res);
-    return $res;
-  }
-  $u = strpos($ipn->txn_type, '_');
-  if ($u > 0) {
-    $f = $in . substr($ipn->txn_type, 0, $u);
-    if (function_exists($f)) {
-      $res = $f($ipn);
-      module_invoke_all('lm_paypal_process_in', $ipn, $f, $res);
-      return $res;
-    }
-  }
-
-  watchdog(LM_PAYPAL, 'No processor for this IPN, ignoring: %type', array('%type' => check_plain($ipn->txn_type)), WATCHDOG_WARNING, $link);
-}
-
-/**
- * Process a newly arrived send_money IPN message
- *
- * @param $ipn
- */
-function lm_paypal_process_in_send_money($ipn) {
-  _lm_paypal_ini();
-  global $_lm_paypal_debug;
-
-  if ($_lm_paypal_debug) {
-    watchdog(LM_PAYPAL, 'in_send_money (passing to web_accept)');
-  }
-
-  return lm_paypal_process_in_web_accept($ipn);
-}
-
-/**
- * Process a newly arrived web_accept IPN message
- *
- * @param $ipn
- */
-function lm_paypal_process_in_web_accept($ipn) {
-  _lm_paypal_ini();
-  global $_lm_paypal_debug;
-
-  if ($_lm_paypal_debug) {
-    watchdog(LM_PAYPAL, 'in_web_accept');
-  }
-
-  $link = l(t('view'), "admin/settings/lm_paypal/id/$ipn->id");
-
-  if (lm_paypal_already_processed($ipn->txn_id)) {
-    watchdog(
-      LM_PAYPAL,
-      'This transaction has already been processed, ignored: %id',
-      array('%id' => check_plain($ipn->txn_id)),
-      WATCHDOG_WARNING,
-      $link);
-    return;
-  }
-
-  lm_paypal_mark_processed($ipn);
-
-  if ($ipn->payment_status == 'Pending') {
-    watchdog(
-      LM_PAYPAL,
-      'Ignoring IPN with status: Pending. Check your PayPal account to see why it is pending. Note: pending_reason: %reason',
-      array('%reason' => check_plain($ipn->pending_reason)),
-      WATCHDOG_ERROR,
-      $link);
-    return;
-  }
-
-  $custom = unpack_ipn_custom($ipn);
-  $uid = $custom['uid'];
-  $other = $custom['other'];
-
-  if ($uid == '') {
-    $uid = 0;
-    if ($_lm_paypal_debug) {
-      watchdog(
-        LM_PAYPAL,
-        'No uid, try to lookup payer_email',
-        array(),
-        WATCHDOG_WARNING,
-        $link);
-    }
-    $users = db_query("SELECT uid FROM {users} WHERE LOWER(mail) = LOWER('%s')", $ipn->payer_email);
-    $user = db_fetch_object($users);
-    if (!$user) {
-      watchdog(
-        LM_PAYPAL,
-        'IPN web_accept no uid presuming uid 0, cannot find payer_email: %email',
-        array('%email' => check_plain($ipn->payer_email)),
-        WATCHDOG_WARNING,
-        $link);
-      $uid = 0;
-    }
-    else {
-      $uid = $user->uid;
-      watchdog(
-        LM_PAYPAL,
-        'IPN web_accept no uid, found payer_email %email for uid %uid',
-        array('%email' => check_plain($ipn->payer_email), '%uid' => $uid),
-        WATCHDOG_WARNING,
-        $link);
-    }
-  }
-  else if (!is_numeric($uid) || intval($uid) != $uid || $uid < 0) {
-    watchdog(
-      LM_PAYPAL,
-      'Invalid uid, ignoring IPN: %uid',
-      array('%uid' => $uid),
-      WATCHDOG_WARNING,
-      $link);
-    return;
-  }
-
-  // If I receive a web_accept without a uid then presume it came from anon
-  if ($uid != '') {
-    // Is this uid valid?
-    $users = db_query("SELECT * FROM {users} WHERE uid = %d", $uid);
-    $user = db_fetch_object($users);
-    if (!$user) {
-      watchdog(
-        LM_PAYPAL,
-        'IPN web_accept unknown uid, presuming uid 0: %uid',
-        array('%uid' => check_plain($uid)),
-        WATCHDOG_ERROR,
-        $link);
-      $uid = 0;
-    }
-  }
-
-  // Use the item_number to select the kind of payment coming in
-  $item_number = $ipn->item_number;
-
-  // If you use the Send Money menu item on PayPal I treat this pretty the
-  //  same as a donation (item_number = 0)
-  if ($ipn->txn_type == 'send_money') {
-    if ($_lm_paypal_debug) {
-      watchdog(LM_PAYPAL, "send_money - being converted to web_accept");
-    }
-    $item_number = 0;
-  }
-  else if ($item_number == '') {
-    if ($_lm_paypal_debug) {
-      watchdog(LM_PAYPAL, "empty item_number - being converted to web_accept");
-    }
-    $item_number = 0;
-  }
-  else if (!is_numeric($item_number) || intval($item_number) != $item_number || $item_number < 0) {
-    watchdog(
-      LM_PAYPAL,
-      'Invalid item_number, ignoring IPN: %item_number',
-      array('%item_number' => check_plain($item_number)),
-      WATCHDOG_WARNING,
-      $link);
-    return;
-  }
-
-  return lm_paypal_web_accept_invoke($ipn, $link, $uid, $other, $item_number);
-}
-
-function lm_paypal_web_accept_invoke($ipn, $link, $uid, $other, $item_number) {
-
-  // Find the correct web_accept processor
-  $ranges = lm_paypal_web_accept_register();
-  if ($ranges) {
-    foreach ($ranges as $r) {
-      $f = $r['fun'];
-      $min = $r['min'];
-      $max = $r['max'];
-      //watchdog(LM_PAYPAL,"found $f $min $max");
-      if ($min <= $item_number && $item_number <= $max) {
-        return $f($ipn, $link, $uid, $other, $item_number);
-      }
-    }
-  }
-
-  watchdog(
-    LM_PAYPAL,
-    'No web_accept processor registered for this item_number: %item_number',
-    array('%item_number' => check_plain($item_number)),
-    WATCHDOG_WARNING,
-    $link);
-}
 
 /**
  * Register the handler function for a range of item_numbers
@@ -585,16 +366,19 @@ function lm_paypal_web_accept_register($function_name = NULL, $min = NULL, $max 
  *  The IPN to be marked.
  */
 function lm_paypal_mark_processed($ipn) {
-  $update = db_query("UPDATE {lm_paypal_ipns} SET processed = 1 WHERE id = %d", $ipn->id);
-  // TODO: Check for error
+  // It seems that drupal_write_record() doesn't like fields of type 'serial'
+  // $object = array('processed' => TRUE);
+  // drupal_write_record('lm_paypal_ipns', $object, array('id' => $ipn->id));
+  $sql = "UPDATE {lm_paypal_ipns} SET processed = 1 WHERE id = %d";
+  $update = db_query($sql, $ipn->id);
 }
 
 function lm_paypal_already_processed($txn_id) {
   // Has this transaction already been processed?
   // Changed to allow for echecks which can be payment_status = 'Pending' for
   //  quite a while
-  $r = db_query("SELECT * FROM {lm_paypal_ipns} WHERE txn_id = '%s' and processed = '1' and payment_status = 'Completed'", $txn_id);
-  return (db_result($r) != FALSE);
+  $result = db_query("SELECT COUNT(*) FROM {lm_paypal_ipns} WHERE txn_id = '%s' and processed = '1' and payment_status = 'Completed'", $txn_id);
+  return db_result($result);
 }
 
 /**
@@ -623,20 +407,6 @@ function lm_paypal_unit2str($count, $unit) {
   }
 }
 
-/**
- * Finds the currency symbol corresponding to a three letter code
- *
- * @param $ccc
- *   A three letter currency code such as USD
- * @return
- *   A currency symbol such as $
- */
-function lm_paypal_ccc2symbol($ccc) {
-  _lm_paypal_ini();
-  global $_lm_paypal_currency_syms;
-
-  return $_lm_paypal_currency_syms [$ccc];
-}
 
 /**
  * Returns the number of days given a period and unit
@@ -677,10 +447,8 @@ function lm_paypal_period_unit2days($period, $unit) {
  *   The string representation the currency (eg: U.S. Dollar)
  */
 function lm_paypal_ccc2currency($ccc) {
-  _lm_paypal_ini();
-  global $_lm_paypal_currency_option;
-
-  return $_lm_paypal_currency_option [$ccc];
+  $info = _lm_paypal_get_currency_info($ccc);
+  return $info[1];
 }
 
 /**
@@ -700,11 +468,11 @@ function lm_paypal_ccc2currency($ccc) {
 function lm_paypal_nccc2str($n, $ccc) {
   $sym = lm_paypal_ccc2symbol($ccc);
   if ($sym != '' && $sym != '?') {
-    return t('!symbol!amount', array('!amount' =>$n, '!symbol' => $sym));
+    return t('!symbol!amount', array('!amount' => $n, '!symbol' => $sym));
   }
   else {
     $cur = lm_paypal_ccc2currency($ccc);
-    return t('!amount !currency', array('!amount' =>$n, '!currency' => $cur));
+    return t('!amount !currency', array('!amount' => $n, '!currency' => $cur));
   }
   return $str;
 }
@@ -831,4 +599,3 @@ function unpack_ipn_custom($ipn) {
     return array();
   }
 }
-

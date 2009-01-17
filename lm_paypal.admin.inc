@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * Return the main LM PayPal settings form.
@@ -15,7 +16,9 @@ function lm_paypal_settings_form() {
   // $site_name = variable_get('site_name', 'drupal');
   $site_name = url('', array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
 
-  // TODO: add better support for switching to dev/sandbox site
+  // TODO: add better support for switching to dev/sandbox site : maybe two sets
+  // of options (defaulting to sane options), with a radio button to switch
+  // between them.
 
   // Show these in order of most likely to be changed
   $form['lm_paypal_business'] = array(
@@ -66,11 +69,6 @@ function lm_paypal_settings_form() {
     '#title' => t('LM PayPal Debug'),
     '#default_value' => $_lm_paypal_debug,
     '#description' => t('Enabled verbose debugging output of LM PayPal'),
-  );
-
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Update settings'),
   );
 
   return system_settings_form($form);

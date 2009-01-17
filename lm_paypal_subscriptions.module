@@ -735,7 +735,6 @@ function lm_paypal_subscription_edit($subid = '') {
 function lm_paypal_subscription_edit_form($form_state, $subid = '') {
   _lm_paypal_subscriptions_ini();
   global $_lm_paypal_period_units_option;
-  global $_lm_paypal_currency_option;
 
   $form['#submit'] = array('lm_paypal_subscription_edit_submit');
   $form['#validate'] = array('lm_paypal_subscription_edit_validate');
@@ -899,7 +898,7 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
     '#type' => 'select',
     '#title' => t('The currency of the payment(s)'),
     '#default_value' => $so->currency_code,
-    '#options' => $_lm_paypal_currency_option,
+    '#options' => _lm_paypal_get_currencies(),
     '#description' => t('The currency to use in all payments relating to this subscription.'),
   );
 
@@ -1003,7 +1002,7 @@ function lm_paypal_subscription_edit_form($form_state, $subid = '') {
   );
 
   $form['email_user']['send_user_header1'] = array(
-    '#value' => '<p>'. t('The following variables can be used in the subject and body of messages:') .'</p>' .
+    '#value' => '<p>'. t('The following variables can be used in the subject and body of messages:') . '</p>' .
       '<ul><li>%Subscription - the subscriptions name</li><li>%Username - the subscribers name</li><li>%Login - the subscribers login</li><li>%Site - this sites name</li><li>%Uri - this uri</li><li>%Uri_brief - this uri stripped of http://</li><li>%Mailto - target of this email</li><li>%Date - the curent date/time</li></ul>',
   );
 
@@ -1653,7 +1652,7 @@ function lm_paypal_subscription($subid = '', $display = 0) {
     }
     else if (strncmp($key, 'p', 1) == 0 && strlen($key) == 2) {
       // use 'p' (period-count) and 't' (period-unit) to format a period
-      $unit = $sub['t'. substr($key,1)];
+      $unit = $sub['t' . substr($key,1)];
       $value = lm_paypal_unit2str($value, $unit);
     }
     else if (strncmp($key, 't', 1) == 0 && strlen($key) == 2) {

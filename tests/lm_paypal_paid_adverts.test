@@ -61,11 +61,8 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
       'item_name' => $this->randomName(4, 'SUB_'),
       'description' => $this->randomName(4, 'DESC_'),
       'kind' => 1, // node
-      // 'a3' => '10.00', // regular rate
       'a3' => '20.00', // regular rate
-      // 'p3' => 30, // regular billing cycle
       'p3' => 3, // regular billing cycle
-      // 't3' => 'D', // regular billing cycle units DWMY
       't3' => 'M', // regular billing cycle units DWMY
       'currency_code' => 'AUD',
     );
