@@ -92,7 +92,6 @@ function lm_paypal_paid_adverts_perm() {
  */
 function lm_paypal_paid_adverts_menu() {
   $items = array();
-
   $items['admin/settings/lm_paypal/paid_adverts_settings'] = array(
     'title' => 'Paid Advert Settings',
     'page callback' => 'drupal_get_form',
@@ -102,7 +101,6 @@ function lm_paypal_paid_adverts_menu() {
     'weight' => 41,
     'description' => 'PayPal Paid Advert interface configuration.',
   );
-
   $items['admin/settings/lm_paypal/paid_adverts'] = array(
     'title' => 'Show Paid Adverts',
     'page callback' => 'lm_paypal_paid_adverts_list_nodes',
@@ -111,7 +109,6 @@ function lm_paypal_paid_adverts_menu() {
     'weight' => 42,
     'description' => 'Show all PayPal Paid Adverts.',
   );
-
   $items['node/%node/lm_paypal'] = array(
     'title' => 'PayPal Publication',
     'page callback' => '_lm_paypal_paid_adverts_payment',
@@ -120,7 +117,6 @@ function lm_paypal_paid_adverts_menu() {
     'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
   );
-
   return $items;
 }
 
@@ -140,9 +136,7 @@ function _lm_paypal_paid_adverts_paypal_access($node) {
   $has_sub = lm_paypal_paid_adverts_has_sub($node, $subid, $paidfor);
   if ($has_sub) {
     // Allow admin & moderators or the node owner to view the PayPal tab
-    if ($user->uid == 1 || user_access('access unpaid adverts') || $node->uid == $user->uid) {
-      return TRUE;
-    }
+    return ($user->uid == 1 || user_access('access unpaid adverts') || $node->uid == $user->uid);
   }
   return FALSE;
 }
@@ -161,28 +155,24 @@ function lm_paypal_paid_adverts_settings_form() {
     '#value' => '<p><em>'. t('Once a subscription is associated with a node type when new nodes of that type are created they will be PRIVATE to the author until paid for.') .'</em></p>',
   );
 
-  // Note: Drupal 5 pass 'names' to get a type,name array (Drupal 4 ignores it)
   $node_types = node_get_types('names');
   $node_subs = lm_paypal_subscription_node_subs();
-  if (count($node_subs) <= 0) {
+
+  if (empty($node_subs)) {
     $form['none'] = array(
       '#value' => '<p>'. t('No node subscriptions defined.') .'</p>',
     );
   }
+
   else {
-    // Sadly when these form items are passed to submit they are no
-    // longer nested. So they are flattened and mixed with the other items.
-    // By sticking 'NT' at the start I can tell them apart.
-    // pounard: Or maybe use the #tree to TRUE should do the trick no?
+    // Replaced all flattened array into a clean #tree tree.
+    $form['lm_paypal_paid_adverts_node_subs'] = array('#tree' => TRUE);
 
     // TODO: set form to send tree
     $type_subs = lm_paypal_paid_adverts_get_type_subs();
     foreach ($node_types as $node_type => $node_name) {
-      $default_value = $type_subs[$node_type];
-      if ($default_value == NULL) {
-        $default_value = array();
-      }
-      $form['lm_paypal_paid_adverts_node_subs']['NT'. $node_type] = array(
+      $default_value = empty($type_subs[$node_type]) ? array(NULL) : $type_subs[$node_type];
+      $form['lm_paypal_paid_adverts_node_subs'][$node_type] = array(
         '#type' => 'checkboxes',
         '#title' => $node_name,
         '#options' => $node_subs,
@@ -209,32 +199,10 @@ function lm_paypal_paid_adverts_settings_form() {
  *   An array containing the name,value pairs from the form
  */
 function lm_paypal_paid_adverts_settings_form_submit($form, &$form_state) {
-  $values = $form_state['values'];
-
-  // Find all the type sub's by looking for any key that matches NTtype
-  $type_subs = array();
-  foreach ($values as $key => $val) {
-    if (strncmp($key, "NT", 2) != 0) {
-      // Not an NTtype skip it
-      continue;
-    }
-    $type = substr($key, 2);
-    // Make sure it is an array and then
-    if (is_array($val) && count($val) > 0) {
-      // Copy over any set entries
-      $ts = array();
-      foreach ($val as $k => $v) {
-        if ($v != 0) {
-          $ts[$k] = $v;
-        }
-      }
-      // Skip empties
-      if (count($ts) > 0) {
-        $type_subs[$type] = $ts;
-      }
-    }
-  }
-  variable_set('lm_paypal_paid_adverts_type_subs', $type_subs);
+  // Thank you GOD (even if you don't exists, at least with computers) for that
+  // wonderful #tree form modifier!
+  variable_set('lm_paypal_paid_adverts_type_subs',
+    $form_state['values']['lm_paypal_paid_adverts_node_subs']);
 }
 
 /**
@@ -320,7 +288,7 @@ function lm_paypal_paid_adverts_has_sub($node, &$subid, &$paidfor) {
 function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50) {
   $type_subs = lm_paypal_paid_adverts_get_type_subs();
 
-  if (!is_numeric($uid) || intval($uid) != $uid) {
+  if (!is_numeric($uid) || ((int) $uid) != $uid) {
     $uid = 0;
   }
 

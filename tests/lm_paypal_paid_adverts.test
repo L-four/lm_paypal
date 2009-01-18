@@ -98,7 +98,7 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
 
 
     // Enable subscriptions for "Page" type for this subscription.
-    $edit = array("NTpage[$sub_id]" => TRUE);
+    $edit = array("lm_paypal_paid_adverts_node_subs[page][$sub_id]" => TRUE);
     $this->drupalPost('admin/settings/lm_paypal/paid_adverts_settings', $edit, 'Save configuration');
     // $this->assertText('Paid Advert settings updated');
     $this->drupalLogout();
