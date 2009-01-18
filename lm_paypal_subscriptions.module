@@ -1722,7 +1722,7 @@ function _lm_paypal_process_in_subscr($ipn) {
     return;
   }
 
-  $custom = unpack_ipn_custom($ipn);
+  $custom = lm_paypal_unpack_ipn_custom($ipn);
   if ($ipn->item_number == '' || !is_numeric($ipn->item_number) ||
       !isset($custom['uid']) || !is_numeric($custom['uid'])) {
     watchdog(

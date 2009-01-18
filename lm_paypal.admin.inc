@@ -107,7 +107,7 @@ function lm_paypal_ipns() {
   }
 
   while ($ipn = db_fetch_object($result)) {
-    $custom = unpack_ipn_custom($ipn);
+    $custom = lm_paypal_unpack_ipn_custom($ipn);
     // $uid = $custom['uid'];
     // $other = ($ipn->custom >> 16) & 0xFFFF;
     $rows[] = array(

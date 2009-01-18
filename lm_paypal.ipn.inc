@@ -224,7 +224,7 @@ function _lm_paypal_process_in_web_accept($ipn) {
     return;
   }
 
-  $custom = unpack_ipn_custom($ipn);
+  $custom = lm_paypal_unpack_ipn_custom($ipn);
   $uid = $custom['uid'];
   $other = $custom['other'];
 
