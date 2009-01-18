@@ -400,69 +400,76 @@ function lm_paypal_paid_adverts_nodeapi(&$node, $op, $a3, $a4) {
 function _lm_paypal_paid_adverts_nodeapi_load(&$node) {
   global $user;
   $type_subs = lm_paypal_paid_adverts_get_type_subs();
-
   $title_len = 10;
+  $has_sub = lm_paypal_paid_adverts_has_sub($node, $subid, $paidfor);
 
+  if (!$has_sub) {
+    return;
+  }
 
-      $has_sub = lm_paypal_paid_adverts_has_sub($node, $subid, $paidfor);
-      if (!$has_sub) {
-        return;
-      }
-      if (!$paidfor) {
-        if (!$subid) {
-          // Select the first identifier as the subscription identifier.
-          // In a perfect world, you should not have multiple subscriptions for
-          // one node type also it is allowed by the module...
-          $ts = $type_subs[$node->type];
-          $subid = reset($ts);
-        }
-        $msg = t('This classified ad for subscription #'. $subid .' is still unpaid. '
-               .'Other users will not be able to access it.');
-      }
+  if (!$paidfor) {
+    if (!$subid) {
+      // Select the first identifier as the subscription identifier.
+      // In a perfect world, you should not have multiple subscriptions for
+      // one node type also it is allowed by the module...
+      $ts = $type_subs[$node->type];
+      $subid = reset($ts);
+    }
+    $msg = t('This classified ad for subscription #'. $subid .' is still unpaid. '
+      .'Other users will not be able to access it.');
+  }
 
-      if ($user->uid == 1 || node_access('update', $node)
-            || user_access('access unpaid adverts') || user_access('administer lm_paypal')) {
-        if (!$paidfor) {
-          // Allow the theme to show the admin/moderators that
-          // different adverts were not paid for yet.
-          if ($user->uid == 1 || user_access('administer lm_paypal')) {
-            // And to people who can administer LM Paypal,
-            // show a button to mark this node as paid.
-            drupal_set_message($msg, 'error');
-            $link = l(
-              t('Mark as Paid'),
-              "admin/settings/lm_paypal/subscriber_pay/$subid/{$node->nid}/{$node->uid}",
-              array('attributes' => array('title' => t('Click on this link to mark this node as paid without having to go to PayPal.'))));
-            drupal_set_message($link, 'error');
-          }
-        }
-        return;
-      }
-      if ($node->uid != $user->uid && !$paidfor) {
-        // Make sure nothing useful is visible
-
-        // TODO: use drupal function for this? and ellipsis / &hellip;
-        if (strlen($node->title) > $title_len) {
-          $short_title = substr($node->title, 0, $title_len) . '...';
-        }
-        else {
-          $short_title = $node->title;
-        }
-
-        $overwrite = array(
-          'title' => $short_title,
-          'teaser' => t('<em>Not yet published.</em>'),
-          'body' => t('<em>Not yet published.</em>'),
-        );
-        return $overwrite;
-      }
-      if (!$paidfor) {
-        // Add a link for the user to be able to put a charge to pay for this node
+  if ($user->uid == 1
+    || node_access('update', $node)
+    || user_access('access unpaid adverts')
+    || user_access('administer lm_paypal'))
+  {
+    if (!$paidfor) {
+      // Allow the theme to show the admin/moderators that different adverts
+      // were not paid for yet.
+      if ($user->uid == 1 || user_access('administer lm_paypal')) {
+        // And to people who can administer LM Paypal, show a button to mark
+        // this node as paid.
         drupal_set_message($msg, 'error');
-        $link = l(t('Click here to publish this node now.'),
-                        "node/{$node->nid}/lm_paypal",
-                        array('attributes' => array('title' => t('For us to publicly publish this node, we require that you pay the ad charge.'))));
+        $link = l(
+        t('Mark as Paid'),
+          "admin/settings/lm_paypal/subscriber_pay/$subid/{$node->nid}/{$node->uid}",
+        array('attributes' => array('title' => t('Click on this link to mark this node as paid without having to go to PayPal.'))));
         drupal_set_message($link, 'error');
       }
-      return;
+    }
+    return;
+  }
+
+  if ($node->uid != $user->uid && !$paidfor) {
+    // Make sure nothing useful is visible
+
+    // TODO: pounard: Why would us make this node visible to anymous or other
+    // users? In case this is really usefull, then we should let the site admin
+    // configure this behavior.
+
+    // TODO: use drupal function for this? and ellipsis / &hellip;
+    if (strlen($node->title) > $title_len) {
+      $short_title = substr($node->title, 0, $title_len) . '...';
+    }
+    else {
+      $short_title = $node->title;
+    }
+
+    $overwrite = array(
+      'title' => $short_title,
+      'teaser' => t('<em>Not yet published.</em>'),
+      'body' => t('<em>Not yet published.</em>'),
+    );
+    return $overwrite;
+  }
+  if (!$paidfor) {
+    // Add a link for the user to be able to put a charge to pay for this node
+    drupal_set_message($msg, 'error');
+    $link = l(t('Click here to publish this node now.'), "node/{$node->nid}/lm_paypal", array(
+      'attributes' => array('title' => t('For us to publicly publish this node, we require that you pay the ad charge.'))
+    ));
+    drupal_set_message($link, 'error');
+  }
+  return;
 }
