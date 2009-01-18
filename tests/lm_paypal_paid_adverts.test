@@ -127,7 +127,7 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
     $this->clickLink('Click here to publish this node now.');
     $this->assertText('Click here to publish this node now.'); // TODO: should NOT appear on this view
     $this->assertText('Not yet paid for.');
-    $price_str = lm_paypal_nccc2str($subscription['a3'], $subscription['currency_code']);
+    $price_str = theme('lm_paypal_amount', $subscription['a3'], $subscription['currency_code'], TRUE);
     $period_str = lm_paypal_unit2str($subscription['p3'], $subscription['t3']);
     $this->assertText("Rate $price_str for $period_str");
     $this->assertRaw('<form action="https://www.sandbox.paypal.com/cgi-bin/webscr" method="post">');
