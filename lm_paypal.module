@@ -323,7 +323,7 @@ function lm_paypal_is_email_shaped($formelement) {
  * If the element fails any of the tests form_set_error() is called.
  * Based on code by Coyote see http://drupal.org/node/36899
  */
-function lm_paypal_is_integer_between($formelement, $min=NULL, $max=NULL) {
+function lm_paypal_is_integer_between($formelement, $min = NULL, $max = NULL) {
   $thevalue = $formelement['#value'];
   $fieldname = $formelement['#name'];
   if (is_numeric($thevalue)) {
@@ -565,9 +565,11 @@ function lm_paypal_mail($key, &$message, $params) {
 /**
  * Extract data from the 'custom' field in an IPN.  The old way LM Paypal did it
  * was by bit-packing into a 32-bit integer. The new way is PHP serialized data.
- * @return an associative array with at least 'uid' and 'other'.
+ * 
+ * @return array
+ *   An associative array with at least 'uid' and 'other'
  */
-function unpack_ipn_custom($ipn) {
+function lm_paypal_unpack_ipn_custom($ipn) {
   if ($ipn) {
     if (is_int($ipn->custom)) {
       // Old bit-packing format for 'custom'. The uid is in the bottom of 'custom'
