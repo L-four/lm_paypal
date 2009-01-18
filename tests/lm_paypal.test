@@ -96,7 +96,7 @@ class LmPaypalTestCase extends AbstractLmPaypalTestCase {
 
     // Check (empty) Saved IPNs page.
     db_query('DELETE FROM {lm_paypal_ipns}');
-    $this->drupalGet('admin/settings/lm_paypal/ipns');
+    $this->drupalGet('admin/settings/lm_paypal/base/ipns');
     $this->assertText(t('No ipns found.'), t('Empty IPNs list message found'));
     $this->assertField('filter', t('Basic filter field found on IPNs list'));
     $this->drupalLogout();
@@ -125,7 +125,7 @@ class LmPaypalTestCase extends AbstractLmPaypalTestCase {
 
     // Check (non-empty) Saved IPNs page.
     $this->drupalLogin($this->admin_user);
-    $this->drupalGet('admin/settings/lm_paypal/ipns');
+    $this->drupalGet('admin/settings/lm_paypal/base/ipns');
     $this->assertNoText(t('No ipns found.'), t('Empty IPNs list message found'));
     $this->assertField('filter', t('Basic filter field found on IPNs list'));
     $this->assertLink('1'); // the test IPN is still kept, even if it is not processed

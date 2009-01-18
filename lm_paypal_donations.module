@@ -117,13 +117,19 @@ function lm_paypal_donations_menu() {
 
   // LM PayPal Donations Settings
   $items['admin/settings/lm_paypal/donations'] = array(
-    // 'file' => 'lm_paypal.admin.inc',
-    'title' => 'LM PayPal Donations Settings',
+    'title' => 'Donations',
     'description' => 'PayPal donations interface configuration.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_donations_settings_form'),
     'access arguments' => array('administer lm_paypal'),
     'type' => MENU_LOCAL_TASK,
+    'weight' => 11,
+  );
+  // Tab 2.1 this is just to keep consistency with other modules
+  $items['admin/settings/lm_paypal/donations/settings'] = array(
+    'title' => 'Settings',
+    'access arguments' => array('administer lm_paypal'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => 11,
   );
 

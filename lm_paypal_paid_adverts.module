@@ -22,7 +22,7 @@ function lm_paypal_paid_adverts_help($path, $arg) {
   $access = l(t('user management > permissions'), 'admin/user/permissions');
   $blocks = l(t('site building > blocks'), 'admin/build/block');
   $subs = l(t('LM PayPal Subscriptions'), 'admin/settings/lm_paypal/subscriptions');
-  $adminpa = l('LM PayPal Paid Adverts', 'admin/settings/lm_paypal/paid_adverts_settings');
+  $adminpa = l('LM PayPal Paid Adverts', 'admin/settings/lm_paypal/paid_adverts/settings');
 
   $new_sub = l('LM PayPal New Subscriptions', 'admin/settings/lm_paypal/subscriptions/new');
   $help_pa = l(t('LM PayPal Paid Adverts Help'), 'admin/help/lm_paypal_paid_adverts');
@@ -92,23 +92,33 @@ function lm_paypal_paid_adverts_perm() {
  */
 function lm_paypal_paid_adverts_menu() {
   $items = array();
-  $items['admin/settings/lm_paypal/paid_adverts_settings'] = array(
-    'title' => 'Paid Advert Settings',
+  // Main tab
+  $items['admin/settings/lm_paypal/paid_adverts'] = array(
+    'title' => 'Paid Adverts',
+    'page callback' => 'lm_paypal_paid_adverts_list_nodes',
+    'access arguments' => array('administer lm_paypal'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 41,
+    'description' => 'Show all PayPal Paid Adverts.',
+  );
+  // Tab 2.1 show adverts
+  $items['admin/settings/lm_paypal/paid_adverts/show'] = array(
+    'title' => 'Show Paid Adverts',
+    'access arguments' => array('administer lm_paypal'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 41,
+  );
+  // Tab 2.2 settings
+  $items['admin/settings/lm_paypal/paid_adverts/settings'] = array(
+    'title' => 'Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_paid_adverts_settings_form'),
     'access arguments' => array('administer lm_paypal'),
     'type' => MENU_LOCAL_TASK,
-    'weight' => 41,
+    'weight' => 42,
     'description' => 'PayPal Paid Advert interface configuration.',
   );
-  $items['admin/settings/lm_paypal/paid_adverts'] = array(
-    'title' => 'Show Paid Adverts',
-    'page callback' => 'lm_paypal_paid_adverts_list_nodes',
-    'access arguments' => array('administer lm_paypal'),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 42,
-    'description' => 'Show all PayPal Paid Adverts.',
-  );
+  // Node payment form
   $items['node/%node/lm_paypal'] = array(
     'title' => 'PayPal Publication',
     'page callback' => '_lm_paypal_paid_adverts_payment',

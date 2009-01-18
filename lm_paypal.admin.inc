@@ -27,7 +27,7 @@ function lm_paypal_settings_form() {
   $form['lm_paypal_host'] = array(
     '#type' => 'textfield',
     '#title' => t('LM PayPal Host'),
-    '#default_value' => variable_get('lm_paypal_business', LM_PAYPAL_HOST_DEFAULT),
+    '#default_value' => variable_get('lm_paypal_host', LM_PAYPAL_HOST_DEFAULT),
     '#maxlength' => 100,
     '#required' => TRUE,
     '#description' => t('The host to send PayPal requests to usually www.paypal.com (when testing use www.sandbox.paypal.com)'),

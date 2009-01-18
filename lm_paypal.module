@@ -33,7 +33,7 @@ function lm_paypal_perm() {
 function lm_paypal_menu() {
   $items = array();
 
-  // use tabs for menus, main config on the default
+  // Use tabs for menus, main config on the default
   $items['admin/settings/lm_paypal'] = array(
     'file' => 'lm_paypal.admin.inc',
     'title' => 'LM PayPal',
@@ -43,22 +43,34 @@ function lm_paypal_menu() {
     'access arguments' => array('administer lm_paypal'),
     'type' => MENU_NORMAL_ITEM,
   );
-
-  // Tab 1 : LM Paypal Settings
-  $items['admin/settings/lm_paypal/settings'] = array(
-    'title' => 'LM Paypal Settings',
-    'description' => 'PayPal IPN interface configuration.',
+  // Tab 1
+  $items['admin/settings/lm_paypal/base'] = array(
+    'file' => 'lm_paypal.admin.inc',
+    'title' => 'LM PayPal',
     'access arguments' => array('administer lm_paypal'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 1,
   );
-
-  // Tab 2 : View saved IPNs
-  $items['admin/settings/lm_paypal/ipns'] = array(
+  // Tab 2.1 main settings
+  $items['admin/settings/lm_paypal/base/paypal'] = array(
+    'file' => 'lm_paypal.admin.inc',
+    'title' => 'Paypal settings',
+    'access arguments' => array('administer lm_paypal'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  // Tab 2.1 : View saved IPNs
+  $items['admin/settings/lm_paypal/base/ipns'] = array(
     'file' => 'lm_paypal.admin.inc',
     'title' => 'Saved IPNs',
     'description' => 'Show details of all saved PayPal IPN\'s',
     'page callback' => 'lm_paypal_ipns',
+    'access arguments' => array('administer lm_paypal'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
+  );
+  // Tab 2.2 : LM Paypal Settings
+  $items['admin/settings/lm_paypal/base/settings'] = array(
+    'title' => 'IPNs Settings',
+    'description' => 'PayPal IPN interface configuration.',
     'access arguments' => array('administer lm_paypal'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 2,

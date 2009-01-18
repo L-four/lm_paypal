@@ -123,13 +123,14 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
   function testLmPaypalSubscriptions() {
     // Check Settings page.
     $this->drupalLogin($this->admin_user);
-    $this->drupalGet('admin/settings/lm_paypal/subscriptions_settings');
+    $this->drupalGet('admin/settings/lm_paypal/subscriptions/settings');
     $this->assertField('lm_paypal_subscriptions_inprogress');
     $this->assertRaw(variable_get('lm_paypal_subscriptions_inprogress', NULL)); // TODO: check value is IN field?
     $this->assertField('lm_paypal_subscriptions_menu_rebuild');
     // $this->assertRaw(variable_get('lm_paypal_subscriptions_menu_rebuild', NULL)); // TODO: check value is IN field?
 
     // Check the help page.
+    $this->drupalGet('admin/settings/lm_paypal/subscriptions');
     $this->clickLink('LM PayPal Subscriptions Help');
     $this->assertText('LM PayPal Subscriptions');
     $this->assertText('Initial Configuration');

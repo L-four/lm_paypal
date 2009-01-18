@@ -52,7 +52,7 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
 
     // Check Settings page.
     $this->drupalLogin($this->admin_user);
-    $this->drupalGet('admin/settings/lm_paypal/paid_adverts_settings');
+    $this->drupalGet('admin/settings/lm_paypal/paid_adverts/settings');
     $this->assertText('Associate node subscriptions with node types.');
     $this->assertText('No node subscriptions defined.');
     // $this->assertNoText('Save configuration');
@@ -92,14 +92,14 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
 
 
     // Go back to the settings page.
-    $this->drupalGet('admin/settings/lm_paypal/paid_adverts_settings');
+    $this->drupalGet('admin/settings/lm_paypal/paid_adverts/settings');
     $this->assertText('Associate node subscriptions with node types.');
     $this->assertNoText('No node subscriptions defined.');
 
 
     // Enable subscriptions for "Page" type for this subscription.
     $edit = array("lm_paypal_paid_adverts_node_subs[page][$sub_id]" => TRUE);
-    $this->drupalPost('admin/settings/lm_paypal/paid_adverts_settings', $edit, 'Save configuration');
+    $this->drupalPost('admin/settings/lm_paypal/paid_adverts/settings', $edit, 'Save configuration');
     // $this->assertText('Paid Advert settings updated');
     $this->drupalLogout();
 
