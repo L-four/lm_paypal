@@ -7,6 +7,17 @@
  * PayPal interface.
  */
 
+define('LM_PAYPAL', 'LM_PayPal');
+
+// Don't change these here! Use the admin interface at admin/settings/lm_paypal
+define('LM_PAYPAL_HOST_DEFAULT', 'www.paypal.com');
+define('LM_PAYPAL_OBEY_TEST_IPNS_DEFAULT', 0);
+define('LM_PAYPAL_IPNS_MAX_AGE_DEFAULT', 5 * 24); // Max hours to keep IPNS
+
+// Never change these unless you really know what you are doing?
+define('LM_PAYPAL_DEBUG_DEFAULT', FALSE);
+define('LM_PAYPAL_VALIDATE_TIMEOUT', 30);
+
 /**
  * Implementation of hook_perm().
  */
@@ -73,6 +84,145 @@ function lm_paypal_menu() {
   return $items;
 }
 
+function lm_paypal_debug() {
+  return (bool) variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
+}
+
+/**
+ * Get the configured paypal host.
+ * 
+ * @param boolean $url = FALSE
+ *   If set to TRUE, return the webscr full absolute URL
+ * @return string
+ *   Paypal hostname
+ */
+function lm_paypal_api_get_host($full_url = FALSE) {
+  $hostname = variable_get('lm_paypal_host', LM_PAYPAL_HOST_DEFAULT);
+  if ($full_url) {
+    return 'https://'.$hostname.'/cgi-bin/webscr';
+  }
+  return $hostname;
+}
+
+/**
+ * Get the configured paypal business.
+ * 
+ * @return string
+ *   Paypal business name
+ */
+function lm_paypal_api_get_business() {
+  return variable_get('lm_paypal_business', '');
+}
+
+/**
+ * Get currency localized textual description or symbol.
+ * 
+ * If you don't specify a currency code you want, this function will return an
+ * array containing all the lm_paypal supported currencies descriptions.
+ * 
+ * @param string $currency = NULL
+ *   (optional) If set, the function will return only the given currency code
+ *   data.
+ * @param boolean $syms = FALSE
+ *   (optional) If set to TRUE, return the given currency symbol instead of the
+ *   currency localized textual description.
+ * @return mixed
+ *   Data (string) about one currency or array of all support currencies
+ *   NULL if $currency is unknown.
+ */
+function lm_paypal_api_get_currency($currency = NULL, $syms = FALSE) {
+  static $currencies_text, $currencies_syms;
+
+  if (! $syms && $currencies_text === NULL) {
+    $currencies_text = array(
+      // '' => t('default currency'),  Force a currency to be specified
+      'USD' => t('U.S. Dollar'),
+      'GBP' => t('Pound Sterling'),
+      'EUR' => t('Euro'),
+      'AUD' => t('Australian Dollar'),
+      'CAD' => t('Canadian Dollar'),
+      'JPY' => t('Japanese Yen'),
+      'CHF' => t('Swiss Franc'),
+      'CZK' => t('Czech Koruna'),
+      'DKK' => t('Danish Krone'),
+      'HKD' => t('Hong Kong Dollar'),
+      'HUF' => t('Hungarian Forint'),
+      'NOK' => t('Norwegian Krone'),
+      'NZD' => t('New Zealand Dollar'),
+      'PLN' => t('Polish Zloty'),
+      'SEK' => t('Swedish Krona'),
+      'SGD' => t('Singapore Dollar'),
+    );
+  }
+  if ($syms && $currencies_syms === NULL) {
+    $currencies_syms = array(
+      '' => '?',
+      'AUD' => 'A$',
+      'CAD' => 'Can$',
+      //'EUR' => '&euro;',  This causes problems depending on the fonts
+      // available and the version of the browser used
+      // TODO: pounard: I think we should write the real Euro sign (€)
+      'EUR' => 'Euro',
+      'GBP' => '&#163;',
+      'JPY' => '&#165;',
+      'USD' => '$',
+      'CHF' => 'CHF',   // Yes - it really is writen as CHF
+      'CZK' => 'Kc',
+      'DKK' => 'kr',
+      'HKD' => 'HK$',
+      'HUF' => 'Ft',
+      'NOK' => 'kr',
+      'NZD' => 'NZ$',
+      'PLN' => 'zl',  // I cannot find the HTML character for a crossed l
+      'SEK' => 'kr',
+      'SGD' => 'S$',
+    );
+  }
+
+  if ($currency) {
+    return $syms ? $currencies_syms[$currency] : $currencies_text[$currency];
+  }
+  else {
+    return $syms ? $currencies_syms : $currencies_text;
+  }
+}
+
+function lm_paypal_api_get_period_unit_list($default = FALSE) {
+  static $cache;
+  if (! $cache) {
+    $cache = array(
+      'D' => t('Days'),
+      'W' => t('Weeks'),
+      'M' => t('Months'),
+      'Y' => t('Years'),
+    );
+  }
+  if ($default) {
+    return array(NULL, t('Default')) + $default;
+  }
+  else {
+    return $cache;
+  }
+}
+
+function _lm_paypal_clean_stored_ipns() {
+  $ipns_max_age = variable_get('lm_paypal_ipns_max_age', LM_PAYPAL_IPNS_MAX_AGE_DEFAULT);
+  if (lm_paypal_debug()) {
+    watchdog(LM_PAYPAL, 'cron');
+  }
+  $max_age = time() - ($ipns_max_age * 3600);
+  db_query("DELETE FROM {lm_paypal_ipns} WHERE timestamp < %d", $max_age);
+}
+
+/**
+ * Implementation of hook_cron().
+ */
+function lm_paypal_cron() {
+  // This cron implementation is OK, but shouldn't we add a option to keep
+  // history of *ALL* transactions and what module did treat the IPN?
+  _lm_paypal_clean_stored_ipns();
+}
+
 // =====================================================================
 // Below this line, module has not been "cleaned up"
 
@@ -80,147 +230,11 @@ function lm_paypal_menu() {
 
 
 
-
-
-
-
-
-
-
-
-define('LM_PAYPAL', 'LM_PayPal');
-
-// Don't change these here! Use the admin interface at admin/settings/lm_paypal
-define('LM_PAYPAL_HOST_DEFAULT', 'www.paypal.com');
-define('LM_PAYPAL_OBEY_TEST_IPNS_DEFAULT', 0);
-define('LM_PAYPAL_IPNS_MAX_AGE_DEFAULT', 5 * 24); // Max hours to keep IPNS
-
-// Never change these unless you really know what you are doing?
-define('LM_PAYPAL_DEBUG_DEFAULT', FALSE);
-define('LM_PAYPAL_VALIDATE_TIMEOUT', 30);
-
-
-
-
-
-/**
- * Get a list of currencies supported by PayPal, in a format suitable for
- * looking up, or using as #options in a form.
- */
-function _lm_paypal_get_currency_info($code = NULL) {
-  static $currency_info;
-  if (!isset($currency_info)) {
-    $currency_info = array(
-      'USD' => array('$', t('U.S. Dollar')),
-      'GBP' => array('&#163;', t('Pound Sterling')),
-      'EUR' => array('Euro', t('Euro')), // &euro; causes some font/browser issues
-      'AUD' => array('A$', t('Australian Dollar')),
-      'CAD' => array('Can$', t('Canadian Dollar')),
-      'JPY' => array('&#165;', t('Japanese Yen')),
-      'CHF' => array('CHF', t('Swiss Franc')), // Yes - it really is writen as CHF
-      'CZK' => array('Kc', t('Czech Koruna')),
-      'DKK' => array('kr', t('Danish Krone')),
-      'HKD' => array('HK$', t('Hong Kong Dollar')),
-      'HUF' => array('Ft', t('Hungarian Forint')),
-      'NOK' => array('kr', t('Norwegian Krone')),
-      'NZD' => array('NZ$', t('New Zealand Dollar')),
-      'PLN' => array('zl', t('Polish Zloty')), // I cannot find the HTML character for a crossed l
-      'SEK' => array('kr', t('Swedish Krona')),
-      'SGD' => array('S$', t('Singapore Dollar')),
-    );
-  }
-
-  return $code ? $currency_info[$code] : $currency_info;
-}
-
-
-function _lm_paypal_get_currencies() {
-  $currencies = array();
-  foreach (_lm_paypal_get_currency_info() as $code => $info) {
-    $currencies[$code] = $info[1];
-  }
-  return $currencies;
-}
-
-
-/**
- * Finds the currency symbol corresponding to a three letter code
- *
- * @param $ccc
- *   A three letter currency code such as USD
- * @return
- *   A currency symbol such as $
- */
-function lm_paypal_ccc2symbol($ccc) {
-  $currency_info = _lm_paypal_get_currency_info($ccc);
-  return $currency_info[0];
-}
-
-
-
-/**
- * Initialize global variables
- * Note: Originally this was a hook_init() function but a user was getting
- * hit by this function being called before common.inc was loaded.
- *
- *
- * TODO: get rid of this grotty design
- */
-function _lm_paypal_ini() {
-  // dsm("_lm_paypal_ini()");
-
-  global $_lm_paypal_debug;  // Is debugging enabled
-  global $_lm_paypal_welcome;  // Welcome message
-  global $_lm_paypal_host;  // Where to send paypal requests/verifies to
-  global $_lm_paypal_business;  // what is my business email
-  global $_lm_paypal_obey_test_ipns;  // Treat test IPN messages as real
-  global $_lm_paypal_ipns_max_age;  // How many hours to keep old IPNs for
-  global $_lm_paypal_period_units_option;
-
-  static $inited = 0;
-
-  if ($inited) {
-    return;
-  }
-  $inited = 1;
-
-  $_lm_paypal_debug = variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
-  $_lm_paypal_host = variable_get('lm_paypal_host', LM_PAYPAL_HOST_DEFAULT);
-  $_lm_paypal_business = variable_get('lm_paypal_business', '');
-  $_lm_paypal_obey_test_ipns = variable_get('lm_paypal_obey_test_ipns', LM_PAYPAL_OBEY_TEST_IPNS_DEFAULT);
-  $_lm_paypal_ipns_max_age = variable_get('lm_paypal_ipns_max_age', LM_PAYPAL_IPNS_MAX_AGE_DEFAULT);
-
-  $_lm_paypal_welcome = '<p>'. t('Welcome to the LM PayPal modules for Drupal.') .'</p>';
-
-  //$_lm_paypal_welcome .= '<p><b>'. t('These modules are still undergoing development so it is strongly advised that you to test them out against the PayPal Sandbox first.') .'</b></p>';
-  // Note: NOT used to format messages for the user. See lm_paypal_unit2str()
-  $_lm_paypal_period_units_option = array(
-    //'' => t('default'),
-    'D' => t('Days'),
-    'W' => t('Weeks'),
-    'M' => t('Months'),
-    'Y' => t('Years'),
-  );
-
-  // Call all the _ini functions of all the lm_paypal modules.
-  // This is mostly to ensure that all the web_accept_register's are called.
-  foreach (module_list() as $module) {
-    if (strncmp($module, "lm_paypal", 9) == 0) {
-      $f = '_'. $module .'_ini';
-      if (function_exists($f)) {
-        $f();
-      }
-    }
-  }
-}
-
 /**
  * Implementation of hook_help().
  */
 /*
  function lm_paypal_help($path, $arg) {
-  _lm_paypal_ini();
-  global $_lm_paypal_welcome;  // Welcome message
 
   $admin = l('LM PayPal Admin', 'admin/settings/lm_paypal');
   $access = l('administer permissions', 'admin/user/permissions');
@@ -329,9 +343,6 @@ function lm_paypal_is_integer_between($formelement, $min=NULL, $max=NULL) {
     }
   }
 }
-
-
-
 
 /**
  * Register the handler function for a range of item_numbers
@@ -442,19 +453,6 @@ function lm_paypal_period_unit2days($period, $unit) {
 }
 
 /**
- * Finds the option value corresponding to a three letter currency
- *
- * @param $ccc
- *   A PayPal three letter currency code (eg: USD)
- * @return
- *   The string representation the currency (eg: U.S. Dollar)
- */
-function lm_paypal_ccc2currency($ccc) {
-  $info = _lm_paypal_get_currency_info($ccc);
-  return $info[1];
-}
-
-/**
  * Generates a human readable string from a number and a 3 letter currency code.
  *
  * If we can find a currency symbol (eg: '$') for the given currency code, use
@@ -469,12 +467,12 @@ function lm_paypal_ccc2currency($ccc) {
  *   The string representation the amount in that currency (eg: $5)
  */
 function lm_paypal_nccc2str($n, $ccc) {
-  $sym = lm_paypal_ccc2symbol($ccc);
+  $sym = lm_paypal_api_get_currency($ccc, TRUE);
   if ($sym != '' && $sym != '?') {
     return t('!symbol!amount', array('!amount' => $n, '!symbol' => $sym));
   }
   else {
-    $cur = lm_paypal_ccc2currency($ccc);
+    $cur = lm_paypal_api_get_currency($ccc, FALSE);
     return t('!amount !currency', array('!amount' => $n, '!currency' => $cur));
   }
   return $str;
@@ -514,11 +512,9 @@ function lm_paypal_nccc2str($n, $ccc) {
  */
 function lm_paypal_mail_user($to_uid, $about_uid, $subject, $message, $vars) {
   // TODO: use Token module
-  _lm_paypal_ini();
-  global $_lm_paypal_debug;
   global $base_url;
 
-  if ($_lm_paypal_debug) {
+  if (lm_paypal_debug()) {
     watchdog(LM_PAYPAL, "lm_paypal_mail_user($to_uid, $about_uid, $subject, $message, $vars)", NULL);
   }
 
@@ -563,22 +559,6 @@ function lm_paypal_mail($key, &$message, $params) {
       $message['body'] = $params['body'];
       break;
   }
-}
-
-/**
- * Implementation of hook_cron().
- */
-function lm_paypal_cron() {
-  _lm_paypal_ini();
-  global $_lm_paypal_debug;
-  global $_lm_paypal_ipns_max_age;
-
-  if ($_lm_paypal_debug) {
-    watchdog(LM_PAYPAL, 'cron');
-  }
-
-  $max_age = time() - ($_lm_paypal_ipns_max_age * 3600);
-  db_query("DELETE FROM {lm_paypal_ipns} WHERE timestamp < %d", $max_age);
 }
 
 /**

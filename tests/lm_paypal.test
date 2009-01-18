@@ -1,6 +1,8 @@
 <?php
 // $Id$
 
+require_once(drupal_get_path('module', 'lm_paypal').'/tests/lm_paypal.base.test');
+
 /*
 [13-Jan-2009 08:36:31] SUBSCRIPTION IPN = Array
 (
@@ -143,6 +145,36 @@ class LmPaypalTestCase extends AbstractLmPaypalTestCase {
     }
   }
 
+  function testLmPaypalAPI() {
+    // Test simple getters
+    $business = 'my_business';
+    $host = 'www.my_paypal_host.com';
+    variable_set('lm_paypal_business', $business);
+    variable_set('lm_paypal_host', $host);
+    $this->assertEqual(variable_get('lm_paypal_business', ''), lm_paypal_api_get_business(), t('Strings are equals'));
+    $this->assertEqual(variable_get('lm_paypal_host', ''), lm_paypal_api_get_host(FALSE), t('Strings are equals'));
+    $this->assertEqual(variable_get('lm_paypal_host', ''), lm_paypal_api_get_host(), t('Strings are equals'));
+    $full_host = 'https://'.$host.'/cgi-bin/webscr';
+    $this->assertEqual($full_host, lm_paypal_api_get_host(TRUE), t('Strings are equals'));
+
+    // Test currencies API methods
+    $test_cases = array(
+      // Unknown text asked
+      array(array('XXX'), NULL),
+      array(array('YYY', FALSE), NULL),
+      // Uknown syms asked
+      array(array('ZZZ', TRUE), NULL),
+      // Known text asked
+      array(array('CZK'), t('Czech Koruna')),
+      array(array('NOK', FALSE), t('Norwegian Krone')),
+      // Unknown syms asked
+      array(array('AUD', TRUE), 'A$'),
+    );
+    foreach ($test_cases as $case) {
+      $return = call_user_func_array('lm_paypal_api_get_currency', $case[0]);
+      $this->assertEqual($return, $case[1], t('Currency test for @cur', array('@cur' => $case[0][0])));
+    }
+  }
 
   /**
    * Test IPN validation. This requires access to the PayPal validation service,

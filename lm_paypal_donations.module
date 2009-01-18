@@ -17,29 +17,9 @@ define('LM_PAYPAL_DONATIONS', 'LM_PayPal_Donat');
 define('LM_PAYPAL_DONATIONS_THANKS_DEFAULT', '/lm_paypal/donations_thanks');
 
 /**
- * Initialize global variables
- */
-function _lm_paypal_donations_ini() {
-  _lm_paypal_ini();
-  global $_lm_paypal_donations_thanks;  // page user is directed to on donation
-
-  static $inited = 0;
-
-  if ($inited) {
-    return;
-  }
-  $inited = 1;
-
-  $_lm_paypal_donations_thanks = variable_get('lm_paypal_donations_thanks', LM_PAYPAL_DONATIONS_THANKS_DEFAULT);
-
-  // lm_paypal_web_accept_register('lm_paypal_process_in_donate', 0, 0);
-}
-
-/**
  * Implementation of hook_help().
  */
 function lm_paypal_donations_help($path, $arg) {
-  _lm_paypal_donations_ini();
   global $_lm_paypal_welcome;  // Welcome message
   global $base_url;
 
@@ -133,8 +113,6 @@ function lm_paypal_donations_perm() {
  * Implementation of hook_menu().
  */
 function lm_paypal_donations_menu() {
-  _lm_paypal_donations_ini();
-
   $items = array();
 
   // LM PayPal Donations Settings
@@ -172,18 +150,14 @@ function lm_paypal_donations_menu() {
  * Settings form.
  */
 function lm_paypal_donations_settings_form() {
-  _lm_paypal_donations_ini();
-  global $_lm_paypal_donations_thanks;
-
   $form ['lm_paypal_donations_thanks'] = array(
     '#type' => 'textfield',
     '#title' => t('LM PayPal donation thanks page'),
-    '#default_value' => $_lm_paypal_donations_thanks,
+    '#default_value' => variable_get('lm_paypal_donations_thanks', LM_PAYPAL_DONATIONS_THANKS_DEFAULT),
     '#maxlength' => 100,
     '#required' => TRUE,
     '#description' => t('The page the user is sent to by paypal after a donation. The default is %link but you might want to point it at a page you have created yourself.', array('%link' => LM_PAYPAL_DONATIONS_THANKS_DEFAULT)),
   );
-
   return system_settings_form($form);
 }
 
@@ -221,10 +195,7 @@ function lm_paypal_donations_lm_paypal_ipn_donate($ipn) {
  *   The PayPal item_number
  */
 function _lm_paypal_process_in_donate($ipn, $link, $uid, $other, $item_number) {
-  _lm_paypal_donations_ini();
-  global $_lm_paypal_debug;
-
-  if ($_lm_paypal_debug) {
+  if (lm_paypal_debug()) {
     watchdog(LM_PAYPAL_DONATIONS, 'in donate');
   }
 
@@ -264,12 +235,7 @@ function _lm_paypal_process_in_donate($ipn, $link, $uid, $other, $item_number) {
  */
 
 function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '', $amount_label = '', $ret_url = '') {
-  _lm_paypal_donations_ini();
   global $user;
-  global $_lm_paypal_debug;
-  global $_lm_paypal_host;
-  global $_lm_paypal_business;
-  global $_lm_paypal_donations_thanks;
 
   if (!user_access('access lm_paypal_donate')) {
     return t('Access to PayPal donation buttons denied');
@@ -286,7 +252,7 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
   if (is_array($amount)) {
     if (count($amount) == 1) {
       $a = $amount[0];
-      $cs = lm_paypal_ccc2symbol($ccc);
+      $cs = lm_paypal_api_get_currency($ccc, TRUE);
       $sa = "$cs <input name=\"amount\" size=\"3\" value=\"$a\">\n";
     }
     else {
@@ -321,9 +287,9 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
 
   $name = check_plain($name);
 
-  $biz = check_plain($_lm_paypal_business);
+  $biz = check_plain(lm_paypal_api_get_business());
   if ($ret_url == '' || is_null($ret_url)) {
-    $ret_url = $_lm_paypal_donations_thanks;
+    $ret_url = variable_get('lm_paypal_donations_thanks', LM_PAYPAL_DONATIONS_THANKS_DEFAULT);
   }
 
   if (variable_get('clean_url', 0)) {
@@ -337,7 +303,7 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
 
   // Output a form that will redirect the user to PayPal - note all the fields
   // are hidden so only the submit appears
-  $form = "\n<form action=\"http://$_lm_paypal_host/cgi-bin/webscr\" method=\"post\">\n";
+  $form = "\n<form action=\"".lm_paypal_api_get_host(TRUE)."\" method=\"post\">\n";
 
   if (isset($sa)) {
     if ($amount_label != '') {
@@ -392,9 +358,6 @@ function lm_paypal_donations_thanks() {
  * Implementation of hook_user().
  */
 function lm_paypal_donations_user($op, &$edit, &$account, $category = NULL) {
-  _lm_paypal_donations_ini();
-  global $_lm_paypal_debug;
-
   global $user;
   $uid = isset($account->uid) ? $account->uid : 0;
   // In the "my account" view area show all donations

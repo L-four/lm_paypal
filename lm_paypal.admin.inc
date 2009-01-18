@@ -5,14 +5,6 @@
  * Return the main LM PayPal settings form.
  */
 function lm_paypal_settings_form() {
-  _lm_paypal_ini();
-  global $_lm_paypal_debug;
-  global $_lm_paypal_host;
-  global $_lm_paypal_business;
-  global $_lm_paypal_ipns_max_age;
-  global $_lm_paypal_obey_test_ipns;
-  global $_lm_paypal_ipns_max_age;
-
   // $site_name = variable_get('site_name', 'drupal');
   $site_name = url('', array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
 
@@ -24,7 +16,7 @@ function lm_paypal_settings_form() {
   $form['lm_paypal_business'] = array(
     '#type' => 'textfield',
     '#title' => t('LM PayPal Business/Premier Email'),
-    '#default_value' => $_lm_paypal_business,
+    '#default_value' => variable_get('lm_paypal_business', ''),
     '#maxlength' => 100,
     '#required' => TRUE,
     '#validate' => array('lm_paypal_is_email_shaped' => array(0)),
@@ -34,7 +26,7 @@ function lm_paypal_settings_form() {
   $form['lm_paypal_host'] = array(
     '#type' => 'textfield',
     '#title' => t('LM PayPal Host'),
-    '#default_value' => $_lm_paypal_host,
+    '#default_value' => variable_get('lm_paypal_business', LM_PAYPAL_HOST_DEFAULT),
     '#maxlength' => 100,
     '#required' => TRUE,
     '#description' => t('The host to send PayPal requests to usually www.paypal.com (when testing use www.sandbox.paypal.com)'),
@@ -43,7 +35,7 @@ function lm_paypal_settings_form() {
   $form['lm_paypal_ipns_max_age'] = array(
     '#type' => 'textfield',
     '#title' => t('LM PayPal Max Age IPNS'),
-    '#default_value' => $_lm_paypal_ipns_max_age,
+    '#default_value' => variable_get('lm_paypal_ipns_max_age', LM_PAYPAL_IPNS_MAX_AGE_DEFAULT),
     '#maxlength' => 10,
     '#required' => TRUE,
     '#validate' => array('lm_paypal_is_integer_between' => array(1)),
@@ -53,7 +45,7 @@ function lm_paypal_settings_form() {
   $form['lm_paypal_obey_test_ipns'] = array(
     '#type' => 'checkbox',
     '#title' => t('LM PayPal Obey Test IPNS'),
-    '#default_value' => $_lm_paypal_obey_test_ipns,
+    '#default_value' => variable_get('lm_paypal_obey_test_ipns', LM_PAYPAL_OBEY_TEST_IPNS_DEFAULT),
     '#description' => t('Obey test IPNS, from PayPal Sandbox, as if real'),
   );
 
@@ -67,7 +59,7 @@ function lm_paypal_settings_form() {
   $form['lm_paypal_debug'] = array(
     '#type' => 'checkbox',
     '#title' => t('LM PayPal Debug'),
-    '#default_value' => $_lm_paypal_debug,
+    '#default_value' => variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT),
     '#description' => t('Enabled verbose debugging output of LM PayPal'),
   );
 
@@ -82,9 +74,6 @@ function lm_paypal_settings_form() {
  * Mostly borrowed from watchdog.module.
  */
 function lm_paypal_ipns() {
-  _lm_paypal_ini();
-  global $_lm_paypal_debug;
-
   $ipns_per_page = 50;
 
   $output = drupal_get_form('lm_paypal_ipns_filter');
@@ -158,9 +147,6 @@ function lm_paypal_ipns() {
  *   The string containing the details of the IPN.
  */
 function lm_paypal_id($id = '') {
-  _lm_paypal_ini();
-  global $_lm_paypal_debug;
-
   $id = check_plain($id);
 
   if ($id == '' || !is_numeric($id) || intval($id) != $id) {
@@ -226,6 +212,5 @@ function lm_paypal_ipns_filter() {
  * Process the form submission for lm_paypal_ipns
  */
 function lm_paypal_ipns_submit($form, &$form_state) {
-  global $form_values;
   $_SESSION['lm_paypal_ipns_filter'] = $form_state['values']['filter'];
 }

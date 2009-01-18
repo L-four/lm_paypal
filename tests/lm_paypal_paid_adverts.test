@@ -1,6 +1,8 @@
 <?php
 // $Id$
 
+require_once(drupal_get_path('module', 'lm_paypal').'/tests/lm_paypal.test');
+
 class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
 
   function getInfo() {

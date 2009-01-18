@@ -11,8 +11,6 @@
 function lm_paypal_ipn_in() {
   // file_put_contents('/tmp/ipn-post.txt', serialize($_POST));
   watchdog(LM_PAYPAL, 'lm_paypal_ipn_in called', NULL);
-  _lm_paypal_ini();
-  // global $_lm_paypal_host;
 
   // Don't bother with these fields - but don't flag them as errors
   static $ignore_fields = array(
@@ -80,24 +78,19 @@ function lm_paypal_ipn_in() {
  *  The id of the saved IPN to be processed.
  */
 function lm_paypal_process_in($ipn) {
-  _lm_paypal_ini();
-  global $_lm_paypal_debug;
-  global $_lm_paypal_host;
-  global $_lm_paypal_business;
-  global $_lm_paypal_obey_test_ipns;
-
+  $business = lm_paypal_api_get_business();
   $link = l(t('view'), "admin/settings/lm_paypal/id/$ipn->id");
 
-  if ($ipn->test_ipn != '' && !$_lm_paypal_obey_test_ipns) {
+  if ($ipn->test_ipn != '' && ! variable_get('lm_paypal_obey_test_ipns', FALSE)) {
     watchdog(LM_PAYPAL, 'test_ipn received - ignoring', array(), WATCHDOG_WARNING, $link);
     return;
   }
 
-  if (strcasecmp(trim($ipn->receiver_email), trim($_lm_paypal_business)) != 0) {
+  if (strcasecmp(trim($ipn->receiver_email), trim($business)) != 0) {
     watchdog(
       LM_PAYPAL,
       'Incoming IPN received email does not match business email (received %received, business %business)',
-      array('%received' => check_plain($ipn->receiver_email), '%business' => check_plain($_lm_paypal_business)),
+      array('%received' => check_plain($ipn->receiver_email), '%business' => check_plain($business)),
       WATCHDOG_ERROR,
       $link);
     return;
@@ -178,8 +171,7 @@ function lm_paypal_process_in($ipn) {
  */
 function lm_paypal_lm_paypal_ipn_send_money($ipn) {
   // error_log("Called lm_paypal_lm_paypal_ipn_send_money($ipn->txn_id)");
-  $debug = variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
-  if ($debug) {
+  if (lm_paypal_debug()) {
     watchdog(LM_PAYPAL, 'lm_paypal_lm_paypal_ipn_send_money (passing to web_accept)');
   }
   return lm_paypal_process_in_web_accept($ipn);
@@ -389,7 +381,7 @@ function _lm_paypal_validate_ipn($post) {
   // Validate this incoming IPN by sending it to PayPal to be checked
   $lm_paypal_host = variable_get('lm_paypal_host', LM_PAYPAL_HOST_DEFAULT);
   $validate_result = drupal_http_request(
-    'http://'. $lm_paypal_host . '/cgi-bin/webscr',
+    lm_paypal_api_get_host(TRUE),
     array('Content-Type' => 'application/x-www-form-urlencoded'),
     'POST',
     $req
