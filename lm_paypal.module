@@ -12,7 +12,7 @@ define('LM_PAYPAL', 'LM_PayPal');
 // Don't change these here! Use the admin interface at admin/settings/lm_paypal
 define('LM_PAYPAL_HOST_DEFAULT', 'www.paypal.com');
 define('LM_PAYPAL_OBEY_TEST_IPNS_DEFAULT', 0);
-define('LM_PAYPAL_IPNS_MAX_AGE_DEFAULT', 5 * 24); // Max hours to keep IPNS
+define('LM_PAYPAL_IPNS_MAX_AGE_DEFAULT', 120); // Max hours to keep IPNS
 
 // Never change these unless you really know what you are doing?
 define('LM_PAYPAL_DEBUG_DEFAULT', FALSE);
@@ -206,20 +206,21 @@ function lm_paypal_api_get_period_unit_list($default = FALSE) {
 }
 
 function _lm_paypal_clean_stored_ipns() {
-  $ipns_max_age = variable_get('lm_paypal_ipns_max_age', LM_PAYPAL_IPNS_MAX_AGE_DEFAULT);
-  if (lm_paypal_debug()) {
-    watchdog(LM_PAYPAL, 'cron');
+  $ipns_max_age = (int) variable_get('lm_paypal_ipns_max_age', LM_PAYPAL_IPNS_MAX_AGE_DEFAULT);
+  // Do not launch this action if no max age is specified (keep for ever).
+  if ($ipns_max_age > 0) {
+    if (lm_paypal_debug()) {
+      watchdog(LM_PAYPAL, 'cron');
+    }
+    $max_age = time() - ($ipns_max_age * 3600);
+    db_query("DELETE FROM {lm_paypal_ipns} WHERE timestamp < %d", $max_age);
   }
-  $max_age = time() - ($ipns_max_age * 3600);
-  db_query("DELETE FROM {lm_paypal_ipns} WHERE timestamp < %d", $max_age);
 }
 
 /**
  * Implementation of hook_cron().
  */
 function lm_paypal_cron() {
-  // This cron implementation is OK, but shouldn't we add a option to keep
-  // history of *ALL* transactions and what module did treat the IPN?
   _lm_paypal_clean_stored_ipns();
 }
 

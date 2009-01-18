@@ -5,12 +5,13 @@
  * Return the main LM PayPal settings form.
  */
 function lm_paypal_settings_form() {
-  // $site_name = variable_get('site_name', 'drupal');
-  $site_name = url('', array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
-
   // TODO: add better support for switching to dev/sandbox site : maybe two sets
   // of options (defaulting to sane options), with a radio button to switch
   // between them.
+  
+  // pounard: Or, like the old simple_paypal module, 2 per default options,
+  // sandbox and paypal in host, but do not let the choice to user to add
+  // others?
 
   // Show these in order of most likely to be changed
   $form['lm_paypal_business'] = array(
@@ -37,9 +38,9 @@ function lm_paypal_settings_form() {
     '#title' => t('LM PayPal Max Age IPNS'),
     '#default_value' => variable_get('lm_paypal_ipns_max_age', LM_PAYPAL_IPNS_MAX_AGE_DEFAULT),
     '#maxlength' => 10,
-    '#required' => TRUE,
+    '#required' => FALSE, // False because NULL is zero here
     '#validate' => array('lm_paypal_is_integer_between' => array(1)),
-    '#description' => t('Maximum age of an old IPN record in hours before it is deleted. Minimum is 1.'),
+    '#description' => t('Maximum age of an old IPN record in hours before it is deleted. Type 0 if you want to keep them forever.'),
   );
 
   $form['lm_paypal_obey_test_ipns'] = array(
@@ -65,8 +66,6 @@ function lm_paypal_settings_form() {
 
   return system_settings_form($form);
 }
-
-
 
 /**
  * View all saved IPNs
