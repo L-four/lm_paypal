@@ -270,7 +270,7 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
         $sa .= " <option value=\"$a\"";
         if ($def)
           $sa .= ' selected="selected"';
-        $d = lm_paypal_nccc2str($a, $ccc);
+        $d = theme('lm_paypal_amount', $a, $ccc, TRUE);
         $sa .= ">$d</option>";
       }
       $sa .= '</select>';
@@ -281,7 +281,7 @@ function lm_paypal_donate($amount = '', $ccc = '', $name = '', $button_url = '',
   }
 
   if ($name == '' && !isset($sa)) {
-    $d = lm_paypal_nccc2str($amount, $ccc);
+    $d = theme('lm_paypal_amount', $amount, $ccc, TRUE);
     $name = t('Donate %amount', array('%amount', $d));
   }
 

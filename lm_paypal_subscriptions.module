@@ -1545,16 +1545,16 @@ function lm_paypal_subscription($subid = '', $display = 0) {
         $output .= '<p>';
       }
       if ($so->p1 != '' && $so->p1 > 0) {
-        $amount = lm_paypal_nccc2str($so->a1, $so->currency_code);
+        $amount = theme('lm_paypal_amount', $so->a1, $so->currency_code, TRUE);
         $duration = lm_paypal_unit2str($so->p1, $so->t1);
         $output .= t('First trial period %amount for %duration.', array('%amount' => $amount, '%duration' => $duration));
       }
       if ($so->p2 != '' && $so->p2 > 0) {
-        $amount = lm_paypal_nccc2str($so->a2, $so->currency_code);
+        $amount = theme('lm_paypal_amount', $so->a2, $so->currency_code, TRUE);
         $duration = lm_paypal_unit2str($so->p2, $so->t2);
         $output .= t('Second trial period %amount for %duration.', array('%amount' => $amount, '%duration' => $duration));
       }
-      $amount = lm_paypal_nccc2str($so->a3, $so->currency_code);
+      $amount = theme('lm_paypal_amount', $so->a3, $so->currency_code, TRUE);
       $duration = lm_paypal_unit2str($so->p3, $so->t3);
       $output .= t('Rate %amount for %duration. ', array('%amount' => $amount, '%duration' => $duration));
       if ($so->src) {
