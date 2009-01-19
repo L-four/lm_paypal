@@ -154,6 +154,28 @@ class LmPaypalTestCase extends AbstractLmPaypalTestCase {
     }
   }
 
+  /*
+   * Hu.. don't known how to test theme functions, how bad is this?..
+  function testLmPaypalTheme() {
+    $test_cases = array(
+      // Unknown syms asked
+      array(array(10, 'XXX'), 'XXX 10'),
+      array(array(5, 'YYY', FALSE), 'YYY 5'),
+      // Uknown text asked
+      array(array(50, 'ZZZ', TRUE), 'ZZZ 50'),
+      // Known syms asked
+      array(array(3, 'CZK'), 'Kc 3'),
+      array(array(12.67, 'NOK', FALSE), 'kr 12.67'),
+      // Unknown text asked
+      array(array(1534.98, 'AUD', TRUE), '1534.98 Australian Dollar'),
+    );
+    foreach ($test_cases as $case) {
+      $return = @call_user_func_array('theme', array('lm_paypal_amount') + $case[0]);
+      $this->assertEqual($return, $case[1], t('Theme function lm_paypal_amount test for @case', array('@case' => $case[0][0].', '.$case[0][1])));
+    }
+  }
+  */
+
   function testLmPaypalAPI() {
     // Test simple getters
     $business = 'my_business';

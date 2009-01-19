@@ -40,12 +40,13 @@ function theme_lm_paypal_amount($n, $ccc, $syms = TRUE) {
   // Do not display a NULL currency
   if (! $textual) {
     $textual = $ccc;
+    $syms = TRUE;
   }
 
   if ($syms) {
-    return t('!symbol!amount', array('!amount' => $n, '!symbol' => $sym));
+    return t('!symbol !amount', array('!amount' => $n, '!symbol' => $textual));
   }
   else {
-    return t('!amount !currency', array('!amount' => $n, '!currency' => $cur));
+    return t('!amount !currency', array('!amount' => $n, '!currency' => $textual));
   }
 }

@@ -115,9 +115,11 @@ function lm_paypal_theme() {
   return array(
     'lm_paypal_payment_form' => array(
       'arguments' => array('form' => array()),
+      'file' => 'lm_paypal.theme',
     ),
-    'lm_paypal_price' => array(
+    'lm_paypal_amount' => array(
       'arguments' => array('n' => NULL, 'ccc' => NULL, 'syms' => TRUE),
+      'file' => 'lm_paypal.theme',
     ),
   );
 }
@@ -195,7 +197,7 @@ function lm_paypal_api_get_business() {
 function lm_paypal_api_get_currency($currency = NULL, $syms = FALSE) {
   static $currencies_text, $currencies_syms;
 
-  if (! $syms && $currencies_text === NULL) {
+  if (! $syms && ! $currencies_text) {
     $currencies_text = array(
       // '' => t('default currency'),  Force a currency to be specified
       'USD' => t('U.S. Dollar'),
@@ -216,7 +218,7 @@ function lm_paypal_api_get_currency($currency = NULL, $syms = FALSE) {
       'SGD' => t('Singapore Dollar'),
     );
   }
-  if ($syms && $currencies_syms === NULL) {
+  if ($syms && ! $currencies_syms) {
     $currencies_syms = array(
       '' => '?',
       'AUD' => 'A$',
@@ -241,7 +243,7 @@ function lm_paypal_api_get_currency($currency = NULL, $syms = FALSE) {
     );
   }
 
-  if ($currency && isset($currencies_syms[$currency])) {
+  if ($currency) {
     return $syms ? $currencies_syms[$currency] : $currencies_text[$currency];
   }
   else if (! $currency) {
@@ -313,12 +315,13 @@ function lm_paypal_page_thanks() {
  * back the form and change it to a input box, but without validation this
  * is dangerous, your users should go through a business validation process
  * before getting to this form.
- * 
- * @param array $form_state
- *   Form API stuff
  *
- * @param float $amount
- *   Amount
+ * @param $form_state
+ *   Form API stuff.
+ *
+ * @param mixed $amount
+ *   You can pass either a float value that will be passed in an hidden field
+ *   either an array of integers values, which will display a select.
  *
  * @param array $options = array()
  *   (optional) Pairs of setting => custom value where setting can be:
@@ -342,26 +345,48 @@ function lm_paypal_page_thanks() {
  *        his payment.
  *        Default is a page displaying the thanks message from lm_paypal main
  *        module.
+ *        Note that if the path is not valid, then lm_paypal default will be
+ *        used.
  *
  *     'text': string
  *        (x)html text to display over the form (eg: 'Validate your command').
  *        Don't forget to check_plain() your text!
  *        Default is no text displayed.
  *
+ *     'button_text': string
+ *        Whatever you want to display on submit button.
+ *
  *     'display_amount': boolean
  *        Set this to FALSE if you dont want the price to be displayed (or if
  *        you want to display it yourself in the 'text' setting).
  *        Default is amount is displayed.
+ *        Note that if you gave an array of amounts, it will remain FALSE,
+ *        whatever you pass to this option.
  *
  *     More to come, module in active development.
  *
  * @return array
  *   Drupal well formated form you can then build with drupal's form API.
- *   Or NULL if amount is not a valid positive float.
+ *   Or FALSE if amount is not a valid positive float.
  */
 function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
-  $amount = (float) $amount;
-  if ($amount > 0) {
+  $valid_amount = FALSE;
+  // Check amount is valid
+  if (is_array($amount) && ! empty($amount)) {
+    $valid_amount = array();
+    foreach ($amount as $key => $value) {
+      // Always prefer casts to *_val() php functions.
+      if (( (float) $value) > 0) {
+        $valid_amount["$value"] = $value;
+      }
+    }
+    $amount_is_valid = ! empty($amount);
+  }
+  else {
+    $valid_amount = (float) $amount;
+  }
+
+  if ($valid_amount) {
     global $user;
     // Check our user can access to return URL
     if (isset($options['return_path']) && menu_valid_path(array('item_link' => $options['return_path']))) {
@@ -373,9 +398,6 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
     $currency = isset($options['currency']) ? $options['currency'] : lm_paypal_api_get_currency_default();
 
     $form['#action'] = lm_paypal_api_get_host(TRUE);
-    $form['pre'] = array(
-      '#value' => '<p>Please complete the form below and then you will be directed through the Paypal donation process.</p>'
-    );
     $form['business'] = array(
       '#type' => 'hidden',
       '#name' => 'business',
@@ -418,18 +440,30 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
         '#value' => $options['text'],
       );
     }
-    if (! (isset($options['display_amount']) && $options['display_amount'])) {
+    if (is_array($valid_amount)) {
+      $textual_currency = lm_paypal_api_get_currency($currency, FALSE);
+      if (! $textual_currency) {
+        $textual_currency = $currency;
+      }
+      $form['amount'] = array(
+        '#type' => 'select',
+        '#title' => t('Select amount'),
+        '#options' => $valid_amount,
+        '#description' => t('Value is @currency', array('@currency' => $textual_currency)),
+      );
+    }
+    else if (! (isset($options['display_amount']) && $options['display_amount'])) {
       $form['amount_display'] = array(
         '#type' => 'markup',
         '#value' => '<p>'.t('Proceed your @price payment', array(
-          '@price' => theme('lm_paypal_amount', $amount, $currency, TRUE))).'</p>',
+          '@price' => theme('lm_paypal_amount', $valid_amount, $currency, TRUE))).'</p>',
+      );
+      $form['amount'] = array(
+        '#type' => 'hidden',
+        '#value' => $valid_amount,
+        '#name' => 'amount',
       );
     }
-    $form['amount'] = array(
-      '#type' => 'hidden',
-      '#value' => $amount,
-      '#name' => 'amount',
-    );
     $form['notify_url'] = array(
       '#type' => 'hidden',
       '#value' => lm_paypal_api_get_notify_url(),
@@ -442,11 +476,12 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
     );
     $form['submit'] = array(
       '#type' => 'submit', 
-      '#value' => t('Proceed to paypal.com'),
+      '#value' => isset($options['button_text']) ? $options['button_text'] :  t('Proceed to paypal.com'),
       '#name' => 'submit',
     );
     return $form;
   }
+  return array();
 }
 
 // =====================================================================
