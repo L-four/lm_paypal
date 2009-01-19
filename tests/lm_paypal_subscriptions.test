@@ -72,8 +72,8 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
 
   function getInfo() {
     return array(
-      'name' => t('LM PayPal Subscriptions'),
-      'description' => t('Excercise LM PayPal Subscriptions.'), // TODO: write better description
+      'name' => t('Subscriptions'),
+      'description' => t('Tests paid subscriptions to nodes/roles/groups.'),
       'group' => t('LM Paypal'),
     );
   }
@@ -114,9 +114,6 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
   }
 
 
-
-
-
   /**
    * Exercise the basic LM PayPal Donations pages.
    */
@@ -152,8 +149,6 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     $this->drupalGet('admin/settings/lm_paypal/subscriptions');
     $this->clickLink('Create New Subscription');
     $this->assertText('Create New Subscription');
-
-    // TODO: change email to log-only
 
     // There's no point in asserting a bunch of fields - just submit it!
 
@@ -239,7 +234,6 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
 
     // Subscribe (using two fake IPNs).
     $this->assertNoWatchdogErrors(WATCHDOG_WARNING, TRUE);
-    variable_set('lm_paypal_skip_validation', TRUE);
     $ipn1 = $this->postPreparedIpn(
       'sandbox-subscription-ipn1.txt',
       array(
@@ -264,7 +258,6 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
 
       )
     );
-    variable_set('lm_paypal_skip_validation', FALSE);
     $this->assertNoWatchdogErrors(WATCHDOG_WARNING, FALSE);
     // $this->dumpWatchdogErrors(WATCHDOG_DEBUG);
 
@@ -328,18 +321,5 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     // $in = 'lm_paypal_process_in_';
     // $f = $in . $ipn->txn_type;
   }
-
-/*
-  function testDummyIpn() {
-    $ipn = $this->loadTestIpn('sandbox-subscription-ipn1.txt');
-    ksort($ipn);
-    error_log('sandbox-subscription-ipn1.txt');
-    error_log(print_r($ipn, TRUE));
-    $ipn = $this->loadTestIpn('sandbox-subscription-ipn2.txt');
-    ksort($ipn);
-    error_log('sandbox-subscription-ipn2.txt');
-    error_log(print_r($ipn, TRUE));
-  }
-*/
 
 }

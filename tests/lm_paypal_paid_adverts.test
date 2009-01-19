@@ -7,8 +7,8 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
 
   function getInfo() {
     return array(
-      'name' => t('LM PayPal Paid Adverts'),
-      'description' => t('Excercise LM PayPal Paid Adverts.'), // TODO: write better description
+      'name' => t('Paid Adverts'),
+      'description' => t('Tests the creation and processing of nodes that require payment before publishing.'),
       'group' => t('LM Paypal'),
     );
   }
@@ -137,7 +137,6 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
 
     // Purchase and publish the node (using two fake IPNs).
     $this->assertNoWatchdogErrors(WATCHDOG_WARNING, TRUE);
-    variable_set('lm_paypal_skip_validation', TRUE);
     $ipn1 = $this->postPreparedIpn(
       'sandbox-subscription-ipn1.txt',
       array(
@@ -175,7 +174,6 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
         'period3' => $subscription['p3'] . ' ' . $subscription['t3'], // "30 D"
       )
     );
-    variable_set('lm_paypal_skip_validation', FALSE);
     $this->assertNoWatchdogErrors(WATCHDOG_WARNING, FALSE);
     // $this->dumpWatchdogErrors(WATCHDOG_DEBUG);
 

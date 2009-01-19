@@ -49,8 +49,8 @@ class LmPaypalTestCase extends AbstractLmPaypalTestCase {
 
   function getInfo() {
     return array(
-      'name' => t('Basic LM Paypal functionality'),
-      'description' => t('Process Paypal actions.'), // TODO: write better description
+      'name' => t('Basic module functionality'),
+      'description' => t('Verify the UI and IPN-processing function of LM Paypal.'),
       'group' => t('LM Paypal'),
     );
   }
@@ -82,9 +82,6 @@ class LmPaypalTestCase extends AbstractLmPaypalTestCase {
    * NOT require connectivity to paypal.com.
    */
   function testLmPaypal() {
-    // Disable IPN validation for this test
-    variable_set('lm_paypal_skip_validation', TRUE);
-
     // Check Settings page.
     $this->drupalLogin($this->admin_user);
     $edit = array(

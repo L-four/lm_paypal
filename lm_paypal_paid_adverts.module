@@ -175,10 +175,8 @@ function lm_paypal_paid_adverts_settings_form() {
   }
 
   else {
-    // Replaced all flattened array into a clean #tree tree.
+    // Send form data as a nested array, rather than flattening it.
     $form['lm_paypal_paid_adverts_node_subs'] = array('#tree' => TRUE);
-
-    // TODO: set form to send tree
     $type_subs = lm_paypal_paid_adverts_get_type_subs();
     foreach ($node_types as $node_type => $node_name) {
       $default_value = empty($type_subs[$node_type]) ? array(NULL) : $type_subs[$node_type];
@@ -209,8 +207,6 @@ function lm_paypal_paid_adverts_settings_form() {
  *   An array containing the name,value pairs from the form
  */
 function lm_paypal_paid_adverts_settings_form_submit($form, &$form_state) {
-  // Thank you GOD (even if you don't exists, at least with computers) for that
-  // wonderful #tree form modifier!
   variable_set('lm_paypal_paid_adverts_type_subs',
     $form_state['values']['lm_paypal_paid_adverts_node_subs']);
 }
@@ -454,8 +450,8 @@ function _lm_paypal_paid_adverts_nodeapi_load(&$node) {
   if ($node->uid != $user->uid && !$paidfor) {
     // Make sure nothing useful is visible
 
-    // TODO: pounard: Why would us make this node visible to anymous or other
-    // users? In case this is really usefull, then we should let the site admin
+    // TODO: pounard: Why would us make this node visible to anonymous or other
+    // users? In case this is really useful, then we should let the site admin
     // configure this behavior.
 
     // TODO: use drupal function for this? and ellipsis / &hellip;

@@ -78,7 +78,7 @@ function lm_paypal_subscription_menu_rebuild() {
 
 /**
  * Get textual status.
- * 
+ *
  * @param int $status = NULL
  *   (optional) If omitted, return full list.
  * @return mixed
@@ -348,15 +348,11 @@ function lm_paypal_subscription_node_subs() {
  *   TRUE only if the node has a live subscription
  */
 function lm_paypal_node_subscribed($nid, &$subid) {
-  $sbs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE status = 1 AND nid = %d", $nid);
-  $sb = db_fetch_object($sbs);
-
-  if (!$sb) {
-    // TODO: No object.. is this an error?
-    return FALSE;
+  $result = db_query("SELECT subid FROM {lm_paypal_subscribers} WHERE status = 1 AND nid = %d", $nid);
+  if ($sb = db_fetch_object($result)) { // assignment + test
+    $subid = $db;
   }
-  $subid = $sb->subid;
-  return TRUE;
+  return $sb != FALSE;
 }
 
 /**
@@ -385,15 +381,10 @@ function lm_paypal_subscribe($subid = NULL, $display = 15, $button_url = '', $ni
   global $user;
   $business = lm_paypal_api_get_business();
 
-  if (!is_null($account)) {
-    // I am looking at an account other than current user.
-    // I cannot tell if they are logged in or not .. so presume they are.
-    $logged_in = TRUE;
+  if ($account == NULL) {
+    $account = $user;
   }
-  else {
-    $logged_in = ($user->uid != 0);
-  }
-
+  $logged_in = $account->uid != 0;
 
   $subid = check_plain($subid);
 

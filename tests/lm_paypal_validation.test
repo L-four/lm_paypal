@@ -11,8 +11,8 @@ class LmPaypalValidationTestCase extends AbstractLmPaypalTestCase {
 
   function getInfo() {
     return array(
-      'name' => t('IP Valiation functionality'),
-      'description' => t('Exercise the IPN validation part of LM Paypal using paypal.com.'),
+      'name' => t('IPN Valiation'),
+      'description' => t('Tests the IPN validation part of LM Paypal using www.sandbox.paypal.com.'),
       'group' => t('LM Paypal'),
     );
   }
@@ -44,6 +44,7 @@ class LmPaypalValidationTestCase extends AbstractLmPaypalTestCase {
   function testLmPaypalValidation() {
     // Post an unmodified IPN from the IPN Simulator, it pass validation, then
     // fail because the payee doesn't match the site setting for lm_paypal_business.
+    variable_set('lm_paypal_skip_validation', FALSE);
     $ipn_post = $this->postPreparedIpn('ipn-web_accept-inprogress.txt');
     $this->assertWatchdogError('Incoming IPN received email does not match business email%%');
     $this->assertNoWatchdogErrors(WATCHDOG_WARNING);

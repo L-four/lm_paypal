@@ -5,8 +5,8 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
 
   function getInfo() {
     return array(
-      'name' => t('LM Paypal Donations'),
-      'description' => t('Process Paypal Donations actions.'), // TODO: write better description
+      'name' => t('Donations'),
+      'description' => t('Tests the creation and processing of &quot;donations&quot;'),
       'group' => t('LM Paypal'),
     );
   }
@@ -121,7 +121,6 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
       $this->drupalLogin($this->admin_user);
       for ($donation = 0; $donation < $num_donations_per_user; $donation++) {
         // Post the IPN with some unique values
-        variable_set('lm_paypal_skip_validation', TRUE);
         $offset = 100 * $user + 10 * $donation; // just a number to make values unique(ish)
         $ipn = $this->postPreparedIpn(
           'ipn-web_accept-inprogress.txt',
@@ -136,7 +135,6 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
             'mc_currency' => 'USD',
           )
         );
-        variable_set('lm_paypal_skip_validation', FALSE);
 
         // Check for errors processing IPN.
         $this->assertWatchdogError('IPN web_accept no uid, found payer_email%%');

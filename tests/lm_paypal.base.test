@@ -2,7 +2,7 @@
 // $Id$
 
 // Why is this required? Otherwise I get PHP errors
-include_once drupal_get_path('module', 'simpletest') . '/drupal_web_test_case.php';
+include_once 'sites/all/modules/simpletest/drupal_web_test_case.php';
 
 abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
 
@@ -19,15 +19,17 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
     // Clear out the Watchdog table.
     $this->emptyWatchdog();
 
-    // Setup basic config
+    // Configure Drupal's mail-delivery to use a dummy function that adds
+    // entries to the watchdog() log rather than actually sending mail.
     variable_set('smtp_library', drupal_get_path('module', 'lm_paypal') . '/tests/lm_paypal.base.test');
 
+    // Setup basic config. This *disables* IPN validation!
     variable_set('lm_paypal_business', 'dummy@dummy.com');
     variable_set('lm_paypal_host', 'www.sandbox.paypal.com');
     variable_set('lm_paypal_ipns_max_age', 120);
     variable_set('lm_paypal_debug', FALSE);
     variable_set('lm_paypal_obey_test_ipns', TRUE);
-    variable_set('lm_paypal_skip_validation', FALSE);
+    variable_set('lm_paypal_skip_validation', TRUE);
   }
 
   /**
