@@ -87,7 +87,19 @@ class LmPaypalTestCase extends AbstractLmPaypalTestCase {
 
     // Check Settings page.
     $this->drupalLogin($this->admin_user);
-    $this->drupalGet('admin/settings/lm_paypal');
+    $edit = array(
+      'lm_paypal_business' => $this->randomName() . '@example.com',
+    );
+    $this->drupalPost('admin/settings/lm_paypal', $edit, 'Save configuration');
+
+    $this->assertRaw('value="' . variable_get('lm_paypal_business', $edit['lm_paypal_business']) . '"');
+    $this->assertRaw('value="' . variable_get('lm_paypal_host', LM_PAYPAL_HOST_DEFAULT) . '"');
+    $this->assertRaw('value="' . variable_get('lm_paypal_ipns_max_age', LM_PAYPAL_IPNS_MAX_AGE_DEFAULT) . '"');
+    // TODO: check lm_paypal_obey_test_ipns
+    // TODO: check lm_paypal_skip_validation
+    // TODO: check lm_paypal_debug
+
+    // Check variables
     $check_variables = array('lm_paypal_business', 'lm_paypal_host', 'lm_paypal_ipns_max_age');
     foreach ($check_variables as $v) {
       $this->assertField($v);
@@ -171,73 +183,8 @@ class LmPaypalTestCase extends AbstractLmPaypalTestCase {
       array(array('AUD', TRUE), 'A$'),
     );
     foreach ($test_cases as $case) {
-      $return = call_user_func_array('lm_paypal_api_get_currency', $case[0]);
+      $return = @call_user_func_array('lm_paypal_api_get_currency', $case[0]);
       $this->assertEqual($return, $case[1], t('Currency test for @cur', array('@cur' => $case[0][0])));
     }
   }
-
-  /**
-   * Test IPN validation. This requires access to the PayPal validation service,
-   * but not a user account.
-   */
-  function testLmPaypalValidation() {
-    // Post an unmodified IPN from the IPN Simulator, it pass validation, then
-    // fail because the payee doesn't match the site setting for lm_paypal_business.
-    $ipn_post = $this->postPreparedIpn('ipn-web_accept-inprogress.txt');
-    $this->assertWatchdogError('Incoming IPN received email does not match business email%%');
-    $this->assertNoWatchdogErrors(WATCHDOG_WARNING);
-
-    // Update the site setting to match the unmodified IPN, and try again.
-    // This should emit two warnings:
-    // - that the UID wasn't set, and that the buyer email address could not be
-    //   found either.
-    // - the item_number isn't an integer so can't be used by the system
-    variable_set('lm_paypal_business', $ipn_post['receiver_email']);
-    $ipn_post = $this->postPreparedIpn('ipn-web_accept-inprogress.txt');
-    $this->assertWatchdogError('IPN web_accept no uid presuming uid 0, cannot find payer_email%%');
-    $this->assertWatchdogError('Invalid item_number, ignoring IPN: %%');
-    $this->assertNoWatchdogErrors(WATCHDOG_WARNING);
-
-    // Change the email address of the web user to match the sender, and try
-    // again. The first error should change to one about finding the user via
-    // their email address (a fallback). The second error should still be there.
-    // $this->web_user->mail = $ipn_post['payer_email'];
-    $old_mail = $this->web_user->mail;
-    user_save($this->web_user, array('mail' => $ipn_post['payer_email']));
-    $ipn_post = $this->postPreparedIpn('ipn-web_accept-inprogress.txt');
-    $this->assertWatchdogError('IPN web_accept no uid, found payer_email%%');
-    $this->assertWatchdogError('Invalid item_number, ignoring IPN: %%');
-    $this->assertNoWatchdogErrors(WATCHDOG_WARNING);
-
-    // This time, update the item_number in the IPN. This will fail to validate
-    // because the IPN has been changed.
-    $ipn_post = $this->postPreparedIpn(
-      'ipn-web_accept-inprogress.txt',
-      array('item_number' => 1234));
-    $this->assertWatchdogError('IPN incoming NOT VERIFIED%%');
-    $this->assertNoWatchdogErrors(WATCHDOG_WARNING);
-
-    // Finally, disable validation (careful!) and try it again.
-    variable_set('lm_paypal_skip_validation', TRUE);
-    $ipn_post = $this->postPreparedIpn(
-      'ipn-web_accept-inprogress.txt',
-      array('item_number' => 1234));
-    $this->assertWatchdogError('IPN web_accept no uid, found payer_email%%');
-    $this->assertWatchdogError('No web_accept processor registered for this item_number:%%');
-    $this->assertNoWatchdogErrors(WATCHDOG_WARNING);
-
-    // Now, set the user email back, and send the UID in the "custom" field.
-    // Validation is still disabled.
-    user_save($this->web_user, array('mail' => $old_mail));
-    $ipn_post = $this->postPreparedIpn(
-      'ipn-web_accept-inprogress.txt',
-      array(
-        'item_number' => 1234,
-        'custom' => serialize(array('uid' => $this->web_user->uid)),
-      ));
-    variable_set('lm_paypal_skip_validation', FALSE);
-    $this->assertWatchdogError('No web_accept processor registered for this item_number:%%');
-    $this->assertNoWatchdogErrors(WATCHDOG_WARNING);
-  }
-
 }

@@ -252,7 +252,7 @@ EOF;
     $this->drupalGet('/');
     $this->assertText('We would really like a $10 donation');
     $this->assertNoRaw('<?php', 'No unparsed PHP code found');
-    $this->assertRaw('<form action="http://www.sandbox.paypal.com/cgi-bin/webscr" method="post">', 'Sandbox form(s) found');
+    $this->assertRaw('<form action="https://www.sandbox.paypal.com/cgi-bin/webscr" method="post">', 'Sandbox form(s) found');
   }
 
 }
