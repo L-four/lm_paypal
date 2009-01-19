@@ -275,7 +275,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     $this->drupalGet('/');
     $this->clickLink('My account');
     // TODO: fail!
-    $this->writeFile('myaccount.html');
+    // $this->writeFile('myaccount.html');
 
     // As the admin, check all subscribers page
     $this->drupalLogin($this->admin_user);
@@ -286,21 +286,20 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     $this->assertText($subscription['item_name']);
     $this->assertText('paid');
     $this->assertNoText('01/01/1970');
-    $this->writeFile('allsubs.html');
-    return;
+    // $this->writeFile('allsubs.html');
 
     // Check sub info link.
     $this->clickLink($sub_id);
     $this->assertText('Show Subscription Details');
     $this->assertText('Subscription ' . $sub_id);
-    $this->writeFile('sub1.html');
+    // $this->writeFile('sub1.html');
 
     // Check sub edit
     $this->drupalGet('admin/settings/lm_paypal/subscribers/0');
     $this->clickLink('edit');
     $this->assertText('Edit Subscriber');
     $this->assertText('Uid ' . $this->web_user->uid); // ick, but that's what's shown
-    $this->writeFile('sub1edit.html');
+    // $this->writeFile('sub1edit.html');
     // TODO: test edit subscriber
 
 
