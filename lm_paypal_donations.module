@@ -23,7 +23,7 @@ function lm_paypal_donations_help($path, $arg) {
   global $_lm_paypal_welcome;  // Welcome message
   global $base_url;
 
-  $admin = l('LM PayPal Admin', 'admin/settings/lm_paypal/settings');
+  $admin = l('LM PayPal Admin', 'admin/settings/lm_paypal');
   $access = l('administer permissions', 'admin/user/permissions');
 
   $help = l('LM PayPal Help', 'admin/help/lm_paypal');

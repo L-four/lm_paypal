@@ -17,12 +17,12 @@ function lm_paypal_paid_adverts_get_type_subs() {
  * Implementation of hook_help().
  */
 function lm_paypal_paid_adverts_help($path, $arg) {
-  $admin = l('LM PayPal Admin', 'admin/settings/lm_paypal/settings');
+  $admin = l('LM PayPal Admin', 'admin/settings/lm_paypal');
   $roles = l(t('user management > roles'), 'admin/user/roles');
   $access = l(t('user management > permissions'), 'admin/user/permissions');
   $blocks = l(t('site building > blocks'), 'admin/build/block');
   $subs = l(t('LM PayPal Subscriptions'), 'admin/settings/lm_paypal/subscriptions');
-  $adminpa = l('LM PayPal Paid Adverts', 'admin/settings/lm_paypal/paid_adverts/settings');
+  $adminpa = l('LM PayPal Paid Adverts', 'admin/settings/lm_paypal/paid_adverts');
 
   $new_sub = l('LM PayPal New Subscriptions', 'admin/settings/lm_paypal/subscriptions/new');
   $help_pa = l(t('LM PayPal Paid Adverts Help'), 'admin/help/lm_paypal_paid_adverts');

@@ -112,7 +112,7 @@ function lm_paypal_subscriptions_help($path, $arg) {
   $groups = l(t('create content > group'), 'node/add/og');
   $subs = l(t('LM PayPal Subscriptions'), 'admin/settings/lm_paypal/subscriptions');
 
-  $admin = l('LM PayPal Admin', 'admin/settings/lm_paypal/settings');
+  $admin = l('LM PayPal Admin', 'admin/settings/lm_paypal');
   $roles = l(t('user management > roles'), 'admin/user/roles');
   $access = l(t('user management > permissions'), 'admin/user/permissions');
   $blocks = l(t('site building > blocks'), 'admin/build/block');
@@ -1389,7 +1389,7 @@ function lm_paypal_view_subscriptions() {
 
 
   if ($business == '') {
-    $settings = l(t('admin settings lm_paypal'), 'admin/settings/lm_paypal/settings');
+    $settings = l(t('admin settings lm_paypal'), 'admin/settings/lm_paypal');
     $output = '<p>'. t("LM PayPal not yet configured! An administrator needs to do this at !settings", array("!settings" => $settings)) .'.</p>';
     return $output;
   }
