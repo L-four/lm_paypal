@@ -275,7 +275,7 @@ function lm_paypal_subscriptions_menu() {
     'access arguments' => array('administer lm_paypal'),
     'weight' => 33,
     'description' => 'Mark a node as paid bypassing Paypal.',
-    // TODO: type?
+    'type' => MENU_CALLBACK,
   );
 
   // User page to subscribe
