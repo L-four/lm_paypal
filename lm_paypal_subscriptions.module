@@ -1335,7 +1335,7 @@ function lm_paypal_subscribable_groups() {
 
   // This SQL borrowed from: function og_list_groups_page and added to the WHERE
   // a condition to match og.selective = OG_INVITE_ONLY (2)
-  $sql = db_rewrite_sql("SELECT og.nid, n.title, r.body, n.uid, u.name, og.description FROM {og} og INNER JOIN {node} n ON og.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON n.uid = u.uid WHERE og.directory=1 AND n.status=1 AND og.selective = 2 ORDER BY og.nid DESC", 'og', 'nid');
+  $sql = db_rewrite_sql("SELECT og.nid, n.title, r.body, n.uid, u.name, og.og_description FROM {og} og INNER JOIN {node} n ON og.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON n.uid = u.uid WHERE og.og_directory=1 AND n.status=1 AND og.og_selective = 2 ORDER BY og.nid DESC", 'og', 'nid');
   $gs = db_query($sql);
 
   $groups = array();
