@@ -33,7 +33,10 @@ function lm_paypal_perm() {
 function lm_paypal_menu() {
   $items = array();
 
-  // Use tabs for menus, main config on the default
+  // Each of the LM Paypal modules has a tab under admin/settings/lm_paypal.
+  // Their "main settings page" should be the default, and any other
+  // view/configure pages should be second-level tabs.
+
   $items['admin/settings/lm_paypal'] = array(
     'file' => 'lm_paypal.admin.inc',
     'title' => 'LM PayPal',
@@ -43,21 +46,18 @@ function lm_paypal_menu() {
     'access arguments' => array('administer lm_paypal'),
     'type' => MENU_NORMAL_ITEM,
   );
-  // Tab 1
   $items['admin/settings/lm_paypal/base'] = array(
-    'file' => 'lm_paypal.admin.inc',
-    'title' => 'LM PayPal',
-    'access arguments' => array('administer lm_paypal'),
+    'title' => 'Base',
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 1,
   );
-  // Tab 2.1 main settings
-  $items['admin/settings/lm_paypal/base/paypal'] = array(
-    'file' => 'lm_paypal.admin.inc',
-    'title' => 'Paypal settings',
-    'access arguments' => array('administer lm_paypal'),
+  // Tab 1.1: LM Paypal Settings
+  $items['admin/settings/lm_paypal/base/settings'] = array(
+    'title' => 'Settings',
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 1,
   );
-  // Tab 2.1 : View saved IPNs
+  // Tab 1.2: LM Paypal Settings
   $items['admin/settings/lm_paypal/base/ipns'] = array(
     'file' => 'lm_paypal.admin.inc',
     'title' => 'Saved IPNs',
@@ -65,18 +65,10 @@ function lm_paypal_menu() {
     'page callback' => 'lm_paypal_ipns',
     'access arguments' => array('administer lm_paypal'),
     'type' => MENU_LOCAL_TASK,
-    'weight' => 1,
-  );
-  // Tab 2.2 : LM Paypal Settings
-  $items['admin/settings/lm_paypal/base/settings'] = array(
-    'title' => 'IPNs Settings',
-    'description' => 'PayPal IPN interface configuration.',
-    'access arguments' => array('administer lm_paypal'),
-    'type' => MENU_LOCAL_TASK,
     'weight' => 2,
   );
 
-  // Default return path for 
+  // Default return path for
   $items['lm_paypal/thanks'] = array(
     'title' => 'Proceeding payment',
     'description' => 'Default return path for paypal payment form'
@@ -133,7 +125,7 @@ function lm_paypal_cron() {
 
 /**
  * Tells if module is in debug mode.
- * 
+ *
  * @return boolean
  *   TRUE if lm_paypal is in debug mode
  */
@@ -143,7 +135,7 @@ function lm_paypal_debug() {
 
 /**
  * Get the configured paypal host.
- * 
+ *
  * @param boolean $url = FALSE
  *   If set to TRUE, return the webscr full absolute URL
  * @return string
@@ -160,7 +152,7 @@ function lm_paypal_api_get_host($full_url = FALSE) {
 /**
  * Return the notify url. Every module that uses this one's API but a custom
  * payement form should use this method.
- * 
+ *
  * @return string
  *   Notify url for paypal
  */
@@ -170,7 +162,7 @@ function lm_paypal_api_get_notify_url() {
 
 /**
  * Get the configured paypal business.
- * 
+ *
  * @return string
  *   Paypal business name
  */
@@ -180,10 +172,10 @@ function lm_paypal_api_get_business() {
 
 /**
  * Get currency localized textual description or symbol.
- * 
+ *
  * If you don't specify a currency code you want, this function will return an
  * array containing all the lm_paypal supported currencies descriptions.
- * 
+ *
  * @param string $currency = NULL
  *   (optional) If set, the function will return only the given currency code
  *   data.
@@ -253,7 +245,7 @@ function lm_paypal_api_get_currency($currency = NULL, $syms = FALSE) {
 
 /**
  * Get default configured currency code.
- * 
+ *
  * @return string
  *   3 letter paypal currency identifier
  */
@@ -293,7 +285,7 @@ function _lm_paypal_clean_stored_ipns() {
 
 /**
  * Default return_path for paypal.
- * 
+ *
  * @return string
  *   (x)html output
  */
@@ -303,14 +295,14 @@ function lm_paypal_page_thanks() {
 
 /**
  * Default payment form. Highly customisable.
- * 
+ *
  * This form display the item_name, the price/currency and a paypal submit
  * button.
  * It should fit for most cases. Either your form does not fit here or not,
  * then think about get this form and alter it. Since it does not have any
  * validate or submit function (action is the real paypal host), you don't
  * have to care if you override it.
- * 
+ *
  * Note that, at least one parameter is mandatory: the amount. You may get
  * back the form and change it to a input box, but without validation this
  * is dangerous, your users should go through a business validation process
@@ -475,7 +467,7 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
       '#name' => 'custom',
     );
     $form['submit'] = array(
-      '#type' => 'submit', 
+      '#type' => 'submit',
       '#value' => isset($options['button_text']) ? $options['button_text'] :  t('Proceed to paypal.com'),
       '#name' => 'submit',
     );
@@ -798,7 +790,7 @@ function lm_paypal_mail($key, &$message, $params) {
 /**
  * Extract data from the 'custom' field in an IPN.  The old way LM Paypal did it
  * was by bit-packing into a 32-bit integer. The new way is PHP serialized data.
- * 
+ *
  * @return array
  *   An associative array with at least 'uid' and 'other'
  */

@@ -207,29 +207,31 @@ function lm_paypal_subscriptions_menu() {
   // Main tab
   $items['admin/settings/lm_paypal/subscriptions'] = array(
     'title' => 'Subscriptions',
-    'page callback' => 'lm_paypal_view_subscriptions',
-    'access arguments' => array('administer lm_paypal'),
     'type' => MENU_LOCAL_TASK,
-    'weight' => 32,
-    'description' => 'View PayPal subscriptions.',
-  );
-  // Tab 2.1 Subscription admin
-  $items['admin/settings/lm_paypal/subscriptions/view'] = array(
-    'title' => 'View subscriptions',
-    'access arguments' => array('administer lm_paypal'),
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 31,
-  );
-  // Tab 2.2
-  $items['admin/settings/lm_paypal/subscriptions/settings'] = array(
-    'title' => 'Settings',
+    'weight' => 3,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_subscriptions_settings_form'),
     'access arguments' => array('administer lm_paypal'),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 32,
-    'description' => 'PayPal subscriptions interface configuration.',
   );
+  // Tab 3.1: Subscription Settings
+  $items['admin/settings/lm_paypal/subscriptions/settings'] = array(
+    'title' => 'Settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 1,
+  );
+
+  // Tab 3.2: View Subscriptions
+  $items['admin/settings/lm_paypal/subscriptions/view'] = array(
+    'title' => 'View subscriptions',
+    'page callback' => 'lm_paypal_view_subscriptions',
+    'access arguments' => array('administer lm_paypal'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+    'description' => 'View PayPal subscriptions.',
+  );
+
+
+
 
   $items['admin/settings/lm_paypal/subscriptions/new'] = array(
     'title' => 'Create New Subscription',

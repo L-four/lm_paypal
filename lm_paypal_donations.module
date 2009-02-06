@@ -123,14 +123,13 @@ function lm_paypal_donations_menu() {
     'page arguments' => array('lm_paypal_donations_settings_form'),
     'access arguments' => array('administer lm_paypal'),
     'type' => MENU_LOCAL_TASK,
-    'weight' => 11,
+    'weight' => 2,
   );
-  // Tab 2.1 this is just to keep consistency with other modules
+  // Tab 2.1: Donations Settings
   $items['admin/settings/lm_paypal/donations/settings'] = array(
     'title' => 'Settings',
-    'access arguments' => array('administer lm_paypal'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 11,
+    'weight' => 1,
   );
 
   // admin - print all donations - TODO: move to /admin? fix links to it

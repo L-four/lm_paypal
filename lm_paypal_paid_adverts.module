@@ -95,29 +95,28 @@ function lm_paypal_paid_adverts_menu() {
   // Main tab
   $items['admin/settings/lm_paypal/paid_adverts'] = array(
     'title' => 'Paid Adverts',
-    'page callback' => 'lm_paypal_paid_adverts_list_nodes',
-    'access arguments' => array('administer lm_paypal'),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 41,
-    'description' => 'Show all PayPal Paid Adverts.',
-  );
-  // Tab 2.1 show adverts
-  $items['admin/settings/lm_paypal/paid_adverts/show'] = array(
-    'title' => 'Show Paid Adverts',
-    'access arguments' => array('administer lm_paypal'),
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 41,
-  );
-  // Tab 2.2 settings
-  $items['admin/settings/lm_paypal/paid_adverts/settings'] = array(
-    'title' => 'Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_paid_adverts_settings_form'),
     'access arguments' => array('administer lm_paypal'),
     'type' => MENU_LOCAL_TASK,
-    'weight' => 42,
-    'description' => 'PayPal Paid Advert interface configuration.',
+    'weight' => 4,
   );
+  // Tab 4.1: Paid Advertisement Setting
+  $items['admin/settings/lm_paypal/paid_adverts/settings'] = array(
+    'title' => 'Settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 1,
+  );
+  // Tab 4.2: Show Paid Advertisements
+  $items['admin/settings/lm_paypal/paid_adverts/show'] = array(
+    'title' => 'Show Paid Adverts',
+    'page callback' => 'lm_paypal_paid_adverts_list_nodes',
+    'access arguments' => array('administer lm_paypal'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+    'description' => 'Show all PayPal Paid Adverts.',
+  );
+
   // Node payment form
   $items['node/%node/lm_paypal'] = array(
     'title' => 'PayPal Publication',
