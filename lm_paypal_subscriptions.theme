@@ -1,0 +1,13 @@
+<?php
+
+function theme_lm_paypal_subscription_name($subscription) {
+  $output = '';
+  $name = check_plain($subscription->item_name);
+  if ($subscription->status) {
+    $output .= '<stroke>'.$name.'</stroke>';
+  }
+  else {
+    $output .= $name;
+  }
+  return $output;
+}

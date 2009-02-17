@@ -2,7 +2,7 @@
 
 // CONTEXT MODULE
 
-// $Id$
+// BIG TODO: get nicer and module coherent func. names, like lm_paypal_subscriptions_<MY FUNC>
 
 /**
  * @file
@@ -192,10 +192,21 @@ if (function_exists(\'lm_paypal_can_subscribe\')) {
 
 /**
  * Implementation of hook_perm().
- * Return a list of the access control permissions that this module defines
  */
 function lm_paypal_subscriptions_perm() {
   return array('access lm_paypal_subscribe');
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function lm_paypal_subscriptions_theme() {
+  $items = array();
+  $items['lm_paypal_subscription_name'] = array(
+    'arguments' => array('subscription' => NULL),
+    'file' => 'lm_paypal_subscriptions.theme',
+  );
+  return $items;
 }
 
 /**
@@ -207,75 +218,123 @@ function lm_paypal_subscriptions_menu() {
   // Main tab
   $items['admin/settings/lm_paypal/subscriptions'] = array(
     'title' => 'Subscriptions',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 3,
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('lm_paypal_subscriptions_settings_form'),
+    'page callback' => 'lm_paypal_subscriptions_view_all_page',
     'access arguments' => array('administer lm_paypal'),
+    'file' => 'lm_paypal_subscriptions.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 33,
   );
-  // Tab 3.1: Subscription Settings
+  // Tab 2.1: Subscription Settings
+  $items['admin/settings/lm_paypal/subscriptions/view'] = array(
+    'title' => 'View subscriptions',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 1,
+  );
+  // Tab 2.2 Subscription admin
   $items['admin/settings/lm_paypal/subscriptions/settings'] = array(
     'title' => 'Settings',
+    'description' => 'View PayPal subscriptions.',
+    'access arguments' => array('administer lm_paypal'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lm_paypal_subscriptions_admin_settings'),
+    'file' => 'lm_paypal_subscriptions.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 20,
+  );
+
+  // Add and delete a subscription
+  $items['admin/settings/lm_paypal/subscriptions/add'] = array(
+    'title' => 'Create subscription',
+    'description' => 'Create new PayPal subscription.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lm_paypal_subscriptions_edit_form'),
+    'access arguments' => array('administer lm_paypal', NULL),
+    'file' => 'lm_paypal_subscriptions.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/settings/lm_paypal/subscriptions/%/delete'] = array(
+    'title' => 'Delete subscription',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lm_paypal_subscription_delete_confirm_form', 4),
+    'access callback' => 'lm_paypal_subscription_access',
+    'access arguments' => array('subscription', 4),
+    'file' => 'lm_paypal_subscriptions.admin.inc',
+  );
+
+  // View and edit tabs
+  $items['admin/settings/lm_paypal/subscriptions/%'] = array(
+    'title' => 'View subscription details',
+    'type' => MENU_NORMAL_ITEM,
+    'page callback' => 'lm_paypal_subscriptions_details',
+    'page arguments' => array(4),
+    'access callback' => 'lm_paypal_subscription_access',
+    'access arguments' => array('subscription', 4),
+    'file' => 'lm_paypal_subscriptions.pages.inc',
+  );
+  $items['admin/settings/lm_paypal/subscriptions/%/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 1,
+  );
+  $items['admin/settings/lm_paypal/subscriptions/%/edit'] = array(
+    'title' => 'Edit',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lm_paypal_subscriptions_edit_form', 4),
+    'access callback' => 'lm_paypal_subscription_access',
+    'access arguments' => array('subscription', 4),
+    'file' => 'lm_paypal_subscriptions.admin.inc',
+    'weight' => 2,
+  );
+  // View subscribers for one subscription
+  $items['admin/settings/lm_paypal/subscriptions/%/subscribers'] = array(
+    'title' => 'Subscribers',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'lm_paypal_subscriptions_subscribers_view_page',
+    'page arguments' => array(4),
+    'access callback' => 'lm_paypal_subscription_access',
+    'access arguments' => array('subscription', 4),
+    'file' => 'lm_paypal_subscriptions.admin.inc',
+    'weight' => 3,
+  );
+
+  // View all suscribers
+  $items['admin/settings/lm_paypal/subscribers'] = array(
+    'title' => 'Subscribers',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'lm_paypal_subscriptions_subscribers_view_page',
+    'access arguments' => array('administer lm_paypal'),
+    'file' => 'lm_paypal_subscriptions.admin.inc',
+    'weight' => 32,
+  );
+  // View and edit a subscriber
+  $items['admin/settings/lm_paypal/subscribers/subscriber/%'] = array(
+    'title' => 'Subscriber',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lm_paypal_subscriptions_subscriber_edit_form', 5),
+    'access callback' => 'lm_paypal_subscription_access',
+    'access arguments' => array('subscriber', 5),
+    'file' => 'lm_paypal_subscriptions.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
+  );
+  $items['admin/settings/lm_paypal/subscribers/subscriber/%/edit'] = array(
+    'title' => 'Edit',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => 1,
   );
 
-  // Tab 3.2: View Subscriptions
-  $items['admin/settings/lm_paypal/subscriptions/view'] = array(
-    'title' => 'View subscriptions',
-    'page callback' => 'lm_paypal_view_subscriptions',
-    'access arguments' => array('administer lm_paypal'),
+  // TODO
+  $items['admin/settings/lm_paypal/subscribers/%/pay'] = array(
+    'title' => 'Pay',
     'type' => MENU_LOCAL_TASK,
-    'weight' => 2,
-    'description' => 'View PayPal subscriptions.',
-  );
-
-
-
-
-  $items['admin/settings/lm_paypal/subscriptions/new'] = array(
-    'title' => 'Create New Subscription',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lm_paypal_subscription_edit_form'),
+    'page arguments' => array('lm_paypal_subscriber_pay_form', 4),
     'access arguments' => array('administer lm_paypal'),
-    'description' => 'Create new PayPal subscriptions.',
-  );
-
-  $items['admin/settings/lm_paypal/subscription/delete'] = array(
-    'title' => 'Delete Subscription',
-    'type' => MENU_CALLBACK,
-    'page callback' => 'lm_paypal_subscription_delete',
-    'access arguments' => array('administer lm_paypal'),
-  );
-
-  $items['admin/settings/lm_paypal/subscription'] = array(
-    'title' => 'Show Subscription Details',
-    'type' => MENU_CALLBACK,
-    'page callback' => 'lm_paypal_subscription',
-    'access arguments' => array('administer lm_paypal'),
-  );
-
-  $items['admin/settings/lm_paypal/subscribers'] = array(
-    'title' => 'Show Subscribers',
-    'type' => MENU_CALLBACK,
-    'page callback' => 'lm_paypal_subscribers',
-    'access arguments' => array('administer lm_paypal'),
-  );
-
-  $items['admin/settings/lm_paypal/subscriber_edit'] = array(
-    'title' => 'Edit Subscriber',
-    'type' => MENU_CALLBACK,
-    'page callback' => 'lm_paypal_subscriber_edit',
-    'access arguments' => array('administer lm_paypal'),
-  );
-
-  $items['admin/settings/lm_paypal/subscriber_pay'] = array(
-    'title' => 'Mark as paid',
-    'page callback' => 'lm_paypal_subscriber_pay',
-    'access arguments' => array('administer lm_paypal'),
-    'weight' => 33,
     'description' => 'Mark a node as paid bypassing Paypal.',
-    'type' => MENU_CALLBACK,
+    'file' => 'lm_paypal_subscriptions.admin.inc',
+    'weight' => 20,
   );
 
   // User page to subscribe
@@ -284,7 +343,8 @@ function lm_paypal_subscriptions_menu() {
     'page callback' => 'lm_paypal_subscribe',
     'access arguments' => array('access lm_paypal_subscribe'),
     'description' => 'Subscribe using PayPal.',
-    // TODO: type?
+    'type' => MENU_CALLBACK,
+    'file' => 'lm_paypal_subscriptions.pages.inc',
   );
 
   // By default we tell Paypal to redirect users here after subscribing
@@ -298,344 +358,145 @@ function lm_paypal_subscriptions_menu() {
   return $items;
 }
 
-/**
+/*
+ * For security, we have to make a subscription_access and a subscriber_access
+ * that checks our subscription/subscriber exists before we let the user access
+ * to the page.
  */
-function lm_paypal_subscriptions_settings_form() {
-  $form['lm_paypal_subscriptions_inprogress'] = array(
-    '#type' => 'textfield',
-    '#title' => t('LM PayPal subscription in progress page'),
-    '#default_value' => lm_paypal_subscription_get_inprogress(),
-    '#maxlength' => 100,
-    '#required' => TRUE,
-    '#description' => t('The page the user is sent to by PayPal after a subscribe. The default is ') . LM_PAYPAL_SUBSCRIPTIONS_INPROGRESS_DEFAULT . t(' but you might want to point it at a page you have created yourself.'),
-  );
+function lm_paypal_subscription_access($op, $subid) {
+  if (user_access('administer lm_paypal')) {
+    switch ($op) {
+      case 'subscription':
+        return lm_paypal_subscriptions_load_subscription($subid) != NULL;
 
-  $form['lm_paypal_subscriptions_menu_rebuild'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Rebuild menu cache on subscription change'),
-    '#default_value' => lm_paypal_subscription_menu_rebuild(),
-    '#description' => t('On a user being added to/removed from a subscription rebuild the menu cache. Needed only if user logout/login fails to get the right menu items.'),
-  );
+      case 'subscriber':
+        return lm_paypal_subscriptions_load_subscriber($subid) != NULL;
+    }
+  }
+  return FALSE;
+}
 
-  return system_settings_form($form);
+/**
+ * Load a subscription from database.
+ * 
+ * This method keeps a static cache.
+ * 
+ * @param int $subid
+ *   Subscription id to load
+ * @param int $status = NULL
+ *   Specify a status to refine query
+ * @return object
+ *   Object from database or NULL if not found
+ */
+function lm_paypal_subscriptions_load_subscription($subid) {
+  static $cache = array();
+  if (! isset($cache[$subid])) {
+    $result = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d", $subid);
+    if ($subscription = db_fetch_object($result)) {
+      $cache[$subid] = $subscription;
+    }
+  }
+  return $cache[$subid];
+}
+
+/**
+ * Load a subscriber from database
+ *
+ * @param int $subid
+ *   Subscriber id to load
+ * @return object
+ *   Object from database or NULL if not found
+ */
+function lm_paypal_subscriptions_load_subscriber($subid) {
+  static $cache = array();
+  if (! isset($cache[$subid])) {
+    $result = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE subid = %d", $subid);
+    if ($subscriber = db_fetch_object($result)) {
+      $cache[$subid] = $subscriber;
+    }
+  }
+  return $cache[$subid];
 }
 
 /**
  * Find all live node subscriptions.
  *
- * @return
- *   An array of live node subscriptions
+ * @return array
+ *   Keyed array of node subscription item_name field.
+ *   Keys are subid.
  */
 function lm_paypal_subscription_node_subs() {
-  $node_subs = array();
-  $subs = db_query('SELECT subid, item_name FROM {lm_paypal_subscriptions} WHERE status = 1 AND kind = 1');
-
-  while ($so = db_fetch_object($subs)) {
-    $node_subs[$so->subid] = $so->item_name;
+  static $cache;
+  if (! $cache) {
+    $result = db_query('SELECT subid, item_name FROM {lm_paypal_subscriptions} WHERE status = 1 AND kind = 1');
+    while ($data = db_fetch_object($result)) {
+      $cache[$data->subid] = $data->item_name;
+    }
   }
-
-  return $node_subs;
+  return $cache;
 }
 
 /**
  * Tests if the given node has a live subscription.
  *
- * @param $nid
- *   The node to check for
- * @param[out] $subid
- *   The corresponding subscription identifier, set ONLY if
- *   the subscriber was subscribed.
- *
- * @return
- *   TRUE only if the node has a live subscription
+ * @param mixed $node
+ *   Either the node to check, or the nid (usefull for hook_load).
+ * @param int &$subid
+ *   The corresponding subscription identifier will be written in this param,
+ *   ONLY if the subscriber was subscribed.
+ * @return int
+ *   Subscription id used for payement, if node has been paid. Else FALSE
  */
-function lm_paypal_node_subscribed($nid, &$subid) {
-  $result = db_query("SELECT subid FROM {lm_paypal_subscribers} WHERE status = 1 AND nid = %d", $nid);
-  if ($sb = db_fetch_object($result)) { // assignment + test
-    $subid = $db;
+function lm_paypal_node_subscribed($node) {
+  static $cache = array();
+
+  if (is_object($node)) {
+    $nid = $node->nid;
   }
-  return $sb != FALSE;
+  else {
+    $nid = $node;
+  }
+
+  if (! $cache[$nid]) {
+    $result = db_query("SELECT subid FROM {lm_paypal_subscribers} WHERE status = 1 AND nid = %d", $nid);
+    if ($data = db_fetch_object($result)) {
+      $subid = $data->subid;
+    }
+    $cache[$nid] = $subid;
+  }
+
+  return isset($cache[$nid]) ? $cache[$nid] : FALSE;
 }
 
-/**
- * Display either all live subscriptions or a single one with a link to PayPal.
- *
- * @param $subid
- *   If given then a subscribe page is returned otherwise a list of
- *   available subscriptions is returned.
- * @param $display
- *   If just showing a single subscription then $diplay lists what to show.
- *   1 = item_name
- *   2 = description
- *   4 = human readable details of subscription
- *   8 = button
- *  16 = brief
- *  32 = no section header (applies to list of subscriptions, subid=null)
- *   These can be added to get combinations (eg: 11 = 1 + 2 + 8)
- *  64 = output a comma seperated list the current users subscriptions
- *       (or just none)
- * @param button_url
- *   The url of the button to display
- * @param nid
- *   For node subscriptions this is the node id
- */
-function lm_paypal_subscribe($subid = NULL, $display = 15, $button_url = '', $nid = NULL, $account = NULL) {
-  global $user;
-  $business = lm_paypal_api_get_business();
+//////////////////// BELOW THIS LINE, CODE NEED SERIOUS REVIEW
 
-  if ($account == NULL) {
-    $account = $user;
-  }
-  $logged_in = $account->uid != 0;
 
-  $subid = check_plain($subid);
 
-  // Print out the details of just one subscription
-  if ($subid != '') {
-    if (!is_numeric($subid) || intval($subid) != $subid) {
-      watchdog(
-        LM_PAYPAL_SUBSCRIPTIONS,
-        'lm_paypal_subscribe requires integer subid: %subid',
-        array('%subid' => $subid),
-        WATCHDOG_ERROR);
-      return $err;
-    }
 
-    if (!$logged_in) {
-      $login = l(t('login'), 'user');
-      $register = l(t('create new account'), 'user/register');
-      return t("You must !login or !register to subscribe", array("!login" => $login, "!register" => $register));
-    }
 
-    $subs = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d AND status = 1", $subid);
-    $so = db_fetch_object($subs);
-    if (! $so) {
-      watchdog(
-        LM_PAYPAL_SUBSCRIPTIONS,
-        'lm_paypal_subscribe cannot find subscription: %subid',
-        array('%subid' => $subid),
-        WATCHDOG_ERROR);
-      return $err;
-    }
 
-    $output = '';
-    $output .= '<p>'. lm_paypal_subscription($subid, $display) .'</p>';
 
-    if (($display & 8) == 0) {
-      // If I am not displaying a button then I am done.
-      return $output;
-    }
-
-    $i_agree = $_SESSION['lm_paypal_I_agree'];
-    if ($so->terms != '' && $i_agree != $subid) {
-      $output .= lm_paypal_subscription_terms($subid, $so->terms);
-      return $output;
-    }
-    $_SESSION['lm_paypal_I_agree'] = '';
-
-    if ($button_url == '') {
-      // This is the default paypal subscribe button
-      $button_url = 'http://images.paypal.com/images/x-click-but20.gif';
-      $button_url = 'http://images.paypal.com/images/x-click-butcc-subscribe.gif';
-    }
-    else {
-      $button_url = check_url($button_url);
-    }
-
-    if ($so->return_url != '') {
-      $ret_url = $so->return_url;
-    }
-    else {
-      $ret_url = lm_paypal_subscription_get_inprogress();
-    }
-    if (variable_get('clean_url', 0)) {
-      $return_url = url(check_url($ret_url), array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
-    }
-    else {
-      $return_url = url(NULL, array('query' => 'q='. check_url($ret_url), 'fragment' => NULL, 'absolute' => TRUE));
-    }
-    $notify_url = url('lm_paypal/ipn', array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
-    $biz = check_plain($business);
-    $so->item_name = check_plain($so->item_name);
-
-    // Output a form that will redirect the user to PayPal - note all the fields
-    // are hidden so only the submit appears
-
-    $notify_url = str_replace('http://localhost:7080/', 'http://proxy.lyricnz.com/', $notify_url);
-    $return_url = str_replace('http://localhost:7080/', 'http://proxy.lyricnz.com/', $return_url);
-    $notify_url = str_replace('http://localhost:7080/', 'http://proxy.lyricnz.com/', $notify_url);
-
-    $form = "\n<form action=\"".lm_paypal_api_get_host(TRUE)."\" method=\"post\">\n";
-
-    $form .= "<input type=\"hidden\" name=\"cmd\" value=\"_xclick-subscriptions\">\n";
-    $form .= "<input type=\"hidden\" name=\"business\" value=\"$biz\">\n";
-    $form .= "<input type=\"hidden\" name=\"notify_url\" value=\"$notify_url\">\n";
-    $form .= "<input type=\"hidden\" name=\"item_name\" value=\"$so->item_name\">\n";
-    $form .= "<input type=\"hidden\" name=\"item_number\" value=\"$so->subid\">\n";
-    $form .= "<input type=\"hidden\" name=\"no_shipping\" value=\"1\">\n";
-    $form .= "<input type=\"hidden\" name=\"return\" value=\"$return_url\">\n";
-    $form .= "<input type=\"hidden\" name=\"cancel_return\" value=\"$return_url\">\n";
-    if ($so->currency_code) {
-      $form .= "<input type=\"hidden\" name=\"currency_code\" value=\"$so->currency_code\">\n";
-    }
-    if ($so->p1 != '' && $so->p1 > 0) {
-      $so->a1 = check_plain($so->a1);
-      $so->p1 = check_plain($so->p1);
-      $form .= "<input type=\"hidden\" name=\"a1\" value=\"$so->a1\">\n";
-      $form .= "<input type=\"hidden\" name=\"p1\" value=\"$so->p1\">\n";
-      $form .= "<input type=\"hidden\" name=\"t1\" value=\"$so->t1\">\n";
-    }
-    if ($so->p2 != '' && $so->p2 > 0) {
-      $so->a2 = check_plain($so->a2);
-      $so->p2 = check_plain($so->p2);
-      $form .= "<input type=\"hidden\" name=\"a2\" value=\"$so->a2\">\n";
-      $form .= "<input type=\"hidden\" name=\"p2\" value=\"$so->p2\">\n";
-      $form .= "<input type=\"hidden\" name=\"t2\" value=\"$so->t2\">\n";
-    }
-    $so->a3 = check_plain($so->a3);
-    $so->p3 = check_plain($so->p3);
-    $form .= "<input type=\"hidden\" name=\"a3\" value=\"$so->a3\">\n";
-    $form .= "<input type=\"hidden\" name=\"p3\" value=\"$so->p3\">\n";
-    $form .= "<input type=\"hidden\" name=\"t3\" value=\"$so->t3\">\n";
-    // If recurring times is set but recurring isn't then set it otherwise
-    // PayPal will reject this request
-    if ($so->srt != '' && $so->src == '') {
-      $so->src = 1;
-    }
-    if ($so->src != '') {
-      $form .= "<input type=\"hidden\" name=\"src\" value=\"$so->src\">\n";
-      if ($so->srt != '') {
-        $form .= "<input type=\"hidden\" name=\"srt\" value=\"$so->srt\">\n";
-      }
-    }
-    $form .= "<input type=\"hidden\" name=\"sra\" value=\"1\">\n";
-    $form .= "<input type=\"hidden\" name=\"no_note\" value=\"1\">\n";
-    if ($so->kind == 0 || $so->kind == 2) {
-      $custom = array('uid' => $user->uid);
-    }
-    if ($so->kind == 1) {
-      $custom = array('nid' => $nid, 'uid' => $user->uid);
-    }
-    // $custom = addslashes(serialize($custom)); // serialize the array
-    $custom = htmlspecialchars(serialize($custom)); // serialize the array
-
-    $form .= "<input type=\"hidden\" name=\"custom\" value=\"$custom\">\n";
-    //$form .= "<input type=\"hidden\" name=\"invoice\" value=\"invoicenumber\">\n";
-    $form .= "<input type=\"hidden\" name=\"usr_manage\" value=\"0\">\n";
-    $form .= "<input type=\"image\" src=\"$button_url\" border=\"0\" name=\"submit\" alt=\"Make payments with PayPal - it's fast, free and secure!\">\n";
-    $form .= "</form>\n";
-
-    $output .= $form;
-    return $output;
-  }
-
-  // Output a list of all the live role or group subscriptions
-  $output = '';
-  $subs = db_query('SELECT subid, item_name, description, status FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2)');
-
-  if (($display & 64) != 0) {
-    $nsubs = 0;
-    while ($so = db_fetch_object($subs)) {
-      $already = lm_paypal_user_subscribed($so->subid, $account);
-      if (!$already) {
-        continue;
-      }
-      $item_name = check_plain($so->item_name);
-      if ($nsubs > 0) {
-        $output .= ", ";
-      }
-      $output .= '"'. $item_name .'"';
-      $nsubs ++;
-    }
-    if ($nsubs == 0) {
-      $output .= t('<b>none</b>');
-    }
-    return $output;
-  }
-
-  if (($display & 32) == 0) {
-    $output .= '<h2>'. t('Subscriptions') .'</h2>';
-  }
-
-  $header = array(t('Name'), t('Description'), t('Action'));
-  while ($so = db_fetch_object($subs)) {
-    $already = lm_paypal_user_subscribed($so->subid, $account);
-
-    $item_name = check_plain($so->item_name);
-    if ($already) {
-      $sub = t('already subscribed');
-    }
-    else {
-      if (!$logged_in) {
-        $login = l(t('login'), 'user');
-        $register = l(t('create new account'), 'user/register');
-        $sub = t("You must !login or !register to subscribe", array("!login" => $login, "!register" => $register));
-      }
-      else {
-        $sub = l(
-          t('subscribe'),
-          "lm_paypal/subscribe/$so->subid",
-          array('attributes' => array(
-            'alt' => t('Link to the subscription page'),
-            'title' => t('Click here to subscribe now!'))));
-      }
-    }
-
-    $rows[] = array('data' => array(
-      array('data' => $item_name, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell'),
-      array('data' => $so->description, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell'),
-      array('data' => $sub, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell')));
-    $count++;
-  }
-  $output .= theme('table', $header, $rows);
-
-  $alias = urlencode($business);
-  $unsuburl = lm_paypal_api_get_host(TRUE)."?cmd=_subscr-find&amp;alias=$alias";
-
-  $output .= '<h4>'. t('To Unsubscribe') .'</h4>';
-  $output .= '<p>';
-  $output .= t('Click unsubscribe to log in to your PayPal account. Click the Details of the subscription in question. Click Cancel Subscription.');
-  $output .= "</p><p><a href=\"$unsuburl\">". t('Unsubscribe') .'</a>';
-  $output .= '</p>';
-
-  return $output;
-}
 
 /**
  * Finds if a user is already subscribed to this subid
  *
- * @param $subid
+ * @param int $subid
  *   The subscription to check
- * @param $account
- *   The user to check, if null then the current user will be checked
- *
+ * @param object $account = NULL
+ *   (optional) The user to check, if null then the current user will be checked
  * @return
  *   TRUE only for role subscriptions and if the current user is subscribed
  */
 function lm_paypal_user_subscribed($subid, $account = NULL) {
+  $subid = (int) $subid;
 
-  $subid = check_plain($subid);
-
-  if (!is_numeric($subid) || intval($subid) != $subid) {
-    watchdog(
-      LM_PAYPAL_SUBSCRIPTIONS,
-      'lm_paypal_user_subscribed requires integer subid: %subid',
-      array('%subid' => $subid),
-      WATCHDOG_ERROR);
-    return FALSE;
-  }
-
-  if (is_null($account)) {
+  if (! $account) {
     global $user;
-    $uid = $user->uid;
+    $account = $user;
   }
-  else {
-    $uid = $account->uid;
-  }
-
 
   // kind 0 is a role subscription, kind 2 is a group
-  $number = db_result(db_query("SELECT COUNT(*) FROM {lm_paypal_subscribers} WHERE uid = %d AND subid = %d AND status = 1 AND (kind = 0 OR kind = 2)", $uid, $subid));
+  $number = db_result(db_query("SELECT COUNT(*) FROM {lm_paypal_subscribers} WHERE uid = %d AND subid = %d AND status = 1 AND (kind = 0 OR kind = 2)", $account->uid, $subid));
   return $number == 1;
 }
 
@@ -653,675 +514,7 @@ function lm_paypal_can_subscribe($subid) {
   if ($user->uid == 0 ) {
     return FALSE;
   }
-  return !lm_paypal_user_subscribed($subid);
-}
-
-/**
- * The user has to agree to the terms and conditions
- */
-function lm_paypal_subscription_terms($subid, $terms) {
-  return drupal_get_form('lm_paypal_subscription_terms_form', $subid, $terms);
-}
-
-function lm_paypal_subscription_terms_form($form_state, $subid, $terms) {
-  $form['#submit'] = array('lm_paypal_subscription_terms_submit');
-
-  $_SESSION['lm_paypal_I_agree'] = '';
-
-  $form['terms'] = array(
-    '#value' => t('<h2>Terms and Conditions</h2><p>') . check_plain($terms) .
-    t('</p><p><em>Before you can subscribe you must agree to these terms and conditions</em></p>'),
-  );
-
-  $form['terms_subid'] = array(
-    '#type' => 'hidden',
-    '#value' => $subid,
-  );
-
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('I agree'),
-  );
-
-  return $form;
-}
-
-/**
- * Process "I Agree" to terms form
- *
- * @return
- *   The url to go to.
- *
- * The user has agreed to the terms and conditions. Allow them to subscribe.
- */
-function lm_paypal_subscription_terms_submit($form, &$form_state) {
-  $subid = ($form_state['values']['terms_subid']);
-  $_SESSION['lm_paypal_I_agree'] = $subid;
-  // $form_state['redirect'] = 'lm_paypal/subscribe/'. $subid;
-}
-
-/**
- * Creates or edits a subscription.
- *
- * @param $subid
- *   If provided then edit this subscription instead creating a new one
- */
-function lm_paypal_subscription_edit_form($form_state, $subid = NULL) {
-  $form = array();
-  $form['#submit'] = array('lm_paypal_subscription_edit_submit');
-  $form['#validate'] = array('lm_paypal_subscription_edit_validate');
-
-  $subid = (int) $subid;
-
-  $edit = $subid > 0;
-
-  if ($edit) {
-    // Look up the default values
-    $subs = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d", $subid);
-
-    $so = db_fetch_object($subs);
-    if (! $so) {
-      watchdog(
-        LM_PAYPAL_SUBSCRIPTIONS,
-        'Cannot find the subscription subid: %subid - lm_paypal_subscription_edit_form',
-        array('%subid' => $subid),
-        WATCHDOG_ERROR);
-      return '';
-    }
-
-    $form['edit_subid'] = array(
-      '#type' => 'hidden',
-      '#value' => $subid,
-    );
-  }
-  else {
-    // Initialise a new subscription
-    $so->src = 0;
-    $so->uid_admin = LM_PAYPAL_SUBSCRIPTIONS_UID_ADMIN_DEFAULT;
-    $so->send_admin_onsub = LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONSUB_DEFAULT;
-    $so->send_admin_onend = LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONEND_DEFAULT;
-
-    $so->send_user_onsub = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONSUB_DEFAULT;
-    $so->send_user_onsub_subject = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONSUB_SUBJECT_DEFAULT;
-    $so->send_user_onsub_body = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONSUB_BODY_DEFAULT;
-
-    $so->send_user_onnearend = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONNEAREND_DEFAULT;
-    $so->nearend_days = LM_PAYPAL_SUBSCRIPTIONS_NEAREND_DAYS_DEFAULT;
-    $so->send_user_onnearend_subject = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONNEAREND_SUBJECT_DEFAULT;
-    $so->send_user_onnearend_body = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONNEAREND_BODY_DEFAULT;
-
-    $so->send_user_onend = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_DEFAULT;
-    $so->send_user_onend_subject = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_SUBJECT_DEFAULT;
-    $so->send_user_onend_body = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_BODY_DEFAULT;
-
-    $so->terms = LM_PAYPAL_SUBSCRIPTIONS_TERMS_DEFAULT;
-  }
-
-  $form['item_name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Subscription Name'),
-    '#maxlength' => 127,
-    '#default_value' => $so->item_name,
-    '#required' => TRUE,
-    '#description' => t('The name of the subscription'),
-  );
-
-  $form['description'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Description'),
-    '#rows' => 5,
-    '#default_value' => $so->description,
-    '#required' => TRUE,
-  );
-
-  $kinds = array(0 => 'Role', 1 => 'Node');
-  $descr = t('Kind of subscription. Role subscriptions for users to gain a role. Node subscription to make a private node public.');
-
-  $og = (function_exists('og_subscribe_user'));
-
-  if ($og) {
-    $kinds[2] = 'Organic Group';
-    $descr .= t(' Organic Group for users to gain a group');
-    $og = TRUE;
-  }
-
-  $form['kind'] = array(
-    '#type' => 'select',
-    '#title' => t('Subscription Kind'),
-    '#options' => $kinds,
-    '#default_value' => $so->kind,
-    '#required' => TRUE,
-    '#description' => $descr,
-  );
-
-  $form['rid'] = array(
-    '#type' => 'select',
-    '#title' => t('Subscribers Role'),
-    '#options' => lm_paypal_subscribable_roles(TRUE),
-    '#default_value' => $so->rid,
-    //'#required' => TRUE, - not required for node-subs only role-subs
-    '#description' => t('The role subscribers become members of. Only used when kind is Role'),
-  );
-
-  if ($og) {
-    // NOTE: Reusing the so->rid field for the Organic Group id
-    $form['gid'] = array(
-      '#type' => 'select',
-      '#title' => t('Subscribers Organic Group'),
-      '#options' => lm_paypal_subscribable_groups(),
-      '#default_value' => $so->rid,
-      //'#required' => TRUE, - not required for node-subs only role-subs
-      '#description' => t('The Organic Group subscribers become members of. Only used when kind is Organic Group. Only "Invite Only" groups can be used in subcsriptions.'),
-    );
-  }
-
-  $form['a3'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Regular rate'),
-    '#maxlength' => 10,
-    '#default_value' => $so->a3,
-    '#required' => TRUE,
-    '#description' => t('This is the price of the subscription. (The currency is specified below.)'),
-  );
-
-  $form['p3'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Regular billing cycle'),
-    '#maxlength' => 10,
-    '#default_value' => $so->p3,
-    '#required' => TRUE,
-    '#description' => t('This is the length of the billing cycle. The number is modified by the regular billing cycle units'),
-  );
-
-  $form['t3'] = array(
-    '#type' => 'select',
-    '#title' => t('Regular billing cycle units'),
-    '#options' => lm_paypal_api_get_period_unit_list(FALSE),
-    '#default_value' => $so->t3,
-    '#required' => TRUE,
-    '#description' => t('This is the units of the regular billing cycle'),
-  );
-
-  $form['src'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Recurring payments'),
-    '#default_value' => $so->src,
-    '#description' => t('If set the payment will recur unless your customer cancels the subscription before the end of the billing cycle. If omitted, the subscription payment will not recur at the end of the billing cycle'),
-  );
-
-  $form['srt'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Recurring Times'),
-    '#maxlength' => 10,
-    '#default_value' => $so->srt,
-    '#description' => t('This is the number of payments which will occur at the regular rate. If omitted, payment will continue to recur at the regular rate until the subscription is cancelled. Requires Recurring payments to be set. <b>If set it must be at least 2</b>.'),
-  );
-
-  $form['currency_code'] = array(
-    '#type' => 'select',
-    '#title' => t('The currency of the payment(s)'),
-    '#default_value' => $so->currency_code,
-    '#options' => lm_paypal_api_get_currency(),
-    '#description' => t('The currency to use in all payments relating to this subscription.'),
-  );
-
-  $form['return_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Return URL'),
-    '#maxlength' => 200,
-    '#default_value' => $so->return_url,
-    '#description' => t('If set this is the URL the user is returned to after completing the transaction at PayPal. If can be used to override the default "thank you" page with a page of your own.'),
-  );
-
-  $form['trial'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Optional Trial Periods'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-
-  $form['trial']['a1'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Trial amount 1'),
-    '#maxlength' => 10,
-    '#default_value' => $so->a1,
-    '#description' => t('This is the price of the first trial period. For a free trial set this to 0'),
-  );
-
-  $form['trial']['p1'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Trial period 1'),
-    '#maxlength' => 10,
-    '#default_value' => $so->p1,
-    '#description' => t('This is the length of the first trial period. The number is modified by the trial period 1 units'),
-  );
-
-  $form['trial']['t1'] = array(
-    '#type' => 'select',
-    '#title' => t('Trial period 1 units'),
-    '#options' => lm_paypal_api_get_period_unit_list(),
-    '#default_value' => $so->t1,
-    '#description' => t('This is the units of trial period 1'),
-  );
-
-  $form['trial']['a2'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Trial amount 2'),
-    '#maxlength' => 10,
-    '#default_value' => $so->a2,
-    '#description' => t('This is the price of the second trial period. For a free trial set this to 0'),
-  );
-
-  $form['trial']['p2'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Trial period 2'),
-    '#maxlength' => 10,
-    '#default_value' => $so->p2,
-    '#description' => t('This is the length of the second trial period. The number is modified by the trial period 2 units'),
-  );
-
-  $form['trial']['t2'] = array(
-    '#type' => 'select',
-    '#title' => t('Trial period 2 units'),
-    '#options' => lm_paypal_api_get_period_unit_list(),
-    '#default_value' => $so->t2,
-    '#description' => t('This is the units of trial period 2'),
-  );
-
-  $form['email_admin'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Email administrator options'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-
-  $form['email_admin']['uid_admin'] = array(
-    '#type' => 'textfield',
-    '#title' => t('UID Admin'),
-    '#maxlength' => 10,
-    '#default_value' => $so->uid_admin,
-    '#description' => t('UID of this subscriptions administrator'),
-  );
-
-  $form['email_admin']['send_admin_onsub'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Email admin on subscription'),
-    '#default_value' => $so->send_admin_onsub,
-    '#description' => t('Email this subscriptions administrator when someone subscribes'),
-  );
-
-  $form['email_admin']['send_admin_onend'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Email admin on subscription end'),
-    '#default_value' => $so->send_admin_onend,
-    '#description' => t('Email this subscriptions administrator when someones subscription ends by either cancel or end-of-term'),
-  );
-
-  $form['email_user'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Email subscriber options'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
-
-  $form['email_user']['send_user_header1'] = array(
-    '#value' => '<p>'. t('The following variables can be used in the subject and body of messages:') . '</p>' .
-      '<ul><li>%Subscription - the subscriptions name</li><li>%Username - the subscribers name</li><li>%Login - the subscribers login</li><li>%Site - this sites name</li><li>%Uri - this uri</li><li>%Uri_brief - this uri stripped of http://</li><li>%Mailto - target of this email</li><li>%Date - the curent date/time</li></ul>',
-  );
-
-  $form['email_user']['send_user_onsub'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Email user on subscription'),
-    '#default_value' => $so->send_user_onsub,
-    '#description' => t('Email the user when they subscribe'),
-  );
-
-  $form['email_user']['send_user_onsub_subject'] = array(
-    '#type' => 'textfield',
-    '#title' => t('New subscription email subject'),
-    '#maxlength' => 80,
-    '#default_value' => $so->send_user_onsub_subject,
-    '#description' => t('Subject of email sent to a user on a new subscription'),
-  );
-
-  $form['email_user']['send_user_onsub_body'] = array(
-    '#type' => 'textarea',
-    '#title' => t('New subscription email body'),
-    '#default_value' => $so->send_user_onsub_body,
-    '#description' => t('Body of email sent to a user on a new subscription'),
-  );
-
-  $form['email_user']['onnearend_header'] = array(
-     '#value' => t('<br/>'),
-  );
-
-  $form['email_user']['send_user_onnearend'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Email user near subscription end'),
-    '#default_value' => $so->send_user_onnearend,
-    '#description' => t('Email the user when their subscription ends or is cancelled'),
-  );
-
-  $form['email_user']['nearend_days'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Days near end to email subscriber'),
-    '#maxlength' => 10,
-    '#validate' => array('lm_paypal_is_integer_between' => array(0)),
-    '#default_value' => $so->nearend_days,
-    '#description' => t('Days before end of subscription to email subscriber'),
-  );
-
-  $form['email_user']['onnearend_note'] = array(
-    '#value' => '<p>'. t('An extra variable %Days, days to end of subscription, is also available') .'</p>',
-  );
-
-  $form['email_user']['send_user_onnearend_subject'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Subscription near end email subject'),
-    '#maxlength' => 80,
-    '#default_value' => $so->send_user_onnearend_subject,
-    '#description' => t('Subject of email sent to a user near end of a subscription'),
-  );
-
-  $form['email_user']['send_user_onnearend_body'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Subscription near end email body'),
-    '#default_value' => $so->send_user_onnearend_body,
-    '#description' => t('Body of email sent to a user near end of a subscription'),
-  );
-
-  $form['email_user']['onend_header'] = array(
-    '#value' => t('<br/>'),
-  );
-
-  $form['email_user']['send_user_onend'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Email user on subscription end'),
-    '#default_value' => $so->send_user_onend,
-    '#description' => t('Email the user when their subscription ends or is cancelled'),
-  );
-
-  $form['email_user']['send_user_onend_note'] = array(
-    '#value' => '<p>'. t('An extra variable %End, reason for end of subscription, is also available') .'</p>',
-  );
-
-  $form['email_user']['send_user_onend_subject'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Subscription end email subject'),
-    '#maxlength' => 80,
-    '#default_value' => $so->send_user_onend_subject,
-    '#description' => t('Subject of email sent to a user on a subscription end or cancellation'),
-  );
-
-  $form['email_user']['send_user_onend_body'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Subscription end email body'),
-    '#default_value' => $so->send_user_onend_body,
-    '#description' => t('Body of email sent to a user on a subscription end or cancellation'),
-  );
-
-  $form['terms'] = array(
-    '#type' => 'textarea',
-    '#title' => t('Terms and conditions'),
-    '#default_value' => $so->terms,
-    '#description' => t('Terms and conditions the user must agree to. If empty no terms or conditions are required.'),
-  );
-
-  if ($edit) {
-    $form['status'] = array(
-      '#type' => 'select',
-      '#title' => t('The status of this subscription definition'),
-      '#default_value' => $so->status,
-      '#options' => array(0 => 'defunct', 1 => 'live'),
-      );
-
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Update subscription'),
-    );
-  }
-  else {
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Create subscription'),
-    );
-  }
-
-  return $form;
-}
-
-/**
- * Checks that all the subscription details make sense
- *
- */
-function lm_paypal_subscription_edit_validate($form, &$form_state) {
-  $values = $form_state['values'];
-
-  $a1 = $values['a1'];
-  $a2 = $values['a2'];
-  $a3 = $values['a3'];
-  $p1 = $values['p1'];
-  $p2 = $values['p2'];
-  $p3 = $values['p3'];
-  $src = $values['src'];
-  $srt = $values['srt'];
-  $uid_admin = $values['uid_admin'];
-  $rid = $values['rid'];
-  $gid = $values['gid'];
-  $kind = $values['kind'];
-
-  if ($kind == 0 && (!is_numeric($rid) || $rid <= 0)) {
-    $perr = t('If Subscription Kind is Role then a Subscription Role must be provided.');
-    form_set_error('rid', $perr);
-  }
-
-  if ($kind == 2 && (!is_numeric($gid) || $gid <= 0)) {
-    $perr = t('If Subscription Kind is Organic Group then a group must be provided.');
-    form_set_error('gid', $perr);
-  }
-
-  // Shame this doesn't work!
-  if ($kind == 0) {
-    unset($values['gid']);
-  }
-  else if ($kind == 2) {
-    unset($values['rid']);
-  }
-
-  if (!is_numeric($a3) || $a3 <= 0) {
-    $perr = t('The amount must positive number greater than 0');
-    form_set_error('a3', $perr);
-  }
-
-  $perr = t('A trial amount must either be empty or a positive number greater than or equal to 0');
-  if ($a1 != '' && (!is_numeric($a1) || $a1 < 0)) {
-    form_set_error('a1', $perr);
-  }
-  if ($a2 != '' && (!is_numeric($a2) || $a2 < 0)) {
-    form_set_error('a2', $perr);
-  }
-
-  if (!is_numeric($p3) || intval($p3) != $p3 || $p3 <= 0) {
-    $perr = t('Regular period must  be a positive integer greater than 0');
-    form_set_error('p3', $perr);
-  }
-
-  $perr = t('A trial period must either be empty or a positive integer greater than 0');
-  if ($p2 != '' && (!is_numeric($p2) || intval($p2) != $p2 || $p2 <= 0)) {
-    form_set_error('p2', $perr);
-  }
-  if ($p3 != '' && (!is_numeric($p3) || intval($p3) != $p3 || $p3 <= 0)) {
-    form_set_error('p3', $perr);
-  }
-
-  /* Wrong... an empty amount means free
-  $perr = t('If a trial period is set the amount must be set too');
-  if ($p1 != '' && $a1 == '') {
-    form_set_error('a1', $perr);
-  }
-  if ($p2 != '' && $a2 == '') {
-    form_set_error('a2', $perr);
-  }
-  */
-
-  $perr = t('If a trial amount is set the period must be set too');
-  if ($a1 != '' && $p1 == '') {
-    form_set_error('p1', $perr);
-  }
-  if ($a2 != '' && $p2 == '') {
-    form_set_error('p2', $perr);
-  }
-
-  if ($srt != '') {
-    if (!is_numeric($srt) || intval($srt) != $srt) {
-      form_set_error('srt', t('Recurring times, if set, must be an integer'));
-    }
-    else {
-      if ($srt < 2) {
-        form_set_error('srt', t('Recurring times, if set, must be at least 2'));
-      }
-    }
-    if (!$src) {
-      form_set_error('src', t('If recurring times is set Recurring payments must be set too'));
-    }
-  }
-
-  if (!is_numeric($uid_admin) || intval($uid_admin) != $uid_admin || $uid_admin <= 0) {
-      form_set_error('uid_admin', t('UID number be an integer greater than zero'));
-  }
-}
-
-/**
- * Process form submission to edit or create new subscription definitions.
- *
- * @return
- *   The url to go to.
- *
- * Updates or inserts subscriptions in the lm_paypal_subscriptions table.
- */
-function lm_paypal_subscription_edit_submit($form, &$form_state) {
-  $values = $form_state['values'];
-  $subid = ($values['edit_subid']);
-  $edit = ($subid != '');
-
-  $kind = ($values['kind']);
-
-  static $keys = array(
-    'rid',
-    'gid',
-    'kind',
-    'item_name',
-    'description',
-    'a1',
-    'p1',
-    't1',
-    'a2',
-    'p2',
-    't2',
-    'a3',
-    'p3',
-    't3',
-    'src',
-    'srt',
-    'currency_code',
-    'return_url',
-
-    'uid_admin',
-    'send_admin_onsub',
-    'send_admin_onend',
-
-    'send_user_onsub',
-    'send_user_onsub_subject',
-    'send_user_onsub_body',
-
-    'send_user_onnearend',
-    'nearend_days',
-    'send_user_onnearend_subject',
-    'send_user_onnearend_body',
-
-    'send_user_onend',
-    'send_user_onend_subject',
-    'send_user_onend_body',
-
-    'terms',
-  );
-
-  static $nulls = array(
-    'a1', 'p1', 't1', 'a2', 'p2', 't2', 'a3', 'p3', 't3',
-    'src', 'srt', 'currency_code', 'return_url');
-
-  static $int_fields = array(
-    'subid', 'kind', 'rid', 'a1', 'p1', 'a2', 'p2', 'a3', 'p3',
-    'src', 'srt', 'status', 'uid_admin',
-    'send_admin_onsub', 'send_admin_onend', 'send_user_onsub',
-    'nearend_days', 'send_user_onnearend', 'send_user_onend',
-  );
-
-
-///////////////////////////////
-$object = array(); // drupal_write_record
-$update = array(); // drupal_write_record
-
-  if ($edit) {
-    $object['subid'] = $subid;
-    $object['status'] = $values['status'];
-    $update = 'subid';
-  }
-  else {
-    $object['status'] = 1; // COOL
-  }
-
-  foreach ($keys as $key) {
-    // Skip rid for OG subscription as it is meaningless
-    // Skip rid for Node subscriptions (may be null/empty)
-    // Also note that I cheat and reuse the db rid field for the OG gid and
-    // insert into it below by renaming gid to rid - yucky but quick to write
-    if (($kind == 1 || $kind == 2) && $key == 'rid') {
-      continue;
-    }
-    // Ditto for role and node subs - ignore gid
-    if (($kind == 0 || $kind == 1) && $key == 'gid') {
-      continue;
-    }
-
-    $value = $values[$key];
-    // NOTE: Reusing the db rid field for the Organic Group id
-    if ($key == 'gid') {
-      $key = 'rid';
-    }
-
-    // Instead of setting a key to empty, if it is a null field then null it!
-    if ($value == '' && in_array($key, $nulls)) {
-      $object[$key] = NULL;
-    }
-    else {
-      // TODO: do we need db_escape_string($value); ?
-      $object[$key] = $value;
-    }
-  }
-
-  $wr = drupal_write_record('lm_paypal_subscriptions', $object, $update);
-  if ($wr === FALSE) {
-    watchdog(LM_PAYPAL_SUBSCRIPTIONS, check_plain($msg), NULL, WATCHDOG_ERROR);
-    form_set_error(NULL, 'Failed to create subscription');
-    return;
-  }
-
-
-  if ($_lm_paypal_debug) {
-    $in = $values['item_name'];
-    if ($edit) {
-      $k = t('Edited subscription: ');
-    }
-    else {
-      $k = t('Created subscription: ');
-    }
-    $msg .= t('%kind %item_name', array('%kind' => $k, '%item_name' => $values['item_name']));
-    watchdog(LM_PAYPAL_SUBSCRIPTIONS, check_plain($msg), NULL);
-    //drupal_set_message($msg);
-  }
-
-  $form_state['redirect'] = 'admin/settings/lm_paypal/subscriptions';
+  return ! lm_paypal_user_subscribed($subid);
 }
 
 /**
@@ -1376,271 +569,6 @@ function lm_paypal_subscribable_roles($none = FALSE) {
   return $ret;
 }
 
-
-/**
- * Main interface to view subscriptions.
- *
- * @return
- *   The contents of the page allowing the admin to view subscriptions.
- */
-function lm_paypal_view_subscriptions() {
-  $business = lm_paypal_api_get_business();
-  // global $_lm_paypal_debug;
-
-
-  if ($business == '') {
-    $settings = l(t('admin settings lm_paypal'), 'admin/settings/lm_paypal');
-    $output = '<p>'. t("LM PayPal not yet configured! An administrator needs to do this at !settings", array("!settings" => $settings)) .'.</p>';
-    return $output;
-  }
-
-  $roles = lm_paypal_subscribable_roles(TRUE);
-  $groups = lm_paypal_subscribable_groups();
-
-  /* This is no longer true now there are Node subscriptions
-  if (count($roles) == 0) {
-    $admin = l(t('admin roles'), 'admin/access/roles');
-    return t('Subscriptions add users to roles but there are no additional roles defined. Define a role using %admin and try again.', array('%admin' => $admin));
-  }
-  */
-
-
-  $output .= '<h2>'. t('Subscriptions') .'</h2>';
-  $header = array(
-    array('data' => t('ID'), 'field' => 'subid'),
-    array('data' => t('Type'), 'field' => 'kind'),
-    array('data' => t('Name'), 'field' => 'item_name'),
-    array('data' => t('Description'), 'field' => 'description'),
-    array('data' => t('Role')), // rid
-    array('data' => t('Group')), // ?
-    array('data' => t('Status'), 'field' => 'status'),
-    array('data' => t('Subscribers')),
-    array('data' => t('Actions')),
-  );
-
-  // Output a list of all the existing subscriptions
-  $tablesort = tablesort_sql($header);
-  $subs = db_query('SELECT subid, item_name, description, status, kind, rid FROM {lm_paypal_subscriptions}'. $tablesort);
-
-  while ($so = db_fetch_object($subs)) {
-    $kind = $so->kind;
-    $linkso = $so->subid;
-    $item_name = l($so->item_name, "admin/settings/lm_paypal/subscription/$so->subid");
-    $description = $so->description;
-    $status = ($so->status ? 'live' : 'defunct');
-    $group = '';
-    $role = '';
-    if ($kind == 0) {
-      $kind = t('Role');
-      $linksb = l(t('subscribers'), "admin/settings/lm_paypal/subscribers/$so->subid");
-      $role = l($roles[$so->rid], "admin/user/permissions/$so->rid");
-    }
-    else if ($kind == 1) {
-      $kind = t('Node');
-      $linksb = l(t('subscribed nodes'), "admin/settings/lm_paypal/subscribers/$so->subid");
-    }
-    else if ($kind == 2) {
-      $kind = t('Organic Group');
-      $linksb = l(t('subscribers'), "admin/settings/lm_paypal/subscribers/$so->subid");
-      $group = $groups[$so->rid];
-    }
-    $actions = l('edit', 'admin/settings/lm_paypal/subscriptions/new/' . $so->subid); // edit
-    $actions .= ' ' . l('delete', 'admin/settings/lm_paypal/subscription/delete/' . $so->subid);
-    // TODO: delete needs a confirmation, and redirect back to this page
-    $rows[] = array('data' => array($linkso, $kind, $item_name, $description, $role, $group, $status, $linksb, $actions));
-  }
-
-  $output .= theme('table', $header, $rows);
-
-  $link = l(t('View All Subscribers to All Subscriptions'), 'admin/settings/lm_paypal/subscribers/0');
-  $output .= "<p>$link</p>";
-
-  $link = l(t('Create New Subscription'), 'admin/settings/lm_paypal/subscriptions/new');
-  $output .= "<p>$link</p>";
-
-  return $output;
-}
-
-/**
- * Print the details of a subscription.
- *
- * @param $subid
- *   Required. The subscription to print
- * @param $display
- *   If just showing a single subscription then $diplay lists what to show.
- *   1 = item_name
- *   2 = description
- *   4 = human readable details of subscription
- *   8 = button
- *  16 = brief
- *   These can be added to get combinations (eg: 11 = 1 + 2 + 8)
- */
-function lm_paypal_subscription($subid = '', $display = 0) {
-  $field_names = array(
-    'item_name' => 'Subscription Name',
-    'description' => 'Description',
-    'rid' => 'Role',
-    'a1' => 'Trial amount 1',
-    'p1' => 'Trial period 1',
-    'a2' => 'Trial amount 2',
-    'p2' => 'Trial period 2',
-    'a3' => 'Regular rate',
-    'p3' => 'Regular billing cycle',
-    'src' => 'Recurring payments',
-    'srt' => 'Recurring times',
-    'currency_code' => 'Currency',
-    'terms' => 'Terms and Conditions',
-    'status' => 'Status',
-  );
-
-  $subid = check_plain($subid);
-
-  if (!is_numeric($subid) || intval($subid) != $subid) {
-    watchdog(
-      LM_PAYPAL_SUBSCRIPTIONS,
-      'lm_paypal_subscription requires integer subid: %subid',
-      array('%subid' => $subid),
-      WATCHDOG_ERROR);
-    return '';
-  }
-
-  $roles = lm_paypal_subscribable_roles(TRUE);
-  $groups = lm_paypal_subscribable_groups();
-
-  $subs = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d AND status = 1", $subid);
-
-  if ($display != 0) {
-    $output = '';
-    $so = db_fetch_object($subs);
-    if (! $so) {
-      watchdog(
-        LM_PAYPAL_SUBSCRIPTIONS,
-        'Cannot find subscription to print subid: %subid',
-        array('%subid' => $subid),
-        WATCHDOG_WARNING);
-      return '';
-    }
-    if (($display & 1) != 0) {
-      if (($display & 16) != 0) {
-        $output .= '<b>'. check_plain($so->item_name) .'</b> ';
-      }
-      else {
-        $output .= '<h3>'. check_plain($so->item_name) .'</h3>';
-      }
-    }
-    if (($display & 2) != 0) {
-      if (($display & 16) != 0) {
-        // This is "brief"--we may want to make it so by keeping only the first line
-        $output .= '"'.  $so->description .'"';
-      }
-      else {
-        $output .= '<p>'.  $so->description .'</p>';
-      }
-    }
-    if (($display & 4) != 0) {
-      if (($display & 16) != 0) {
-        $output .= " ";
-      }
-      else {
-        $output .= '<p>';
-      }
-      if ($so->p1 != '' && $so->p1 > 0) {
-        $amount = theme('lm_paypal_amount', $so->a1, $so->currency_code, TRUE);
-        $duration = lm_paypal_unit2str($so->p1, $so->t1);
-        $output .= t('First trial period %amount for %duration.', array('%amount' => $amount, '%duration' => $duration));
-      }
-      if ($so->p2 != '' && $so->p2 > 0) {
-        $amount = theme('lm_paypal_amount', $so->a2, $so->currency_code, TRUE);
-        $duration = lm_paypal_unit2str($so->p2, $so->t2);
-        $output .= t('Second trial period %amount for %duration.', array('%amount' => $amount, '%duration' => $duration));
-      }
-      $amount = theme('lm_paypal_amount', $so->a3, $so->currency_code, TRUE);
-      $duration = lm_paypal_unit2str($so->p3, $so->t3);
-      $output .= t('Rate %amount for %duration. ', array('%amount' => $amount, '%duration' => $duration));
-      if ($so->src) {
-        if ($so->srt != '') {
-          $times = $so->srt;
-          $output .= t('Recurs %times times.', array('%times' => $times)) ;
-        }
-        else {
-          $output .= t('Recurs till cancelled') .'. ';
-        }
-      }
-      if ($so->kind == 0) {
-        $role = $roles[$so->rid];
-        $output .= t('User becomes member of role %role. ', array('%role' => $role));
-      }
-      else if ($so->kind == 1) {
-        $output .= t('Node becomes viewable by others after the payment was confirmed. ');
-      }
-      else if ($so->kind == 2) {
-        $group = $groups[$so->rid];
-        $output .= t('User becomes member of Organic Group %group. ', array('%group' => $group));
-      }
-
-      // Calculate the length of the subscription - just for debugging for now
-      $duration = lm_paypal_subscription_days($so);
-      if ($duration == 0) {
-        $output .= t('(Duration - till cancelled.)');
-      }
-      else {
-        $output .= t('(Duration %duration days.)', array('%duration' => $duration));
-      }
-
-      if (($display & 16) == 0) {
-        $output .= '</p>';
-      }
-    }
-    return $output;
-  }
-
-  // Output the subscription as a table of fields/values (skip the empty ones)
-  $sub = db_fetch_array($subs);
-  if ( !$sub ) {
-    return t('Subscription does not exist or was deleted subid=%subid', array('%subid' => $subid));
-  }
-
-  $output = '<h2>'. t('Subscription %subid', array('%subid' => $subid)) .'</h2>';
-  $header = array(t('field'), t('value'));
-  foreach ($sub as $key => $value) {
-    if ($value == '') {
-      continue;
-    }
-    if ($key == 'status') {
-      $value = t($value ? 'live' : 'defunct');
-    }
-    else if ($key == 'src') {
-      $value = t($value ? 'recurring' : 'not recurring');
-    }
-    else if ($key == 'rid') {
-      $value = $roles [$value];
-    }
-    else if (strncmp($key, 'p', 1) == 0 && strlen($key) == 2) {
-      // use 'p' (period-count) and 't' (period-unit) to format a period
-      $unit = $sub['t' . substr($key,1)];
-      $value = lm_paypal_unit2str($value, $unit);
-    }
-    else if (strncmp($key, 't', 1) == 0 && strlen($key) == 2) {
-      continue; // skip t (period-unit) fields
-    }
-    $k = $field_names [$key];
-    if ($k == '') {
-      $k = $key;
-    }
-    $k = check_plain($k);
-    $value = check_plain($value);
-    $rows[] = array('data' => array($k, $value));
-  }
-
-  $output .= theme('table', $header, $rows);
-  $output .= '<br/><p><b>'. t('Editing the subscription here will only effect new subscriptions.') .'</b></p>';
-  $output .= l(t('edit'), "admin/settings/lm_paypal/subscriptions/new/$subid");
-  $output .= '<br/><p><b>'. t('Be very careful deleting subscriptions because they cannot be recovered. It is much better to edit them and change their status to defunct. Also if users are still subscribed at PayPal to a deleted subscription incoming payments will be problematic.') .'</b></p>';
-  $output .= l(t('delete'), "admin/settings/lm_paypal/subscription/delete/$subid");
-
-  return $output;
-}
-
 /**
  * Find the duration of a subscription.
  *
@@ -1658,340 +586,334 @@ function lm_paypal_subscription_days($so) {
     $multiply = $so->srt;
   }
   return
-    (lm_paypal_period_unit2days($so->p1, $so->t1) +
-    lm_paypal_period_unit2days($so->p2, $so->t2) +
-    (lm_paypal_period_unit2days($so->p3, $so->t3) * $multiply));
+    (lm_paypal_period_unit2days($so->p1, $so->t1)
+      + lm_paypal_period_unit2days($so->p2, $so->t2)
+      + (lm_paypal_period_unit2days($so->p3, $so->t3) * $multiply));
+}
+
+function _lm_paypal_subscriptions_ipn_is_valid($ipn) {
+  $so = lm_paypal_subscriptions_load_subscription($ipn->item_number);
+  $custom = lm_paypal_unpack_ipn_custom($ipn);
+  return $so != NULL && $custom['module'] == LM_PAYPAL_SUBSCRIPTIONS;
 }
 
 /**
- * Delete a subscription definition.
+ * Check and get if no error mainly used vars from an incomming new IPN.
  *
- * @param $subid
- *   Required. The subid of the definition to delete.
- * @return
- *   A string describing the result of the deletion.
+ * @param object $ipn
+ *   Incomming IPN
+ * @return array
+ *   Array(<subscription_object>, <uid>, <nid or NULL>)
+ *   FALSE if IPN is not for us or has wrong data
  */
-function lm_paypal_subscription_delete($subid) {
-  db_query("DELETE FROM {lm_paypal_subscriptions} WHERE subid = %d", $subid);
-
-  $msg = t('Deleted subscription %subid', array('%subid' => $subid));
-  watchdog(LM_PAYPAL_SUBSCRIPTIONS, $msg, NULL);
-  //drupal_set_message($msg);
-  return t('Deleted subscription');
-}
-
-
-
-/**
- * Implementation of hook_lm_paypal_ipn_TXNTYPE.
- * Process a subscr IPN message.
- */
-function lm_paypal_subscriptions_lm_paypal_ipn($ipn) {
-  // error_log("Called lm_paypal_subscriptions_lm_paypal_ipn($ipn->txn_id, $ipn->txn_type)");
-  if (strpos($ipn->txn_type, 'subscr_') === 0) {
-    _lm_paypal_process_in_subscr($ipn); // Call legacy handler
-    return TRUE;
-  }
-}
-
-
-
-
-/**
- * Process a newly arrived subscription IPN message
- *
- * @param $ipn
- *   The IPN containing a subscription message.
- *
- *   TODO: break up this long function, use switch statement wiht txn_type
- */
-function _lm_paypal_process_in_subscr($ipn) {
-  if (lm_paypal_debug()) {
-    watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'in_subscr', NULL);
-  }
-
+function _lm_paypal_subscriptions_ipn_get_vars($ipn) {
   $link = l(t('view'), "admin/settings/lm_paypal/id/$ipn->id");
 
+  $var_so = NULL;
+  $var_uid = NULL;
+  $var_nid = NULL;
+
   if ($ipn->payment_status == 'Pending') {
-    watchdog(
-      LM_PAYPAL_SUBSCRIPTIONS,
-      'Ignoring IPN with status: Pending. Check your PayPal account to see why it is pending. Note: pending_reason: %reason',
-      array('%reason' => check_plain($ipn->pending_reason)),
-      WATCHDOG_ERROR,
-      $link);
-    return;
+    $message = 'Ignoring IPN with status: Pending. Check your PayPal account to see why it is pending. Note: pending_reason: %reason';
+    $message_vars = array('%reason' => check_plain($ipn->pending_reason));
+    watchdog(LM_PAYPAL_SUBSCRIPTIONS, $message, $message_vars, WATCHDOG_ERROR, $link);
+    return FALSE;
   }
 
   $custom = lm_paypal_unpack_ipn_custom($ipn);
-  if ($ipn->item_number == '' || !is_numeric($ipn->item_number) ||
-      !isset($custom['uid']) || !is_numeric($custom['uid'])) {
-    watchdog(
-      LM_PAYPAL_SUBSCRIPTIONS,
-      'Subscription ipn invalid item_number or custom (item_number %item_number, custom %custom)',
-      array('%item_number' => check_plain($ipn->item_number), '%custom' => check_plain($ipn->custom)),
-      WATCHDOG_ERROR,
-      $link);
-    return;
+
+  // Check for item_number and client id
+  if ($ipn->item_number == '' || !is_numeric($ipn->item_number)) {
+    $message = 'Subscription ipn invalid item_number';
+    $message_vars = array('%item_number' => check_plain($ipn->item_number));
+    watchdog(LM_PAYPAL_SUBSCRIPTIONS, $message, $message_vars, WATCHDOG_ERROR, $link);
+    return FALSE;
+  }
+  if (!isset($custom['uid']) || !is_numeric($custom['uid'])) {
+    $message = 'Subscription custom (custom %custom)';
+    $message_vars = array('%custom' => check_plain($ipn->custom));
+    watchdog(LM_PAYPAL_SUBSCRIPTIONS, $message, $message_vars, WATCHDOG_ERROR, $link);
+    return FALSE;
   }
 
-  $subid = $ipn->item_number;
-  // $custom = $ipn->custom;
-//  $uid = $custom & 0xFFFF;
-//  $other = ($custom >> 16) & 0xFFFF;
-  $uid = $custom['uid'];
-  // $other = $custom['other']; // maybe
+  $var_so = lm_paypal_subscriptions_load_subscription($ipn->item_number);
+  if (! $var_so->status) {
+    $var_so = NULL;
+  }
 
-  $nid = $custom['nid']; // This is usually true and doesn't hurt otherwise
-  // Useful string to add to node related subscription related emails
-  $node = t(" on node !nid", array("!nid" => $nid));
+  $var_uid = $custom['uid'];
+  // This is usually true and doesn't hurt otherwise
+  $var_nid = $custom['nid'];
 
   // Look up the subscription
-  $r = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d AND status = 1", $subid);
-  $so = db_fetch_object($r);
-  if (! $so) {
-    watchdog(
-      LM_PAYPAL_SUBSCRIPTIONS,
-      'IPN uses unknown or defunct subscription, ignored: %subid',
-      array('%subid' => $subid),
-      WATCHDOG_ERROR,
-      $link);
-    return;
+  if (! $var_so || ! $var_so->status) {
+    $message = 'IPN uses unknown or defunct subscription, ignored: %subid';
+    $message_vars = array('%subid' => $var_so->subid);
+    watchdog(LM_PAYPAL_SUBSCRIPTIONS, $message, $message_vars, WATCHDOG_ERROR, $link);
+    return FALSE;
   }
 
   // Is this uid valid?
-  // TODO: load user and pass to methods below?
-  if (!db_result(db_query("SELECT COUNT(*) FROM {users} WHERE uid = %d", $uid))) {
-    watchdog(
-      LM_PAYPAL_SUBSCRIPTIONS,
-      'IPN subscribing unknown uid, ignored: %uid',
-      array('%uid' => $uid),
-      WATCHDOG_ERROR,
-      $link);
-    return;
+  if (! user_load(array('uid' => $var_uid))) {
+    $message = 'IPN subscribing unknown uid, ignored: %uid';
+    $message_vars = array('%uid' => $uid);
+    watchdog(LM_PAYPAL_SUBSCRIPTIONS, $message, $message_vars, WATCHDOG_ERROR, $link);
+    return FALSE;
   }
 
-  if ($ipn->txn_type == 'subscr_signup') {
-    // Note: a signup doesn't have a transaction id!
+  return array($var_so, $var_uid, $var_nid);
+}
 
-    if (!_lm_paypal_subscriptions_validate($ipn, $so, $link)) {
-      return;
-    }
+/**
+ * Implementation of hook_lm_paypal_process_in_<txn_type>().
+ */
+function lm_paypal_subscriptions_lm_paypal_ipn_subscr_eot($ipn) {
+  return _lm_paypal_subscriptions_ipn_cancel_or_eot($ipn);
+}
 
-    // Is this an existing subscription (sometimes payments come before
-    // signups so this is possible).
-    $subs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'", $ipn->subscr_id);
-    $ss = db_fetch_object($subs);
+/**
+ * Implementation of hook_lm_paypal_process_in_<txn_type>().
+ */
+function lm_paypal_subscriptions_lm_paypal_ipn_subscr_cancel($ipn) {
+  return _lm_paypal_subscriptions_ipn_cancel_or_eot($ipn);
+}
 
-    if (!$ss) {
-      // Try and track problem maybe caused by multiple subscr_signups
-      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'new subscr_signup subscr_id %sid', array('%sid' => $ipn->subscr_id));
-      // Not already present.
-      // Create an entry in the subscribers table.
-      lm_paypal_add_subscriber($so->kind, $uid, $nid, $subid, $ipn->subscr_id, LM_PAYPAL_SUBSCRIPTIONS_STATUS_SIGNEDUP);
-    }
-    else {
-      // Try and track problem maybe caused by multiple subscr_signups
-      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'repeat subscr_signup subscr_id %sid', array('%sid' => $ipn->subscr_id));
-      // It is already present
-
-      switch ($ss->status) {
-        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_BLOCKED:
-          watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to signup to blocked subscription, ignored', NULL, WATCHDOG_ERROR, $link);
-          return;
-
-        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_DEAD:
-        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_CANCELLED:
-        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_EOT:
-          watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to signup to ended subscription, ignored %status', array('%status' => $ss->status), WATCHDOG_ERROR, $link);
-          return;
-
-        // Some users are reporting symptoms that suggest multiple
-        // subscr_signup's are arriving. Ignore the duplicates here.
-        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_LIVE:
-        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_SIGNEDUP:
-          watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Signup received but subscription live or signedup, ignoring', NULL, WATCHDOG_ERROR, $link);
-          return;
-
-        // A payment arrived first. Now obey the signup
-        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_PAID:
-          watchdog(LM_PAYPAL_SUBSCRIPTIONS, t('Signup received after payment, obeying it anyway'));
-          break;
-      }
-    }
-
-    // A signup alone is enough to go live. A payment IPN may not arrive at all
-    // if the subscription amount is zero (usually a trial period)
-    lm_paypal_subscriber_set_status($ipn->subscr_id, LM_PAYPAL_SUBSCRIPTIONS_STATUS_LIVE);
-
-    if ($so->kind == 0) {
-      lm_paypal_user_gain_role($uid, $so->rid);
-    }
-    else if ($so->kind == 2) {
-      lm_paypal_user_gain_group($uid, $so->rid);
-    }
-
-    if ($so->send_admin_onsub && is_numeric($so->uid_admin)) {
-      // Email admin to let them know of a new subscriber
-      //  note: t() will be called inside lm_paypal_mail_user
-      // Extra variables (in addition to the default ones provided)
-      if ($so->kind == 0 || $so->kind == 2) {
-        $variables = array('%Subscription' => $so->item_name, '%Node' => '');
-      }
-      else if ($so->kind == 1) {
-        $variables = array('%Subscription' => $so->item_name, '%Node' => $node);
-      }
-      lm_paypal_mail_user(
-        $so->uid_admin,
-        $uid,
-        LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONSUB_SUBJECT,
-        LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONSUB_BODY,
-        $variables);
-    }
-
-    if ($so->send_user_onsub) {
-      // Email user to confirm a new subscriber
-      //  note: t() will be called inside lm_paypal_mail_user
-      // Extra variables (in addition to the default ones provided)
-      if ($so->kind == 0 || $so->kind == 2) {
-        $variables = array('%Subscription' => $so->item_name, '%Node' => '');
-      }
-      else if ($so->kind == 1) {
-        $variables = array('%Subscription' => $so->item_name, '%Node' => $node);
-      }
-      lm_paypal_mail_user($uid, $uid, $so->send_user_onsub_subject, $so->send_user_onsub_body, $variables);
-    }
-
-    return;
+function lm_paypal_subscriptions_lm_paypal_ipn_subscr_signup($ipn) {
+  if (! _lm_paypal_subscriptions_ipn_is_valid($ipn)) {
+    return FALSE;
   }
 
-  else if ($ipn->txn_type == 'subscr_payment' &&
-      $ipn->payment_status == 'Completed') {
+  list($so, $uid, $nid) = _lm_paypal_subscriptions_ipn_get_vars($ipn);
 
-    if (lm_paypal_already_processed($ipn->txn_id)) {
-      watchdog(
-        LM_PAYPAL_SUBSCRIPTIONS,
-        'This transaction has already been processed, ignored: %id',
-        array('%id' => check_plain($ipn->txn_id)),
-        WATCHDOG_WARNING,
-        $link);
-      return;
-    }
+  // Note: a signup doesn't have a transaction id!
 
-    // This should be an existing subscription (but sometimes payments come
-    // before signups).
-    $subs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'", $ipn->subscr_id);
-    $ss = db_fetch_object($subs);
-
-    if (!$ss) {
-      // Not already present.
-      // Create an entry in the subscribers table.
-      lm_paypal_add_subscriber($so->kind, $uid, $nid, $subid, $ipn->subscr_id, LM_PAYPAL_SUBSCRIPTIONS_STATUS_PAID);
-    }
-    else {
-      // It is already present
-      switch ($ss->status) {
-        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_BLOCKED:
-          watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to pay to blocked subscription, ignored', NULL, WATCHDOG_ERROR, $link);
-          break;
-
-        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_DEAD:
-        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_CANCELLED:
-        case LM_PAYPAL_SUBSCRIPTIONS_STATUS_EOT:
-          watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to pay ended subscription, ignored %status', array('%status' => $ss->status), WATCHDOG_ERROR, $link);
-          break;
-      }
-    }
-
-    lm_paypal_mark_processed($ipn);
-
-    return;
+  if (!_lm_paypal_subscriptions_validate($ipn, $so, $link)) {
+    return FALSE;
   }
-  else if ($ipn->txn_type == 'subscr_cancel' || $ipn->txn_type == 'subscr_eot') {
-    // Note: Cancel's dont get a transaction id!
-    $end = check_plain(substr($ipn->txn_type, 7));
-    if ($_lm_paypal_debug) {
-      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'User ending subscription (uid %uid, subid %subid, type %type)', array('%uid' => $uid, '%subid' => $subid, '%end' => $end));
-    }
 
-    // Check I know this subscr_id
-    $subs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'", $ipn->subscr_id);
-    $ss = db_fetch_object($subs);
-    if (!$ss) {
-      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Unable to fetch the subscriber object', NULL, WATCHDOG_ERROR, $link);
-      // Maybe its a temporary error? Reject this and when PayPal retries
-      // it might work!
-      drupal_set_header('HTTP/1.0 404 Not Found');
-      return;
-    }
+  // Is this an existing subscription (sometimes payments come before
+  // signups so this is possible).
+  $subs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'", $ipn->subscr_id);
+  $ss = db_fetch_object($subs);
+
+  if (!$ss) {
+    // Try and track problem maybe caused by multiple subscr_signups
+    watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'new subscr_signup subscr_id %sid', array('%sid' => $ipn->subscr_id));
+    // Not already present.
+    // Create an entry in the subscribers table.
+    lm_paypal_add_subscriber($so->kind, $uid, $nid, $so->subid, $ipn->subscr_id, LM_PAYPAL_SUBSCRIPTIONS_STATUS_SIGNEDUP);
+  }
+  else {
+    // Try and track problem maybe caused by multiple subscr_signups
+    watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'repeat subscr_signup subscr_id %sid', array('%sid' => $ipn->subscr_id));
+    // It is already present
 
     switch ($ss->status) {
       case LM_PAYPAL_SUBSCRIPTIONS_STATUS_BLOCKED:
-        watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to end to blocked subscription, ignored', NULL, WATCHDOG_ERROR, $link);
+        watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to signup to blocked subscription, ignored', NULL, WATCHDOG_ERROR, $link);
         return;
 
       case LM_PAYPAL_SUBSCRIPTIONS_STATUS_DEAD:
       case LM_PAYPAL_SUBSCRIPTIONS_STATUS_CANCELLED:
       case LM_PAYPAL_SUBSCRIPTIONS_STATUS_EOT:
-        watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to end ended subscription, ignored %status', array('%status' => $ss->status), WATCHDOG_ERROR, $link);
+        watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to signup to ended subscription, ignored %status', array('%status' => $ss->status), WATCHDOG_ERROR, $link);
         return;
-    }
 
-    // Mark the subscription ended
-    $status = ($end == 'eot' ? LM_PAYPAL_SUBSCRIPTIONS_STATUS_EOT : LM_PAYPAL_SUBSCRIPTIONS_STATUS_CANCEL);
-    lm_paypal_subscriber_set_status($ipn->subscr_id, $status);
+      // Some users are reporting symptoms that suggest multiple
+      // subscr_signup's are arriving. Ignore the duplicates here.
+      case LM_PAYPAL_SUBSCRIPTIONS_STATUS_LIVE:
+      case LM_PAYPAL_SUBSCRIPTIONS_STATUS_SIGNEDUP:
+        watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Signup received but subscription live or signedup, ignoring', NULL, WATCHDOG_ERROR, $link);
+        return;
 
-    if ($so->kind == 0) {
-      lm_paypal_user_loose_role($uid, $so->rid);
+      // A payment arrived first. Now obey the signup
+      case LM_PAYPAL_SUBSCRIPTIONS_STATUS_PAID:
+        watchdog(LM_PAYPAL_SUBSCRIPTIONS, t('Signup received after payment, obeying it anyway'));
+        break;
     }
-    else if ($so->kind == 2) {
-      lm_paypal_user_loose_group($uid, $so->rid);
-    }
+  }
 
-    if ($so->send_admin_onend && is_numeric($so->uid_admin)) {
-      // Email admin to let them know of an eot or cancellation
-      //  note: t() will be called inside lm_paypal_mail_user
-      // Extra variables (in addition to the default ones provided)
-      if ($so->kind == 0 || $so->kind == 2) {
-        $variables = array('%Subscription' => $so->item_name, '%End' => $end, '%Node' => '');
-      }
-      else if ($so->kind == 1) {
-        $variables = array('%Subscription' => $so->item_name, '%End' => $end, '%Node' => $node);
-      }
-      lm_paypal_mail_user(
-        $so->uid_admin,
-        $uid,
-        LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONEND_SUBJECT,
-        LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONEND_BODY,
-        $variables);
-    }
+  // A signup alone is enough to go live. A payment IPN may not arrive at all
+  // if the subscription amount is zero (usually a trial period)
+  lm_paypal_subscriber_set_status($ipn->subscr_id, LM_PAYPAL_SUBSCRIPTIONS_STATUS_LIVE);
 
-    if ($so->send_user_onend) {
-      // Email user to confirm an eot or cancellation
-      //  note: t() will be called inside lm_paypal_mail_user
-      // Extra variables (in addition to the default ones provided)
-      if ($so->kind == 0 || $so->kind == 2) {
-        $variables = array('%Subscription' => $so->item_name, '%End' => $end, '%Node' => '');
-      }
-      else if ($so->kind == 1) {
-        $variables = array('%Subscription' => $so->item_name, '%End' => $end, '%Node' => $node);
-      }
-      lm_paypal_mail_user($uid, $uid, $so->send_user_onend_subject, $so->send_user_onend_body, $variables);
-    }
+  if ($so->kind == 0) {
+    lm_paypal_user_gain_role($uid, $so->rid);
+  }
+  else if ($so->kind == 2) {
+    lm_paypal_user_gain_group($uid, $so->rid);
+  }
 
+  if ($so->send_admin_onsub && is_numeric($so->uid_admin)) {
+    // Email admin to let them know of a new subscriber
+    //  note: t() will be called inside lm_paypal_mail_user
+    // Extra variables (in addition to the default ones provided)
+    if ($so->kind == 0 || $so->kind == 2) {
+      $variables = array('%Subscription' => $so->item_name, '%Node' => '');
+    }
+    else if ($so->kind == 1) {
+      $node = t(" on node !nid", array("!nid" => $nid));
+      $variables = array('%Subscription' => $so->item_name, '%Node' => $node);
+    }
+    lm_paypal_mail_user(
+      $so->uid_admin,
+      $uid,
+      LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONSUB_SUBJECT,
+      LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONSUB_BODY,
+      $variables);
+  }
+
+  if ($so->send_user_onsub) {
+    // Email user to confirm a new subscriber
+    //  note: t() will be called inside lm_paypal_mail_user
+    // Extra variables (in addition to the default ones provided)
+    if ($so->kind == 0 || $so->kind == 2) {
+      $variables = array('%Subscription' => $so->item_name, '%Node' => '');
+    }
+    else if ($so->kind == 1) {
+      $variables = array('%Subscription' => $so->item_name, '%Node' => $node);
+    }
+    lm_paypal_mail_user($uid, $uid, $so->send_user_onsub_subject, $so->send_user_onsub_body, $variables);
+  }
+
+  // Notify lm_paypal module we processed it.
+  return TRUE;
+}
+
+/**
+ * Implementation of hook_lm_paypal_process_in_<txn_type>().
+ */
+function lm_paypal_subscriptions_lm_paypal_ipn_subscr_payment($ipn) {
+  if (! _lm_paypal_subscriptions_ipn_is_valid($ipn)) {
+    return FALSE;
+  }
+
+  if ($ipn->payment_status != 'Completed') {
+    return FALSE;
+  }
+
+  list($so, $uid, $nid) = _lm_paypal_subscriptions_ipn_get_vars($ipn);
+
+  if (lm_paypal_already_processed($ipn->txn_id)) {
+    watchdog(
+      LM_PAYPAL_SUBSCRIPTIONS,
+      'This transaction has already been processed, ignored: %id',
+      array('%id' => check_plain($ipn->txn_id)),
+      WATCHDOG_WARNING,
+      $link);
+    return FALSE;
+  }
+
+  // This should be an existing subscription (but sometimes payments come
+  // before signups).
+  $ss = lm_paypal_subscriptions_load_subscriber($ipn->subscr_id);
+
+  if (! $ss) {
+    // Not already present.
+    // Create an entry in the subscribers table.
+    lm_paypal_add_subscriber($so->kind, $uid, $nid, $so->subid, $ipn->subscr_id, LM_PAYPAL_SUBSCRIPTIONS_STATUS_PAID);
+  }
+  else {
+    // It is already present
+    switch ($ss->status) {
+      case LM_PAYPAL_SUBSCRIPTIONS_STATUS_BLOCKED:
+        watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to pay to blocked subscription, ignored', NULL, WATCHDOG_ERROR, $link);
+        break;
+
+      case LM_PAYPAL_SUBSCRIPTIONS_STATUS_DEAD:
+      case LM_PAYPAL_SUBSCRIPTIONS_STATUS_CANCELLED:
+      case LM_PAYPAL_SUBSCRIPTIONS_STATUS_EOT:
+        watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to pay ended subscription, ignored %status', array('%status' => $ss->status), WATCHDOG_ERROR, $link);
+        break;
+    }
+  }
+
+  // Notify lm_paypal module we processed it.
+  return TRUE;
+}
+
+/**
+ * Implementation of hook_lm_paypal_process_in_<txn_type>().
+ */
+function _lm_paypal_subscriptions_ipn_cancel_or_eot($ipn) {
+  if (! _lm_paypal_subscriptions_ipn_is_valid($ipn)) {
+    return FALSE;
+  }
+
+  list($so, $uid, $nid) = _lm_paypal_subscriptions_ipn_get_vars($ipn);
+
+  // Note: Cancel's dont get a transaction id!
+  $end = check_plain(substr($ipn->txn_type, 7));
+  if (lm_paypal_debug()) {
+    watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'User ending subscription (uid %uid, subid %subid, type %type)', array('%uid' => $uid, '%subid' => $subid, '%end' => $end));
+  }
+
+  // Check I know this subscr_id
+  $subs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'", $ipn->subscr_id);
+  $ss = db_fetch_object($subs);
+  if (!$ss) {
+    watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Unable to fetch the subscriber object', NULL, WATCHDOG_ERROR, $link);
     return;
   }
 
-  watchdog(
-    LM_PAYPAL_SUBSCRIPTIONS,
-    'Ignoring invalid, unrecognised, or pending subscription ipn type: %type',
-    array('%type' => check_plain($ipn->txn_type)),
-    WATCHDOG_ERROR,
-    $link);
-  return;
+  switch ($ss->status) {
+    case LM_PAYPAL_SUBSCRIPTIONS_STATUS_BLOCKED:
+      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to end to blocked subscription, ignored', NULL, WATCHDOG_ERROR, $link);
+      return;
+
+    case LM_PAYPAL_SUBSCRIPTIONS_STATUS_DEAD:
+    case LM_PAYPAL_SUBSCRIPTIONS_STATUS_CANCELLED:
+    case LM_PAYPAL_SUBSCRIPTIONS_STATUS_EOT:
+      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Attempt to end ended subscription, ignored %status', array('%status' => $ss->status), WATCHDOG_ERROR, $link);
+      return;
+  }
+
+  // Mark the subscription ended
+  $status = ($end == 'eot' ? LM_PAYPAL_SUBSCRIPTIONS_STATUS_EOT : LM_PAYPAL_SUBSCRIPTIONS_STATUS_CANCEL);
+  lm_paypal_subscriber_set_status($ipn->subscr_id, $status);
+
+  if ($so->kind == 0) {
+    lm_paypal_user_loose_role($uid, $so->rid);
+  }
+  else if ($so->kind == 2) {
+    lm_paypal_user_loose_group($uid, $so->rid);
+  }
+
+  if ($so->send_admin_onend && is_numeric($so->uid_admin)) {
+    // Email admin to let them know of an eot or cancellation
+    //  note: t() will be called inside lm_paypal_mail_user
+    // Extra variables (in addition to the default ones provided)
+    if ($so->kind == 0 || $so->kind == 2) {
+      $variables = array('%Subscription' => $so->item_name, '%End' => $end, '%Node' => '');
+    }
+    else if ($so->kind == 1) {
+      $node = t(" on node !nid", array("!nid" => $nid));
+      $variables = array('%Subscription' => $so->item_name, '%End' => $end, '%Node' => $node);
+    }
+    lm_paypal_mail_user(
+      $so->uid_admin,
+      $uid,
+      LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONEND_SUBJECT,
+      LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONEND_BODY,
+      $variables);
+  }
+
+  if ($so->send_user_onend) {
+    // Email user to confirm an eot or cancellation
+    //  note: t() will be called inside lm_paypal_mail_user
+    // Extra variables (in addition to the default ones provided)
+    if ($so->kind == 0 || $so->kind == 2) {
+      $variables = array('%Subscription' => $so->item_name, '%End' => $end, '%Node' => '');
+    }
+    else if ($so->kind == 1) {
+      $variables = array('%Subscription' => $so->item_name, '%End' => $end, '%Node' => $node);
+    }
+    lm_paypal_mail_user($uid, $uid, $so->send_user_onend_subject, $so->send_user_onend_body, $variables);
+  }
+
+  // Notify lm_paypal module we processed it.
+  return TRUE;
 }
-
-
-
 
 
 
@@ -2199,7 +1121,7 @@ function lm_paypal_add_subscriber($kind, $uid, $nid, $subid, $subscr_id, $status
   $update = array();
 
   // Update last-modified status.
-  if ($status == LM_PAYPAL_SUBSCRIPTIONS_STATUS_LIVE) {
+  if ($status == LM_PAYPAL_SUBSCRIPTIONS_STATUS_LIVE || $status == LM_PAYPAL_SUBSCRIPTIONS_STATUS_PAID) {
     $object['started'] = time();
   }
 
@@ -2254,10 +1176,12 @@ function lm_paypal_subscriptions_user($op, &$edit, &$account, $category = NULL) 
       '#title' => t('Subscriptions'),
       '#weight' => 7, // under History which is 5 and Paid Adverts which is 6.
     );
+    // TODO: fix this ugly require
+    require_once(drupal_get_path('module', 'lm_paypal_subscriptions').'/lm_paypal_subscriptions.pages.inc');
     $account->content['subscriptions']['subs'] = array(
       '#type' => 'user_profile_item',
       '#title' => t('Current subscription status:'),
-      '#value' => lm_paypal_subscribe(NULL, 32, '', NULL, $account),
+      '#value' => lm_paypal_subscribe_select(32, $account),
     );
   }
 }
@@ -2297,7 +1221,9 @@ function lm_paypal_subscriptions_block($op = 'list', $delta = 0, $edit = array()
     $subs = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2) AND subid = %d", $subid);
     $so = db_fetch_object($subs);
     $block['subject'] = t('PayPal Subscription:%name', array('%name' => check_plain($so->item_name)));
-    $output .= lm_paypal_subscribe($subid, 2+8);
+    require_once(drupal_get_path('module', 'lm_paypal_subscriptions').'/lm_paypal_subscriptions.pages.inc');
+    // TODO: Fix this ugly require
+    $output .= lm_paypal_subscribe_subscription($subid, 2+8);
     $block['content'] = $output;
     return $block;
   }
@@ -2312,341 +1238,6 @@ function lm_paypal_subscriptions_block($op = 'list', $delta = 0, $edit = array()
 function lm_paypal_subscriptions_inprogress() {
   return t('<h2>Thank you!</h2><p>Your subscription is in progress but for it to take effect you will have to logout and login again.</p><p>Then you can check your subscriptions by looking in "my account".</p><p><b>Special Note: </b>Although PayPal subscriptions are usually instantaneous sometimes, during really busy periods, it may take a few hours to take effect.</p>');
 }
-
-/**
- * View subscibers
- *
- * @param
- *   if a subid is passed then just print out details of that subscription
- */
-function lm_paypal_subscribers($subid = NULL) {
-  $subs_per_page = 50;
-
-  $output = drupal_get_form('lm_paypal_subscribers_form', $subid);
-
-  $header = array(
-    array('data' => t('Kind'), 'field' => 's.kind'),
-    array('data' => t('User'), 'field' => 'u.name'),
-    array('data' => t('Node'), 'field' => 's.nid'),
-    array('data' => t('Subid'), 'field' => 's.subid'),
-    array('data' => t('Subscription Name'), 'field' => 'd.item_name'),
-    array('data' => t('Started'), 'field' => 's.started', 'sort' => 'desc'),
-    array('data' => t('Status'), 'field' => 's.status'),
-    array('data' => t('PayPal Subscription ID'), 'field' => 's.subscr_id'),
-  );
-
-  $sql = "SELECT u.name, d.item_name, s.kind, s.usid, s.uid, s.nid, s.subid, s.started, s.status, s.subscr_id FROM {lm_paypal_subscriptions} d, {lm_paypal_subscribers} s INNER JOIN {users} u ON s.uid = u.uid WHERE u.uid = s.uid AND d.subid = s.subid";
-  $tablesort = tablesort_sql($header);
-
-  // If not sorting by started then make that the 2nd field to sort on
-  if (strpos($tablesort, 'started') === FALSE) {
-    $tablesort .= ', started DESC';
-  }
-
-  if ($subid != 0) {
-    $subid_str = " AND s.subid = '$subid' ";
-  }
-
-  $status = $_SESSION['lm_paypal_subs_filter'];
-  if ($status != 'all') {
-    $sql .= " AND s.status = '%s'". $subid_str . $tablesort;
-    $result = pager_query($sql, $subs_per_page, 0, NULL, $status);
-  }
-  else {
-    $sql .= $subid_str . $tablesort;
-    $result = pager_query($sql, $subs_per_page);
-  }
-
-  while ($sub = db_fetch_object($result)) {
-    $ss = lm_paypal_subscription_get_status($sub->status);
-    if ($ss == '') {
-      $ss = $sub->status;
-    }
-    if ($sub->nid != 0) {
-      $l = "node/$sub->nid";
-      $nid = l($l, $l);
-    }
-    else {
-      $nid = '';
-    }
-
-    if ($sub->kind == 0) {
-      $kind = t('Role');
-    }
-    else if ($sub->kind == 1) {
-      $kind = t('Node');
-    }
-    else if ($sub->kind == 2) {
-      $kind = t('Group');
-    }
-
-    $rows[] = array('data' =>
-      array(
-        $kind,
-        l($sub->name, "user/$sub->uid"),
-        $nid,
-        l($sub->subid, "admin/settings/lm_paypal/subscription/$sub->subid"),
-        check_plain($sub->item_name),
-        format_date($sub->started, 'small'),
-        $ss,
-        $sub->subscr_id,
-        l(t('edit'), "admin/settings/lm_paypal/subscriber_edit/$sub->usid"),
-      ),
-    );
-  }
-
-  if (!$rows) {
-    $rows[] = array(array('data' => t('No subs found.'), 'colspan' => 3));
-  }
-
-  $output .= theme('table', $header, $rows);
-  $output .= theme('pager', NULL, $subs_per_page, 0);
-
-  return $output;
-}
-
-function lm_paypal_subscribers_form($form_state, $subid) {
-  $stati = array('all' => t('all subscribers')) + lm_paypal_subscription_get_status();
-
-  if (!is_numeric($_SESSION['lm_paypal_subs_filter'])) {
-    $_SESSION['lm_paypal_subs_filter'] = 'all';
-  }
-
-  if ($subid == NULL || !is_numeric($subid) || intval($subid) != $subid) {
-    $subid = 0;
-  }
-
-  $form['filter'] = array(
-    '#type' => 'select',
-    '#title' => t('Filter Subscribers'),
-    '#options' => $stati,
-    '#default_value' => $_SESSION['lm_paypal_subs_filter'],
-  );
-
-  $form['#action'] = url("admin/settings/lm_paypal/subscribers/$subid");
-
-  $form['submit'] = array('#type' => 'submit', '#value' => t('Filter'));
-
-  return $form;
-}
-
-/**
- * Process the form submission for lm_paypal_subscribers
- */
-function lm_paypal_subscribers_submit($form, &$form_state) {
-  global $form_values;
-  $_SESSION['lm_paypal_subs_filter'] = $form_state['values']['filter'];
-}
-
-/**
- * Process the form submission for lm_paypal_subscribers for Drupal 5
- */
-function lm_paypal_subscribers_form_submit($form, &$form_state) {
-  lm_paypal_subscribers_submit($form, $form_state);
-}
-
-/**
- * Edit a subscriber.
- *
- * @param $form_state
- *   The current state of this form
- * @param $usid
- *   The subscriber to edit
- */
-function lm_paypal_subscriber_edit_form($form_state, $usid = '') {
-  $subs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE usid = %d", $usid);
-
-  $sb = db_fetch_object($subs);
-  if (! $sb) {
-    watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Cannot find subscriber: !usid', array('!usid' => $usid), WATCHDOG_ERROR);
-    return '';
-  }
-
-  $form['#submit'] = array('lm_paypal_subscriber_edit_submit');
-
-  $form['Edit Subscriber'] = array(
-    '#value' => '<p>Uid '. $sb->uid .'</p>',
-  );
-
-  $form['edit_usid'] = array(
-    '#type' => 'hidden',
-    '#default_value' => $usid,
-  );
-
-  $form['status'] = array(
-    '#type' => 'select',
-    '#title' => t('Status'),
-    '#options' => lm_paypal_subscription_get_status(),
-    '#default_value' => $sb->status,
-    '#required' => TRUE,
-    '#description' => t('The status of this subscriber'),
-  );
-
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Update subscriber'),
-  );
-
-  return $form;
-}
-
-function lm_paypal_subscriber_edit($usid = '') {
-  return drupal_get_form('lm_paypal_subscriber_edit_form', $usid);
-}
-
-/**
- * Form processor for edit subscribers.
- *
- * @return
- *   The url to go to.
- *
- * Updates subscribers in the lm_paypal_subscrbers table.
- */
-function lm_paypal_subscriber_edit_submit($form, &$form_state) {
-  $values = $form_state['values'];
-  $usid = ($values['edit_usid']);
-
-  $sql = "UPDATE {lm_paypal_subscribers} SET status = '%s' WHERE usid = %d";
-  $db_res = db_query($sql, $values['status'], $usid);
-  if (!$db_res) {
-    $msg = t('Failed to update subscriber sql: %sql', array('%sql' => check_plain($sql)));
-    watchdog(LM_PAYPAL_SUBSCRIPTIONS, check_plain($msg), NULL, WATCHDOG_ERROR);
-    drupal_set_message($msg);
-    form_set_error(NULL, 'Failed to update subscriber');
-    return;
-  }
-
-  if (lm_paypal_debug()) {
-    $msg = t('Updated subscriber: %usid', array('%usid' => $usid));
-    watchdog(LM_PAYPAL_SUBSCRIPTIONS, $msg);
-    drupal_set_message($msg);
-  }
-
-  $form_state['redirect'] = "admin/settings/lm_paypal/subscriber_edit/$usid";
-}
-
-
-/**
- * Fake edit to mark a node as paid by a subscriber.
- *
- * @param $form_state
- *   The current state of this form
- * @param $usid
- *   The subscriber to edit
- */
-function lm_paypal_subscriber_pay_form($form_state, $subid = NULL, $nid = NULL, $uid = NULL) {
-  // if anything is missing, no form presented
-  if ($subid == NULL || $nid == NULL || $uid == NULL) {
-    $form['Invalid Request'] = array(
-      '#value' => '<p>You can mark nodes as paid by going to the node and clicking on the <em>Mark as Paid</em> link. You cannot otherwise directly come here to do the same.</p>'
-    );
-    return $form;
-  }
-
-  $form['#submit'] = array('lm_paypal_subscriber_pay_submit');
-
-  $form['Subscriber Pay'] = array(
-    '#value' => '<p>Mark node '. $nid .' as paid by user '. $uid .' for subscription '. $subid .'</p>',
-  );
-
-  $form['pay_subid'] = array(
-    '#type' => 'hidden',
-    '#default_value' => $subid,
-  );
-  $form['pay_nid'] = array(
-    '#type' => 'hidden',
-    '#default_value' => $nid,
-  );
-  $form['pay_uid'] = array(
-    '#type' => 'hidden',
-    '#default_value' => $uid,
-  );
-
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Mark subscription as paid'),
-  );
-
-  return $form;
-}
-
-function lm_paypal_subscriber_pay($subid = NULL, $nid = NULL, $uid = NULL) {
-  return drupal_get_form('lm_paypal_subscriber_pay_form', $subid, $nid, $uid);
-}
-
-/**
- * Form processor for subscriber pay form.
- *
- * Create a new subscriber and mark the corresponding node as paid
- * for that subscriber. Then jump to the edit page where the admin
- * can change the user status to OFF.
- *
- * @param $form
- *   the form that was just submitted
- * @param[in,out] $form_state
- *   the current state such as the redirect of the form
- * @return
- *   an error if one occurs
- *
- * Updates subscribers in the lm_paypal_subscrbers table.
- */
-function lm_paypal_subscriber_pay_submit($form, &$form_state) {
-  $values = $form_state['values'];
-
-  $subid = $values['pay_subid'];
-  $nid   = $values['pay_nid'];
-  $uid   = $values['pay_uid'];
-
-  // retrieve the kind
-  $so = NULL;
-  $sql = "SELECT kind FROM {lm_paypal_subscriptions} WHERE subid = %d AND status = 1";
-  $db_res = db_query($sql, $subid);
-  if ($db_res) {
-    $so = db_fetch_object($db_res);
-  }
-  if (!$so) {
-    $msg = t('Failed to mark node !nid as paid by subscriber !uid with subscription !subid (sql: !sql)',
-      array(
-        '!nid' => check_plain($nid),
-        '!uid' => check_plain($uid),
-        '!subid' => check_plain($subid),
-        '!sql' => check_plain($sql),
-      )
-    );
-    watchdog(LM_PAYPAL_SUBSCRIPTIONS, check_plain($msg), NULL, WATCHDOG_ERROR);
-    drupal_set_message($msg);
-    form_set_error('Failed to mark node as paid by subscriber');
-    return;
-  }
-
-  $subscr_id = ':auto:node:'. $nid;
-  if (!lm_paypal_add_subscriber($so->kind, $uid, $nid, $subid, $subscr_id, LM_PAYPAL_SUBSCRIPTIONS_STATUS_LIVE)) {
-    $msg = t('Failed to mark node as paid by subscriber (by adding subscriber to that node).');
-    watchdog(LM_PAYPAL_SUBSCRIPTIONS, check_plain($msg), NULL, WATCHDOG_ERROR);
-    drupal_set_message($msg);
-    form_set_error(NULL, 'Failed to mark node as paid by subscriber');
-    return;
-  }
-
-  // retrieve the usid now
-  $sb = NULL;
-  $sql = "SELECT usid FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'";
-  $db_res = db_query($sql, $subscr_id);
-  if ($db_res) {
-    $sb = db_fetch_object($db_res);
-  }
-  if (!$sb) {
-    $msg = t('Could not retrieve the subscribtion identifier sql: %sql', array('%sql' => check_plain($sql)));
-    watchdog(LM_PAYPAL_SUBSCRIPTIONS, check_plain($msg), NULL, WATCHDOG_ERROR);
-    drupal_set_message($msg);
-    form_set_error(NULL, 'Failed to mark node as paid by subscriber');
-    return;
-  }
-  $usid = $sb->usid;
-
-  $form_state['redirect'] = "admin/settings/lm_paypal/subscriber_edit/$usid";
-}
-
 
 /**
  * Give the user the extra role if they dont already have it

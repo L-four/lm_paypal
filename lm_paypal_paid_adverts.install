@@ -1,5 +1,4 @@
 <?php
-
 // $Id$
 
 /**
@@ -8,14 +7,54 @@
  * Install or update the PayPal Paid Adverts interface.
  */
 
-/**
- * hook_install()
- */
-function lm_paypal_paid_adverts_install() {
+function lm_paypal_paid_adverts_schema() {
+  $schema['lm_paypal_paid_adverts'] = array(
+    'fields' => array(
+      'node_type' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Node type on which to apply the subscription',
+      ),
+      'subid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'Subscription object'
+      ),
+    ),
+    'indexes' => array(
+      'node_type_idx' => array('node_type')
+    ),
+    'primary key' => array('node_type', 'subid'),
+    'description' => 'Link between node subscriptions and node type'
+  );
+  return $schema;
 }
 
-/**
- * hook_uninstall()
- */
+function lm_paypal_paid_adverts_install() {
+  drupal_install_schema('lm_paypal_paid_adverts');
+}
+
+function lm_paypal_paid_adverts_update_6200() {
+  $ret = array();
+  drupal_install_schema('lm_paypal_paid_adverts');
+  // Convert all variable to our brand new table
+  $type_subs = variable_get('lm_paypal_paid_adverts_type_subs', array());
+  foreach ($type_subs as $node_type => $data) {
+    foreach ($data as $subid => $useless) {
+      $object = array(
+        'node_type' => $node_type,
+        'subid' => $subid,
+      );
+      drupal_write_record('lm_paypal_paid_adverts', $object);
+    }
+  }
+  variable_del('lm_paypal_paid_adverts_type_subs');
+  return $ret;
+}
+
 function lm_paypal_paid_adverts_uninstall() {
+  drupal_uninstall_schema('lm_paypal_paid_adverts');
 }

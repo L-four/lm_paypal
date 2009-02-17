@@ -28,8 +28,9 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
       'access unpaid adverts',
     );
     $this->admin_user = $this->drupalCreateUser($admin_permissions);
-//    $this->web_user = $this->drupalCreateUser(array('access lm_paypal_subscribe'));
-    $this->web_user = $this->drupalCreateUser(array('create page content'));
+    $this->paypal_admin_user = $this->drupalCreateUser(array('administer lm_paypal'));
+    $this->web_user = $this->drupalCreateUser(array('create page content', 'create story content'));
+    $this->observer_user = $this->drupalCreateUser();
 
     // We don't care where it is, but it needs to be set
     // variable_set('lm_paypal_subscriptions_inprogress', LM_PAYPAL_SUBSCRIPTIONS_INPROGRESS_DEFAULT);
@@ -46,18 +47,13 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
   }
 
   /**
-   * Basic test, where everything is perfect :)
+   * Arbitrary create a node subscription, and enable it on 'page' type.
+   * 
+   * @return array
+   *   Two values, first is the new subid, the second is the $edit array
+   *   used for posting.
    */
-  function testSimplePaidAdvert() {
-
-    // Check Settings page.
-    $this->drupalLogin($this->admin_user);
-    $this->drupalGet('admin/settings/lm_paypal/paid_adverts/settings');
-    $this->assertText('Associate node subscriptions with node types.');
-    $this->assertText('No node subscriptions defined.');
-    // $this->assertNoText('Save configuration');
-
-
+  function _createNodeSubscription() {
     // Create a new Node subscription.
     $subscription = array(
       'item_name' => $this->randomName(4, 'SUB_'),
@@ -70,8 +66,7 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
       'send_admin_onsub' => FALSE,
       'send_admin_onend' => FALSE,
     );
-    $this->drupalPost('admin/settings/lm_paypal/subscriptions/new', $subscription, t('Create subscription'));
-
+    $this->drupalPost('admin/settings/lm_paypal/subscriptions/add', $subscription, t('Create'));
 
     // After post, redirects to "All Subscriptions" page.
     $this->assertText($subscription['item_name']);
@@ -83,10 +78,79 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
     $this->assertEqual($matches[0][2], 'Node', 'First subscription is Node type');
     $sub_id = $matches[0][1];
 
+    // Go back to the settings page.
+    $this->drupalGet('admin/settings/lm_paypal/paid_adverts/settings');
+    // Enable subscriptions for "Page" type for this subscription.
+    $edit = array("live[page][$sub_id]" => $sub_id);
+    $this->drupalPost('admin/settings/lm_paypal/paid_adverts/settings', $edit, 'Save configuration');
+
+    return array($sub_id, $subscription);
+  }
+
+  /**
+   * Create a new node with the current user.
+   * 
+   * Note that this function will moved your user into the node view page.
+   * 
+   * @param string $type
+   *   Node type
+   * @param array $options
+   *   Keyed array of options. Can be either of those:
+   *     - 'title': string
+   *     - 'body': string
+   * @param boolean $load = TRUE
+   *   If TRUE, the method returns the new loaded node;
+   *   Else, it returns the posted $edit array.
+   * @return object
+   *   The node_load() result, if all ok, NULL else
+   */
+  function _createNode($node_type, $options = array(), $load = TRUE) {
+    $this->drupalGet('node/add/'.$node_type);
+    $edit = array(
+      'title' => isset($options['title']) ? $options['title'] : $this->randomName(4, 'NODE_'),
+      'body' => isset($options['body']) ? $options['body'] : $this->randomName(20, 'BODY_'),
+    );
+
+    static $node_info;
+    if (! $node_types) {
+      $node_types = node_get_types();
+    }
+
+    $this->drupalPost('node/add/'.$node_type, $edit, 'Save');
+    $this->assertText($node_types[$node_type]->name." ".$edit['title']." has been created");
+
+    if ($load) {
+      $body = $edit['body'];
+      $nid = (int) array_pop(explode("/", $this->getUrl()));
+      $node = node_load($nid);
+      $this->assertEqual($node->title, $edit['title'], 'We could load the new node');
+      unset($edit);
+      return $node;
+    }
+    else {
+      return $edit;
+    }
+  }
+
+  /**
+   * Basic test, where everything is perfect :)
+   */
+  function testPaidAdvertGeneralCase() {
+
+    // Check Settings page.
+    $this->drupalLogin($this->admin_user);
+    $this->drupalGet('admin/settings/lm_paypal/paid_adverts/settings');
+    $this->assertText('Associate node subscriptions with node types.');
+    $this->assertText('No node subscriptions defined.');
+
+    // Create a new Node subscription.
+    list($sub_id, $subscription) = $this->_createNodeSubscription();
 
     // Check (empty) "Subscribed Nodes" page.
+    $this->drupalGet('admin/settings/lm_paypal/subscriptions');
     $this->clickLink('subscribed nodes');
-    $this->assertText('Show Subscribers');
+    $this->assertText('Subscribers');
+    $this->clickLink('Subscribers');
     $this->assertField('filter');
     $this->assertText('No subs found.');
 
@@ -98,7 +162,7 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
 
 
     // Enable subscriptions for "Page" type for this subscription.
-    $edit = array("lm_paypal_paid_adverts_node_subs[page][$sub_id]" => TRUE);
+    $edit = array("live[page][$sub_id]" => $sub_id);
     $this->drupalPost('admin/settings/lm_paypal/paid_adverts/settings', $edit, 'Save configuration');
     // $this->assertText('Paid Advert settings updated');
     $this->drupalLogout();
@@ -117,20 +181,19 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
     $this->assertText($node['title']);
     $this->assertText($node['body']);
     $this->assertText("This classified ad for subscription #$sub_id is still unpaid. Other users will not be able to access it.");
-    $this->assertLink('Click here to publish this node now.');
 
     $bits = explode('/', $this->getUrl());
     $nid = $bits[count($bits) - 1];
 
 
     // Click the Publish link, and ensure the PayPal form looks okay.
-    $this->clickLink('Click here to publish this node now.');
-    $this->assertText('Click here to publish this node now.'); // TODO: should NOT appear on this view
+    $this->clickLink('Paypal publication');
+    $this->assertText('Paypal publication'); // TODO: should NOT appear on this view
     $this->assertText('Not yet paid for.');
     $price_str = theme('lm_paypal_amount', $subscription['a3'], $subscription['currency_code'], TRUE);
     $period_str = lm_paypal_unit2str($subscription['p3'], $subscription['t3']);
     $this->assertText("Rate $price_str for $period_str");
-    $this->assertRaw('<form action="https://www.sandbox.paypal.com/cgi-bin/webscr" method="post">');
+    $this->assertRaw('<form action="https://www.sandbox.paypal.com/cgi-bin/webscr"');
     // $this->assertWatchdogError('Update this $ipn->custom stuff', WATCHDOG_ERROR);
     // $this->assertNoWatchdogErrors();
 
@@ -151,7 +214,11 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
         // 'txn_id' => 548954, // wrong!
         // 'mc_currency' => 'USD',
         // 'payment_status' => 'Completed', // TODO: test other status
-        'custom' => serialize(array('nid' => $nid, 'uid' => $this->web_user->uid)),
+        'custom' => serialize(array(
+          'module' => LM_PAYPAL_SUBSCRIPTIONS,
+          'uid' => $this->web_user->uid,
+          'nid' => $nid,
+        )),
       )
     );
     $ipn2 = $this->postPreparedIpn(
@@ -167,21 +234,26 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
         // 'txn_id' => 548954, // wrong!
         // 'mc_currency' => 'USD',
         // 'payment_status' => 'Completed', // TODO: test other status
-        'custom' => serialize(array('nid' => $nid, 'uid' => $this->web_user->uid)),
-
+        'custom' => serialize(array(
+          'module' => LM_PAYPAL_SUBSCRIPTIONS,
+          'uid' => $this->web_user->uid,
+          'nid' => $nid,
+        )),
         'mc_amount3' => $subscription['a3'], // 20
         'mc_currency' => $subscription['currency_code'], // AUD
         'period3' => $subscription['p3'] . ' ' . $subscription['t3'], // "30 D"
       )
     );
+    $this->writeFile('lm_paypal_subscribers.txt', $this->dumpTable('lm_paypal_subscribers'));
+    $this->writeFile('lm_paypal_ipns.txt', $this->dumpTable('lm_paypal_ipns'));
     $this->assertNoWatchdogErrors(WATCHDOG_WARNING, FALSE);
+    $this->assertNoWatchdogErrors(WATCHDOG_ERROR, FALSE);
     // $this->dumpWatchdogErrors(WATCHDOG_DEBUG);
-
 
     // View the node to see how it looks.
     $this->drupalGet("node/$nid");
     $this->assertNoText("This classified ad for subscription #$sub_id is still unpaid. Other users will not be able to access it.");
-    $this->assertNoLink('Click here to publish this node now.');
+    $this->assertNoLink('Paypal publication');
     $this->assertText($node['title']);
     $this->assertText($node['body']);
     // $this->writeFile("web_user-node-$nid.html");

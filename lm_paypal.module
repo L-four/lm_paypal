@@ -331,6 +331,10 @@ function lm_paypal_page_thanks() {
  *        Paypal 3 letters currency code, see lm_paypal_api_get_currency().
  *        Default is default configured currency in lm_paypal main module.
  *
+ *     'custom': array
+ *        Keyed array of data you might want to pass through PayPal processing
+ *        and get back later when processing the incoming IPN
+ *
  *     'return_path': string
  *        May be this one is the only one interesting for you, you should pass
  *        a drupal path where you want to redirect your user after he procedeed
@@ -339,6 +343,10 @@ function lm_paypal_page_thanks() {
  *        module.
  *        Note that if the path is not valid, then lm_paypal default will be
  *        used.
+ * 
+ *     'cancel_path': string
+ *        Internal path in case of cancel. If not specified, it will use
+ *        return_path setting.
  *
  *     'text': string
  *        (x)html text to display over the form (eg: 'Validate your command').
@@ -348,12 +356,23 @@ function lm_paypal_page_thanks() {
  *     'button_text': string
  *        Whatever you want to display on submit button.
  *
+ *     'button_url': string
+ *        In case you want to display a image from an external (or internal)
+ *        website, use this opton to put the url.
+ *        Note that if you specify this, button_text will be used as alternative
+ *        text for the image.
+ *
  *     'display_amount': boolean
  *        Set this to FALSE if you dont want the price to be displayed (or if
  *        you want to display it yourself in the 'text' setting).
  *        Default is amount is displayed.
  *        Note that if you gave an array of amounts, it will remain FALSE,
  *        whatever you pass to this option.
+ *
+ *     'hidden_fields': array
+ *        Keyed array of values you want to pass as hidden values through paypal
+ *        form.
+ *        Advanced usage only!
  *
  *     More to come, module in active development.
  *
@@ -380,14 +399,34 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
 
   if ($valid_amount) {
     global $user;
-    // Check our user can access to return URL
+    // Check our user can access to return path
     if (isset($options['return_path']) && menu_valid_path(array('item_link' => $options['return_path']))) {
       $return_url = url($options['return_path'], array('absolute' => TRUE));
     }
     else {
-      $return_url = url('publish/payment/'.$node->nid.'/status', array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
+      $return_url = url($_GET['q'], array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
     }
+    // And cancel path if set
+    if (isset($options['cancel_path']) && menu_valid_path(array('item_link' => $options['cancel_path']))) {
+      $cancel_url = url($options['cancel_path'], array('absolute' => TRUE));
+    }
+    else {
+      $cancel_url = $return_url;
+    }
+
+    // Check for a specified currency
     $currency = isset($options['currency']) ? $options['currency'] : lm_paypal_api_get_currency_default();
+
+    // And check for button customisation
+    if (isset($options['button_url']) && check_url($options['button_url'])) {
+      $button_url = $options['button_url'];
+    }
+    if (isset($options['button_text'])) {
+      $button_text = check_plain($options['button_text']);
+    }
+    else {
+      $button_text = t('Proceed to paypal.com');
+    }
 
     $form['#action'] = lm_paypal_api_get_host(TRUE);
     $form['business'] = array(
@@ -419,6 +458,11 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
     $form['return'] = array(
       '#type' => 'hidden',
       '#value' => $return_url,
+      '#name' => 'return',
+    );
+    $form['cancel_url'] = array(
+      '#type' => 'hidden',
+      '#value' => $cancel_url,
       '#name' => 'return',
     );
     $form['currency_code'] = array(
@@ -461,16 +505,41 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
       '#value' => lm_paypal_api_get_notify_url(),
       '#name' => 'notify_url',
     );
+    if (empty($custom) || is_array($custom)) {
+      $custom = array();
+    }
+    $custom['uid'] = $user->uid;
     $form['custom'] = array(
       '#type' => 'hidden',
-      '#value' => $user->uid,
+      '#value' => serialize($custom),
       '#name' => 'custom',
     );
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => isset($options['button_text']) ? $options['button_text'] :  t('Proceed to paypal.com'),
-      '#name' => 'submit',
-    );
+    if (is_array($options['hidden']) && ! empty($options['hidden'])) {
+      foreach ($options['hidden'] as $key => $value) {
+        // Do not override existing values
+        if (! isset($form[$key])) {
+          $form[$key] = array(
+            '#type' => 'hidden',
+            '#value' => check_plain($value),
+          );
+        }
+      }
+    }
+    if ($button_url) {
+      // TODO button as url
+      $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => $button_text,
+        '#name' => 'submit',
+      );
+    }
+    else {
+      $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => $button_text,
+        '#name' => 'submit',
+      );
+    }
     return $form;
   }
   return array();

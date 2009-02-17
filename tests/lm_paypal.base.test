@@ -169,6 +169,41 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
     return db_affected_rows();
   }
 
+  function dumpRequest($request, $failIfNotExists = FALSE) {
+    $args = func_get_args();
+    $request = array_shift($args);
+    $failIfNotExists = array_shift($args);
+    $output = '=== Starting '.$request.' table dump ===';
+    if (! empty($request)) {
+      $result = db_query($request, $args);
+      while ($object = db_fetch_object($result)) {
+        $output .= print_r($object, TRUE);
+      }
+    }
+    else if ($failIfNotExists) {
+      $this->fail(t('Query error'));
+      $output .= 'Query error.';
+    }
+    $output .= '=== End of '.$request.' table dump ===';
+    return $output;
+  }
+
+  function dumpTable($table, $failIfNotExists = FALSE) {
+    $output = '=== Starting '.$table.' table dump ===';
+    if (! empty($table)) {
+      $result = db_query("SELECT * FROM {%s}", $table);
+      while ($object = db_fetch_object($result)) {
+        $output .= print_r($object, TRUE);
+      }
+    }
+    else if ($failIfNotExists) {
+      $this->fail(t('Table @table does not exists', array('@table' => $table)));
+      $output .= 'Table does not exits.';
+    }
+    $output .= '=== End of '.$table.' table dump ===';
+    return $output;
+  }
+
   function dumpWatchdogErrors($severity = WATCHDOG_ERROR, $reset = TRUE) {
     if (!module_exists('dblog')) {
       return FALSE;
