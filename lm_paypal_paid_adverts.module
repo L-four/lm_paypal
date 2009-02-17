@@ -65,7 +65,7 @@ function lm_paypal_paid_adverts_node_is_handled($node) {
  *   Subscription id used for payement, if node has been paid. Else FALSE.
  */
 function lm_paypal_paid_adverts_node_is_paid($node) {
-  return $node->lm_paypal_paid_adverts->paid;
+  return $node->lm_paypal_paid_adverts->payement_subid;
 }
 
 /**
@@ -222,6 +222,26 @@ function lm_paypal_paid_adverts_paypal_access($node, $account = NULL) {
     );
 }
 
+/**
+ * Implementation of hook_link().
+ */
+function lm_paypal_paid_adverts_link($type, $object = NULL, $teaser = FALSE) {
+  if ($type == 'node' && lm_paypal_paid_adverts_paypal_access($object)) {
+    $links = array();
+    if (! lm_paypal_paid_adverts_node_is_paid($object) && user_access('administer lm_paypal')) {
+      // Mark as paid link for administrators
+      $subid = key($object->lm_paypal_paid_adverts->subscriptions);
+      $links[] = array(
+        'title' => t('Mark as paid'),
+        'href' => 'admin/lm_paypal/subscriber/pay/'.$subid.'/'.$object->nid.'/'.$object->uid,
+        'attributes'  => array('title' => t('Click on this link to mark this node as paid without having to go to PayPal.')),
+        'query' => array('destination' => $_GET['q']),
+      );
+    }
+    return $links;
+  }
+}
+
 //////////////////////////////////////////////// BELOW THIS LINE, CODES NEEDS REVIEW
 
 /**
@@ -231,10 +251,9 @@ function lm_paypal_paid_adverts_paypal_access($node, $account = NULL) {
  *   Node whose details should be displayed
  */
 function _lm_paypal_paid_adverts_payment($node) {
-  $paidfor = lm_paypal_node_subscribed($node->nid, $subid);
-  if ($paidfor) {
+  if (lm_paypal_paid_adverts_node_is_paid($node)) {
     require_once(drupal_get_path('module', 'lm_paypal_subscriptions').'/lm_paypal_subscriptions.pages.inc');
-    $sub .= lm_paypal_subscribe_subscription($subid, 23);
+    $sub .= lm_paypal_subscribe_subscription($node->lm_paypal_paid_adverts->payement_subid, 23);
     return t("This article has been paid for by the subscription: !sub. Thank you.", array("!sub" => $sub));
   }
 
@@ -370,13 +389,6 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50) {
 }
 
 /**
- * Implementation of hook_link().
- */
-function lm_paypal_paid_adverts_link($type, $node = NULL, $teaser = FALSE) {
-  
-}
-
-/**
  * Implementation of hook_nodeapi().
  */
 function lm_paypal_paid_adverts_nodeapi(&$node, $op, $a3, $a4) {
@@ -385,40 +397,28 @@ function lm_paypal_paid_adverts_nodeapi(&$node, $op, $a3, $a4) {
       $data = new stdClass();
       $data->is_handled = TRUE;
       $data->subscriptions = lm_paypal_paid_adverts_get_live_subscriptions($node->type);
-      $data->paid = lm_paypal_node_subscribed($node);
+      $data->payement_subid = lm_paypal_subscriptions_node_subscribed($node);
       return array('lm_paypal_paid_adverts' => $data);
     }
   }
 
   if ($op == 'view'
     && lm_paypal_paid_adverts_node_is_handled($node)
-    && ! $node->lm_paypal_paid_adverts->paid)
+    && ! $node->lm_paypal_paid_adverts->payement_subid)
   {
     /*
      * If our user own the node, we have to avert him the node can be paid using
      * paypal.
-     * Then, we also need to put a direct publishing link for site admins.
      */
     if (lm_paypal_paid_adverts_paypal_access($node)) {
       $subid = key($node->lm_paypal_paid_adverts->subscriptions);
 
       $node->content['paid_adverts_message'] = array(
-        '#value' => t('This classified ad for subscription #@subid is still unpaid. Other users will not be able to access it.', array(
+        '#value' => '<p>'.t('This classified ad for subscription #@subid is still unpaid. Other users will not be able to access it.', array(
           '@subid' => $subid
-        )),
+        )).'</p>',
         '#weight' => -10,
       );
-
-      // Allow administrator to publish content without paying
-      if (user_access('administer lm_paypal')) {
-        $link = l(
-          t('Mark as Paid'),
-          'admin/settings/lm_paypal/subscriber_pay/'.$subid.'/'.$node->nid.'/'.$node->uid,
-          array('attributes' => array('title' =>
-            t('Click on this link to mark this node as paid without having to go to PayPal.')))
-        );
-        drupal_set_message($link, 'error');
-      }
     }
 
     /*

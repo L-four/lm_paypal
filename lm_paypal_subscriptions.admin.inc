@@ -788,6 +788,10 @@ function lm_paypal_subscriber_pay_form($form_state, $subid = NULL, $nid = NULL, 
     '#value' => '<p>Mark node '. $nid .' as paid by user '. $uid .' for subscription '. $subid .'</p>',
   );
 
+  if ($destination = drupal_get_destination()) {
+    $form['#redirect'] = $destination;
+  }
+
   $form['pay_subid'] = array(
     '#type' => 'hidden',
     '#default_value' => $subid,

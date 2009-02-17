@@ -1,13 +1,13 @@
 <?php
 // $Id$
 
-require_once(drupal_get_path('module', 'lm_paypal').'/tests/lm_paypal.test');
+require_once(drupal_get_path('module', 'lm_paypal').'/tests/paid_adverts.test');
 
-class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
+class LmPaypalPaidAdvertsGeneralTestCase extends AbstractLmPaypalPaidAdvertsTestCase {
 
   function getInfo() {
     return array(
-      'name' => t('Paid Adverts'),
+      'name' => t('Paid Adverts: general use case'),
       'description' => t('Tests the creation and processing of nodes that require payment before publishing.'),
       'group' => t('LM Paypal'),
     );
@@ -19,22 +19,6 @@ class LmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
   function setUp() {
     // Always call the setUp() function from the parent class.
     parent::setUp('lm_paypal_subscriptions', 'lm_paypal_paid_adverts');
-
-    // Create users.
-    $admin_permissions = array(
-      'administer lm_paypal',
-      'access administration pages',
-      'administer permissions',
-      'access unpaid adverts',
-    );
-    $this->admin_user = $this->drupalCreateUser($admin_permissions);
-    $this->paypal_admin_user = $this->drupalCreateUser(array('administer lm_paypal'));
-    $this->web_user = $this->drupalCreateUser(array('create page content', 'create story content'));
-    $this->observer_user = $this->drupalCreateUser();
-
-    // We don't care where it is, but it needs to be set
-    // variable_set('lm_paypal_subscriptions_inprogress', LM_PAYPAL_SUBSCRIPTIONS_INPROGRESS_DEFAULT);
-    // variable_set('lm_paypal_subscriptions_menu_rebuild', LM_PAYPAL_SUBSCRIPTIONS_MENU_REBUILD_DEFAULT);
   }
 
   /**

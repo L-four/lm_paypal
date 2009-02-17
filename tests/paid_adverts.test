@@ -1,0 +1,126 @@
+<?php
+// $Id$
+
+require_once(drupal_get_path('module', 'lm_paypal').'/tests/abstract.test');
+
+class AbstractLmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
+
+  /**
+   * SimpleTest core method: code run before each and every test method.
+   */
+  function setUp() {
+    // Always call the setUp() function from the parent class.
+    parent::setUp('lm_paypal_subscriptions', 'lm_paypal_paid_adverts');
+
+    // Create users.
+    $admin_permissions = array(
+      'administer lm_paypal',
+      'access administration pages',
+      'administer permissions',
+      'access unpaid adverts',
+    );
+    $this->admin_user = $this->drupalCreateUser($admin_permissions);
+    $this->paypal_admin_user = $this->drupalCreateUser(array('administer lm_paypal'));
+    $this->web_user = $this->drupalCreateUser(array('create page content', 'create story content'));
+    $this->observer_user = $this->drupalCreateUser();
+
+    // We don't care where it is, but it needs to be set
+    // variable_set('lm_paypal_subscriptions_inprogress', LM_PAYPAL_SUBSCRIPTIONS_INPROGRESS_DEFAULT);
+    // variable_set('lm_paypal_subscriptions_menu_rebuild', LM_PAYPAL_SUBSCRIPTIONS_MENU_REBUILD_DEFAULT);
+  }
+
+  /**
+   * SimpleTest core method: code run after each and every test method.
+   */
+  function tearDown() {
+
+    // Always call the tearDown() function from the parent class.
+    parent::tearDown();
+  }
+
+  /**
+   * Arbitrary create a node subscription, and enable it on 'page' type.
+   * 
+   * @return array
+   *   Two values, first is the new subid, the second is the $edit array
+   *   used for posting.
+   */
+  function _createNodeSubscription() {
+    // Create a new Node subscription.
+    $subscription = array(
+      'item_name' => $this->randomName(4, 'SUB_'),
+      'description' => $this->randomName(4, 'DESC_'),
+      'kind' => 1, // node
+      'a3' => '20.00', // regular rate
+      'p3' => 3, // regular billing cycle
+      't3' => 'M', // regular billing cycle units DWMY
+      'currency_code' => 'AUD',
+      'send_admin_onsub' => FALSE,
+      'send_admin_onend' => FALSE,
+    );
+    $this->drupalPost('admin/settings/lm_paypal/subscriptions/add', $subscription, t('Create'));
+
+    // After post, redirects to "All Subscriptions" page.
+    $this->assertText($subscription['item_name']);
+    $this->assertText($subscription['description']);
+    $this->assertText('live');
+    $num_matches = preg_match_all('#<tr [^>]*?><td [^>]*?>([0-9]+)</td><td>([^<]*)</td>#', $this->drupalGetContent(), $matches, PREG_SET_ORDER);
+    $this->assertEqual($num_matches, 1, 'One subscription found');
+    $this->assertEqual($matches[0][1], 1, 'First subscription is sub 1');
+    $this->assertEqual($matches[0][2], 'Node', 'First subscription is Node type');
+    $sub_id = $matches[0][1];
+
+    // Go back to the settings page.
+    $this->drupalGet('admin/settings/lm_paypal/paid_adverts/settings');
+    // Enable subscriptions for "Page" type for this subscription.
+    $edit = array("live[page][$sub_id]" => $sub_id);
+    $this->drupalPost('admin/settings/lm_paypal/paid_adverts/settings', $edit, 'Save configuration');
+
+    return array($sub_id, $subscription);
+  }
+
+  /**
+   * Create a new node with the current user.
+   * 
+   * Note that this function will moved your user into the node view page.
+   * 
+   * @param string $type
+   *   Node type
+   * @param array $options
+   *   Keyed array of options. Can be either of those:
+   *     - 'title': string
+   *     - 'body': string
+   * @param boolean $load = TRUE
+   *   If TRUE, the method returns the new loaded node;
+   *   Else, it returns the posted $edit array.
+   * @return object
+   *   The node_load() result, if all ok, NULL else
+   */
+  function _createNode($node_type, $options = array(), $load = TRUE) {
+    $this->drupalGet('node/add/'.$node_type);
+    $edit = array(
+      'title' => isset($options['title']) ? $options['title'] : $this->randomName(4, 'NODE_'),
+      'body' => isset($options['body']) ? $options['body'] : $this->randomName(20, 'BODY_'),
+    );
+
+    static $node_info;
+    if (! $node_types) {
+      $node_types = node_get_types();
+    }
+
+    $this->drupalPost('node/add/'.$node_type, $edit, 'Save');
+    $this->assertText($node_types[$node_type]->name." ".$edit['title']." has been created");
+
+    if ($load) {
+      $body = $edit['body'];
+      $nid = (int) array_pop(explode("/", $this->getUrl()));
+      $node = node_load($nid);
+      $this->assertEqual($node->title, $edit['title'], 'We could load the new node');
+      unset($edit);
+      return $node;
+    }
+    else {
+      return $edit;
+    }
+  }
+}

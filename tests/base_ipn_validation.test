@@ -1,7 +1,7 @@
 <?php
 // $Id$
 
-require_once(drupal_get_path('module', 'lm_paypal').'/tests/lm_paypal.base.test');
+require_once(drupal_get_path('module', 'lm_paypal').'/tests/abstract.test');
 
 /**
  * Exercise the IPN validation part of LM Paypal.  This requires web access to
@@ -11,7 +11,7 @@ class LmPaypalValidationTestCase extends AbstractLmPaypalTestCase {
 
   function getInfo() {
     return array(
-      'name' => t('IPN Valiation'),
+      'name' => t('Base: IPN valiation'),
       'description' => t('Tests the IPN validation part of LM Paypal using www.sandbox.paypal.com.'),
       'group' => t('LM Paypal'),
     );

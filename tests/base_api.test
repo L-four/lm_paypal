@@ -1,7 +1,7 @@
 <?php
 // $Id$
 
-require_once(drupal_get_path('module', 'lm_paypal').'/tests/lm_paypal.base.test');
+require_once(drupal_get_path('module', 'lm_paypal').'/tests/abstract.test');
 
 /*
 [13-Jan-2009 08:36:31] SUBSCRIPTION IPN = Array
@@ -49,7 +49,7 @@ class LmPaypalTestCase extends AbstractLmPaypalTestCase {
 
   function getInfo() {
     return array(
-      'name' => t('Basic module functionality'),
+      'name' => t('Base: basic module functionality and API'),
       'description' => t('Verify the UI and IPN-processing function of LM Paypal.'),
       'group' => t('LM Paypal'),
     );

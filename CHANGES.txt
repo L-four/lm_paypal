@@ -1,4 +1,55 @@
-6.x-2.x-dev
+$Id$
+
+6.x-2.x-dev - Status at 2009-02-17
+==================================
+
+* Current status (below is changelog):
+    - We need to finish lm_paypal module properly. This includes providing full
+      paypal usage API, custom and general paypal form generation, provide full
+      configuration, clean older methods, and split module with theme functions
+      and better Drupal hooks usage.
+    - Subscriptions handling module is really ugly, old, and still full of bugs,
+      we need to (eventually fully) rewrite it.
+    - Paid adverts module is OK, but hook_nodeapi() is still ugly.
+    - Donation should just work, but needs review.
+
+* Outdated file. Changelog must be made with CVS changelog review.
+  Too much old code has been moved/removed/clean/rewriten.
+
+* Test files have been renamed. Sorry lyrincs, I just can't stand too long
+  names. And a lot of other modules just do it also, so why not.
+
+* Some modules test files have been splitted in many test classes. It more
+  revealant, we can just process unit-testing for a single part for debug, in
+  case only this only one fails.
+
+* Partial rewrite of lm_paypal_subscriptions module
+    - Full usage of new process ipn hooks provided by lm_paypal
+    - Module file splited in admin.inc, pages.inc, .theme files
+    - Rewrote all hook_menu() part, make high usage of access callbacks
+    - Some code cleanup
+  Important notes: module is still really unstable, do not, never use any
+  non unit-tested function from that module until stable releases.
+
+* Almost full rewrite of lm_paypal_paid_adverts module
+    - Now use in a cleaner way hook_nodeapi() and hook_link()
+    - Provide some simple API functions for other modules
+    - Did some static cache to improve performances
+    - Did some ergonomic tricks that look and feel really nicier
+    - Make high usage of hook_menu() and access callbacks
+    - Really high unit-test coverage
+  Code is still ugly. Rewriting body and title in content in nodeapi is
+  something which is really ugly, and that can't override any other module
+  behavior.
+  New way of hiding content is still in brain storming.
+
+* lm_paypal_donation don't seems to past tests anymore. Module needs review.
+
+* lm_paypal low level module has been highly rewriten, and now provide a nicier
+  API and some (sadly undocumented) usable hooks to use paypal.
+
+6.x-2.x-dev - Status before 2009
+================================
 
 * WIP add simpletest for LM Paypal
 

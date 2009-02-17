@@ -326,11 +326,11 @@ function lm_paypal_subscriptions_menu() {
   );
 
   // TODO
-  $items['admin/settings/lm_paypal/subscribers/%/pay'] = array(
+  $items['admin/lm_paypal/subscriber/pay/%/%/%'] = array(
     'title' => 'Pay',
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lm_paypal_subscriber_pay_form', 4),
+    'page arguments' => array('lm_paypal_subscriber_pay_form', 4, 5, 6),
     'access arguments' => array('administer lm_paypal'),
     'description' => 'Mark a node as paid bypassing Paypal.',
     'file' => 'lm_paypal_subscriptions.admin.inc',
@@ -436,18 +436,16 @@ function lm_paypal_subscription_node_subs() {
   return $cache;
 }
 
+
 /**
  * Tests if the given node has a live subscription.
  *
  * @param mixed $node
  *   Either the node to check, or the nid (usefull for hook_load).
- * @param int &$subid
- *   The corresponding subscription identifier will be written in this param,
- *   ONLY if the subscriber was subscribed.
  * @return int
  *   Subscription id used for payement, if node has been paid. Else FALSE
  */
-function lm_paypal_node_subscribed($node) {
+function lm_paypal_subscriptions_node_subscribed($node) {
   static $cache = array();
 
   if (is_object($node)) {
@@ -476,6 +474,41 @@ function lm_paypal_node_subscribed($node) {
 
 
 
+/**
+ * Tests if the given node has a live subscription.
+ *
+ * @obsolete use lm_paypal_subscriptions_node_subscribed
+ *
+ * @param mixed $node
+ *   Either the node to check, or the nid (usefull for hook_load).
+ * @param int &$subid
+ *   The corresponding subscription identifier will be written in this param,
+ *   ONLY if the subscriber was subscribed.
+ * @return int
+ *   Subscription id used for payement, if node has been paid. Else FALSE
+ */
+function lm_paypal_node_subscribed($node, &$subid) {
+  static $cache = array();
+
+  if (is_object($node)) {
+    $nid = $node->nid;
+  }
+  else {
+    $nid = $node;
+  }
+
+  if (! $cache[$nid]) {
+    $result = db_query("SELECT subid FROM {lm_paypal_subscribers} WHERE status = 1 AND nid = %d", $nid);
+    if ($data = db_fetch_object($result)) {
+      $subid = $data->subid;
+    }
+    $cache[$nid] = $subid;
+  }
+
+  // Ensure $subid is set for backward compatibility
+  $subid = isset($cache[$nid]) ? $cache[$nid] : FALSE;
+  return $subid;
+}
 
 /**
  * Finds if a user is already subscribed to this subid

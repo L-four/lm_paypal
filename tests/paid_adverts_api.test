@@ -1,14 +1,13 @@
 <?php
 // $Id$
 
-require_once(drupal_get_path('module', 'lm_paypal').'/tests/lm_paypal.test');
-require_once(drupal_get_path('module', 'lm_paypal').'/tests/lm_paypal_paid_adverts.test');
+require_once(drupal_get_path('module', 'lm_paypal').'/tests/paid_adverts.test');
 
-class LmPaypalPaidAdvertsAPITestCase extends LmPaypalPaidAdvertsTestCase {
+class LmPaypalPaidAdvertsAPITestCase extends AbstractLmPaypalPaidAdvertsTestCase {
 
   function getInfo() {
     return array(
-      'name' => t('Paid Adverts basics and API'),
+      'name' => t('Paid Adverts: basics and API'),
       'description' => t('Test all internal API methods, needed for the module to work and eventually interact with other modules.'),
       'group' => t('LM Paypal'),
     );
@@ -19,30 +18,13 @@ class LmPaypalPaidAdvertsAPITestCase extends LmPaypalPaidAdvertsTestCase {
    */
   function setUp() {
     // Always call the setUp() function from the parent class.
-    parent::setUp('lm_paypal_subscriptions', 'lm_paypal_paid_adverts');
-
-    // Create users.
-    $admin_permissions = array(
-      'administer lm_paypal',
-      'access administration pages',
-      'administer permissions',
-      'access unpaid adverts',
-    );
-    $this->admin_user = $this->drupalCreateUser($admin_permissions);
-    $this->paypal_admin_user = $this->drupalCreateUser(array('administer lm_paypal'));
-    $this->web_user = $this->drupalCreateUser(array('create page content', 'create story content'));
-    $this->observer_user = $this->drupalCreateUser();
-
-    // We don't care where it is, but it needs to be set
-    // variable_set('lm_paypal_subscriptions_inprogress', LM_PAYPAL_SUBSCRIPTIONS_INPROGRESS_DEFAULT);
-    // variable_set('lm_paypal_subscriptions_menu_rebuild', LM_PAYPAL_SUBSCRIPTIONS_MENU_REBUILD_DEFAULT);
+    parent::setUp('lm_paypal_subscriptions', 'lm_paypal_paid_adverts_api');
   }
 
   /**
    * SimpleTest core method: code run after each and every test method.
    */
   function tearDown() {
-
     // Always call the tearDown() function from the parent class.
     parent::tearDown();
   }
@@ -130,9 +112,9 @@ class LmPaypalPaidAdvertsAPITestCase extends LmPaypalPaidAdvertsTestCase {
 
   function testPaidAdvertVisibility() {
     // Log as admin
+    $this->drupalLogin($this->admin_user);
 
     // Create a new subscription
-    $this->drupalLogin($this->admin_user);
     $this->drupalGet('admin/settings/lm_paypal/paid_adverts/settings');
     list($sub_id, $subscription) = $this->_createNodeSubscription();
 
@@ -169,24 +151,28 @@ class LmPaypalPaidAdvertsAPITestCase extends LmPaypalPaidAdvertsTestCase {
     $this->drupalLogin($this->admin_user);
 
     // Check we can see then node, and see the unpay links
-    // TODO finish this
-//    $this->drupalGet('node/'.$node->nid);
-//    $this->assertText($node->body);
-//    $this->assertText("Paypal subscription");
-//    $this->assertText("This classified ad for subscription #$sub_id is still unpaid. Other users will not be able to access it.");
+    $this->drupalGet('node/'.$node->nid);
+    $body = str_replace("<!--break-->", "", $node->body);
+    $this->assertText($body);
+    // No idea why, this one fails as admin
+    // $this->assertText("Paypal subscription");
+    $this->assertText("This classified ad for subscription #$sub_id is still unpaid. Other users will not be able to access it.");
 
     // Unpay the node
-//    $this->clickLink("Mark as paid");
+    $this->clickLink("Mark as paid");
+    $this->assertText('Mark node '.$node->nid.' as paid');
+    $this->drupalPost(NULL, array(), t('Mark subscription as paid'));
 
     // Check links disapeared
-    // TODO mark as pay node link wont work, subscription module was not refactored enough :)
+    $this->assertNoText('Mark as paid');
 
     // Logout and login as another custom user again
-//    $this->drupalLogout();
+    $this->drupalLogout();
     $this->drupalLogin($this->observer_user);
 
     // Check we can read the node
     $this->drupalGet('node/'.$node->nid);
-    // $this->assertText($node->body);
+    $body = str_replace("<!--break-->", "", $node->body);
+    $this->assertText($body);
   }
 }
