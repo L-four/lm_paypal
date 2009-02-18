@@ -208,7 +208,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     $this->assertText('No subs found.');
 
     // Log in as the user, check they DON'T have the role, or subscription...
-    $this->web_user = $this->drupalLogin($this->web_user);
+    $this->drupalLogin($this->web_user);
     $this->assertFalse(isset($this->web_user->roles[$rid]), "User does not already have role");
     $this->clickLink('My account');
     // TODO: check for subscription 'unsubscribe'
