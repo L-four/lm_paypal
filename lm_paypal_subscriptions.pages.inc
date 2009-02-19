@@ -1,4 +1,37 @@
 <?php
+// $Id$
+
+/**
+ * @file
+ * Paypal subscriptions interface, user pages.
+ */
+
+/////////////////////////// BELOW THIS LINE CODE IS WORKING BUT UGLY
+
+
+
+
+////////////////////////////// (AND UN-MAINTAINABLE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Print a subscription details
@@ -300,7 +333,7 @@ function lm_paypal_subscribe_subscription($subid, $display = 15, $button_url = N
     $return_path = $so->return_url;
   }
   else {
-    $return_path = lm_paypal_subscription_get_inprogress();
+    $return_path = lm_paypal_subscriptions_get_inprogress();
   }
 
   $item_name = check_plain($so->item_name);
@@ -381,24 +414,26 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
 
   // Output a list of all the live role or group subscriptions
   $output = '';
-  $result = db_query('SELECT subid, item_name, description, status FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2)');
+  $result = db_query('SELECT subid FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2)');
 
   if (($display & 64) != 0) {
     $nsubs = 0;
-    while ($so = db_fetch_object($result)) {
-      $already = lm_paypal_user_subscribed($so->subid, $account);
-      if (!$already) {
-        continue;
+    while ($data = db_fetch_object($result)) {
+      if ($subscription = lm_paypal_subscriptions_load_subscription($data->subid)) {
+        $already = lm_paypal_subscriptions_user_subscribed($so, $account);
+        if (!$already) {
+          continue;
+        }
+        $item_name = check_plain($subscription->item_name);
+        if ($nsubs > 0) {
+          $output .= ", ";
+        }
+        $output .= '"'. $item_name .'"';
+        $nsubs ++;
       }
-      $item_name = check_plain($so->item_name);
-      if ($nsubs > 0) {
-        $output .= ", ";
+      if ($nsubs == 0) {
+        $output .= t('<b>none</b>');
       }
-      $output .= '"'. $item_name .'"';
-      $nsubs ++;
-    }
-    if ($nsubs == 0) {
-      $output .= t('<b>none</b>');
     }
     return $output;
   }
@@ -408,34 +443,36 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
   }
 
   $header = array(t('Name'), t('Description'), t('Action'));
-  while ($so = db_fetch_object($result)) {
-    $already = lm_paypal_user_subscribed($so->subid, $account);
-
-    $item_name = check_plain($so->item_name);
-    if ($already) {
-      $sub = t('already subscribed');
-    }
-    else {
-      if (!$logged_in) {
-        $login = l(t('login'), 'user');
-        $register = l(t('create new account'), 'user/register');
-        $sub = t("You must !login or !register to subscribe", array("!login" => $login, "!register" => $register));
+  while ($data = db_fetch_object($result)) {
+    if ($subscription = lm_paypal_subscriptions_load_subscription($data->subid)) {
+      $already = lm_paypal_subscriptions_user_subscribed($subscription, $account);
+  
+      $item_name = check_plain($subscription->item_name);
+      if ($already) {
+        $sub = t('already subscribed');
       }
       else {
-        $sub = l(
-          t('subscribe'),
-          "lm_paypal/subscribe/$so->subid",
-          array('attributes' => array(
-            'alt' => t('Link to the subscription page'),
-            'title' => t('Click here to subscribe now!'))));
+        if (!$logged_in) {
+          $login = l(t('login'), 'user');
+          $register = l(t('create new account'), 'user/register');
+          $sub = t("You must !login or !register to subscribe", array("!login" => $login, "!register" => $register));
+        }
+        else {
+          $sub = l(
+            t('subscribe'),
+            "lm_paypal/subscribe/$subscription->subid",
+            array('attributes' => array(
+              'alt' => t('Link to the subscription page'),
+              'title' => t('Click here to subscribe now!'))));
+        }
       }
+  
+      $rows[] = array('data' => array(
+        array('data' => $item_name, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell'),
+        array('data' => $subscription->description, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell'),
+        array('data' => $sub, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell')));
+      $count++;
     }
-
-    $rows[] = array('data' => array(
-      array('data' => $item_name, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell'),
-      array('data' => $so->description, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell'),
-      array('data' => $sub, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell')));
-    $count++;
   }
   $output .= theme('table', $header, $rows);
 
@@ -448,5 +485,22 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
   $output .= "</p><p><a href=\"$unsuburl\">". t('Unsubscribe') .'</a>';
   $output .= '</p>';
 
+  return $output;
+}
+
+/**
+ * Returns the default page that users are sent to by PayPal after subscribing.
+ *
+ * @return
+ *   A string containing the page contents.
+ */
+function lm_paypal_subscriptions_inprogress_page() {
+  $output = "";
+  $output .= '<h2>'.t("Thank you!").'</h2>';
+  $output .= t("<p>Your subscription is in progress but for it to take effect you will have ".
+    "to logout and login again.</p>".
+    "<p>Then you can check your subscriptions by looking in \"my account\".</p>".
+    "<p><b>Special Note: </b>Although PayPal subscriptions are usually instantaneous sometimes, ".
+    "during really busy periods, it may take a few hours to take effect.</p>");
   return $output;
 }

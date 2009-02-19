@@ -84,6 +84,7 @@ function lm_paypal_subscriptions_schema() {
       'subscr_id' => array('subscr_id')
     ),
     'primary key' => array('usid'),
+    'unique key' => array('subscr_id_unique' => array('subscr_id')),
     'description' => 'The table to record subscribers.'
   );
   $schema['lm_paypal_subscriptions'] = array(

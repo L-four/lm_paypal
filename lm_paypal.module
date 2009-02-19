@@ -124,6 +124,37 @@ function lm_paypal_cron() {
 }
 
 /**
+ * Implementation of hook_requirements().
+ */
+function lm_paypal_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+
+  if ($phase == 'runtime') {
+    if (! lm_paypal_api_get_business()) {
+      $requirements['lm_paypal'] = array(
+        'title' => t('LM PayPal'),
+        'severity' => REQUIREMENT_ERROR,
+        'value' => $t('LM PayPal default business address is not configured. Please set it in <a href="!admin_page">administration page</a>', array(
+          '!admin_page' => url('admin/settings/lm_paypal'),
+        )),
+      );
+    }
+    if (! module_exists('job_queue')) {
+      $requirements['lm_paypal_job_queue'] = array(
+        'title' => t('LM PayPal'),
+        'severity' => REQUIREMENT_INFO,
+        'value' => $t('LM PayPal works best when <a href="!job_queue_url">job_queue</a> module is enabled.', array(
+          '!job_queue_url' => url('http://drupal.org/project/job_queue')
+        )),
+      );
+    }
+  }
+
+  return $requirements;
+}
+
+/**
  * Tells if module is in debug mode.
  *
  * @return boolean
@@ -778,6 +809,9 @@ function lm_paypal_period_unit2days($period, $unit) {
 /**
  * Email a user
  *
+ * TODO ok young padawan: for tokens, we should use token module, no?
+ * But I don't know, I'm not sure this will usefull.
+ *
  * @param $to_uid
  *   The uid of user to send this email to
  * @param $about_uid
@@ -842,7 +876,15 @@ function lm_paypal_mail_user($to_uid, $about_uid, $subject, $message, $vars) {
   $params['subject'] = $subject;
   $params['body'] = $body;
 
-  drupal_mail('lm_paypal', 'notify', $to, user_preferred_language($to_account), $params);
+  $func = 'drupal_mail';
+  $args = array('lm_paypal', 'notify', $to, user_preferred_language($to_account), $params);
+
+  if (module_exists('job_queue')) {
+    job_queue_add($func, 'lm_paypal send mail', $args, '', FALSE);
+  }
+  else {
+    call_user_func_array($func, $args);
+  }
 }
 
 function lm_paypal_mail($key, &$message, $params) {

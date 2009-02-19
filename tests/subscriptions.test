@@ -230,6 +230,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     $sub_id = $path_elements[count($path_elements) - 1];
 
     // Subscribe (using two fake IPNs).
+    //$this->writeFile('SubBeforeIPN1.txt', $this->dumpTable('lm_paypal_subscribers'));
     $this->assertNoWatchdogErrors(WATCHDOG_WARNING, TRUE);
     $ipn1 = $this->postPreparedIpn(
       'sandbox-subscription-ipn1.txt',
@@ -243,6 +244,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
         )),
       )
     );
+    //$this->writeFile('SubBeforeIPN2.txt', $this->dumpTable('lm_paypal_subscribers'));
     $ipn2 = $this->postPreparedIpn(
       'sandbox-subscription-ipn2.txt',
       array(
@@ -260,6 +262,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
         'period3' => $subscription['p3'] . ' ' . $subscription['t3'], // "30 D"
       )
     );
+    //$this->writeFile('SubAfterIPNS.txt', $this->dumpTable('lm_paypal_subscribers'));
     // Check IPN have been processed by our module
     $this->assertNoWatchdogErrors(WATCHDOG_WARNING, TRUE);
     

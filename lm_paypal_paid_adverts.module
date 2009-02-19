@@ -197,6 +197,26 @@ function lm_paypal_paid_adverts_menu() {
   return $items;
 }
 
+function lm_paypal_paid_adverts_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+
+  if ($phase == 'runtime') {
+    $live = lm_paypal_paid_adverts_get_live_subscriptions();
+    if (empty($live)) {
+      $requirements['lm_paypal_paid_adverts'] = array(
+        'title' => t(LM_PAYPAL_PAID_ADVERTS),
+        'severity' => REQUIREMENT_WARNING,
+        'value' => $t('There is no node type configured to be used with this module, check some in <a href="!admin_page">administration pages.</a>', array(
+          '!admin_page' => url('admin/settings/lm_paypal/paid_adverts'),
+        )),
+      );
+    }
+  }
+
+  return $requirements;
+}
+
 /**
  * Check whether the user has access to this node tab item.
  * (see the hook_menu() function for the definition of the tab)

@@ -1,5 +1,17 @@
 $Id$
 
+6.x-2.x-dev - Status at 2009-02-18
+==================================
+
+* Did *A LOT* of cleaning in subscriptions module.
+* Fixed some wrong tests in paid_adverts module.
+* Still working on general cleaning (subscriptions and base module).
+* Make use of job_queue module for mail sending, if present.
+* Wrote some hook_requirements().
+
+Any changes will be for 2009-02-19 because drupal.org is currently offline for
+schedule maintenance (and comit won't work).
+
 6.x-2.x-dev - Status at 2009-02-17
 ==================================
 

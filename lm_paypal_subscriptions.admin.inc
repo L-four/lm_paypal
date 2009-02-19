@@ -1,4 +1,10 @@
 <?php
+// $Id$
+
+/**
+ * @file
+ * Paypal subscriptions interface, admin pages and forms.
+ */
 
 /**
  * Main settings form
@@ -7,7 +13,7 @@ function lm_paypal_subscriptions_admin_settings($form_state) {
   $form['lm_paypal_subscriptions_inprogress'] = array(
     '#type' => 'textfield',
     '#title' => t('LM PayPal subscription in progress page'),
-    '#default_value' => lm_paypal_subscription_get_inprogress(),
+    '#default_value' => lm_paypal_subscriptions_get_inprogress(),
     '#maxlength' => 100,
     '#required' => TRUE,
     '#description' => t('The page the user is sent to by PayPal after a subscribe. The default is ') . LM_PAYPAL_SUBSCRIPTIONS_INPROGRESS_DEFAULT . t(' but you might want to point it at a page you have created yourself.'),
@@ -20,6 +26,32 @@ function lm_paypal_subscriptions_admin_settings($form_state) {
   );
   return system_settings_form($form);
 }
+
+/////////////////////////// BELOW THIS LINE CODE IS WORKING BUT UGLY
+
+
+
+
+////////////////////////////// (AND UN-MAINTAINABLE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * Main interface to view subscriptions.
