@@ -1,6 +1,6 @@
 OVERVIEW
 
-This document attempts to collection the documentation about how PayPal works,
+This document attempts to collect the documentation about how PayPal works,
 and how LM Paypal integrates with it. LM Paypal uses the "Simple Integration"
 mode with paypal.com.  This is described at:
 
@@ -13,7 +13,7 @@ method to receive information from paypal as transactions proceed. See:
 
 Briefly, this works by:
 * user submits a form on your site that contains all the transaction information
-  (amounts, subscriptions, unique identifier, etc - but NOT credit cart
+  (amounts, subscriptions, unique identifier, etc - but NOT credit card
   information). This form actually goes to paypal.com, where it asks the user
   for payment details.
 * once this is completed, paypal posts an IPN to your server
