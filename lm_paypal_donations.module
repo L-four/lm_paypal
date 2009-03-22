@@ -191,7 +191,7 @@ function lm_paypal_donations_lm_paypal_ipn_donate($ipn) {
  * @param $ipn
  *   The IPN message
  * @link
- *   html link to the the IPN to display in watchdog reports
+ *   html link to the IPN to display in watchdog reports
  * @uid
  *   The uid of the user associated with this IPN, zero if the user is unknown
  * @other
