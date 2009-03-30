@@ -239,9 +239,25 @@ function lm_paypal_subscriptions_schema() {
       'terms' => array(
         'type' => 'text',
         'description' => 'Terms and conditions for this subscription (?).'),
+      'terms_format' => array(
+        'type' => 'int',
+        'description' => 'The input format used by the subscription terms',
+        'not null' => TRUE,
+        'default' => 0,
+      )
     ),
     'primary key' => array('subid'),
     'description' => 'The table to record subscriptions.'
   );
   return $schema;
+}
+
+
+/**
+ * Add terms_format field to subscriptions.
+ */
+function lm_paypal_subscriptions_update_6000() {
+  $ret = array();
+  db_add_field($ret, 'lm_paypal_subscriptions', 'terms_format', array('type' => 'int', 'not null' => TRUE, 'default' => 0));
+  return $ret;
 }

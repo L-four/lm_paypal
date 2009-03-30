@@ -239,7 +239,7 @@ function lm_paypal_subscriptions_get_agreement($subid = NULL, $set = FALSE) {
 /**
  * The user has to agree to the terms and conditions
  */
-function lm_paypal_subscriptions_terms_form($form_state, $subid, $terms) {
+function lm_paypal_subscriptions_terms_form($form_state, $subid, $terms, $terms_format) {
   $form['#submit'] = array('lm_paypal_subscription_terms_submit');
 
   // This reset the subid agreement
@@ -247,7 +247,7 @@ function lm_paypal_subscriptions_terms_form($form_state, $subid, $terms) {
 
   $form['terms'] = array(
     '#type' => 'markup',
-    '#value' => t('<h2>Terms and Conditions</h2><p>') . check_plain($terms) .
+    '#value' => t('<h2>Terms and Conditions</h2><p>') . check_markup($terms, $terms_format) .
     t('</p><p><em>Before you can subscribe you must agree to these terms and conditions</em></p>'),
   );
   // Some countries made legally mandatory the checkbox to agress before submit
@@ -315,7 +315,7 @@ function lm_paypal_subscribe_subscription($subid, $display = 15, $button_url = N
   $terms = trim($so->terms);
   if (! empty($terms)) {
     if (! lm_paypal_subscriptions_get_agreement($subid)) {
-      $output .= drupal_get_form('lm_paypal_subscriptions_terms_form', $subid, $so->terms);
+      $output .= drupal_get_form('lm_paypal_subscriptions_terms_form', $subid, $so->terms, $so->terms_format);
       return $output;
     }
   }

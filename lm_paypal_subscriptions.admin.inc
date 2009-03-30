@@ -186,6 +186,7 @@ function lm_paypal_subscriptions_edit_form($form_state, $subid = NULL) {
     $so->send_user_onend_body = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_BODY_DEFAULT;
 
     $so->terms = LM_PAYPAL_SUBSCRIPTIONS_TERMS_DEFAULT;
+    $so->terms_format = FILTER_FORMAT_DEFAULT;
   }
 
   $form['item_name'] = array(
@@ -497,7 +498,8 @@ function lm_paypal_subscriptions_edit_form($form_state, $subid = NULL) {
     '#default_value' => $so->terms,
     '#description' => t('Terms and conditions the user must agree to. If empty no terms or conditions are required.'),
   );
-
+  $form['terms_format'] = filter_form($so->terms_format, NULL, array('terms_format') );
+  
   if ($edit) {
     $form['status'] = array(
       '#type' => 'select',
@@ -680,6 +682,7 @@ function lm_paypal_subscriptions_edit_form_submit($form, &$form_state) {
     'send_user_onend_body',
 
     'terms',
+    'terms_format',
   );
 
   static $nulls = array(
@@ -691,6 +694,7 @@ function lm_paypal_subscriptions_edit_form_submit($form, &$form_state) {
     'src', 'srt', 'status', 'uid_admin',
     'send_admin_onsub', 'send_admin_onend', 'send_user_onsub',
     'nearend_days', 'send_user_onnearend', 'send_user_onend',
+    'terms_format',
   );
 
   // Prepare drupal_write_record
