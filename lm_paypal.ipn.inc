@@ -230,7 +230,7 @@ function _lm_paypal_process_in_web_accept($ipn) {
 
   if ($uid == '') {
     $uid = 0;
-    if ($_lm_paypal_debug) {
+    if ($debug) {
       watchdog(
         LM_PAYPAL,
         'No uid, try to lookup payer_email',
@@ -291,13 +291,13 @@ function _lm_paypal_process_in_web_accept($ipn) {
   // If you use the Send Money menu item on PayPal I treat this pretty the
   //  same as a donation (item_number = 0)
   if ($ipn->txn_type == 'send_money') {
-    if ($_lm_paypal_debug) {
+    if ($debug) {
       watchdog(LM_PAYPAL, "send_money - being converted to web_accept");
     }
     $item_number = 0;
   }
   else if ($item_number == '') {
-    if ($_lm_paypal_debug) {
+    if ($debug) {
       watchdog(LM_PAYPAL, "empty item_number - being converted to web_accept");
     }
     $item_number = 0;

@@ -804,6 +804,7 @@ function _lm_paypal_subscriptions_ipn_is_valid($ipn) {
  *   rid for the user to gain
  */
 function lm_paypal_user_gain_role($uid, $rid) {
+  $debug = variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
   $roles = db_query("SELECT * FROM {users_roles} WHERE uid = %d AND rid = %d", $uid, $rid);
   if (!db_result($roles)) {
     $insert = db_query("INSERT INTO {users_roles} (uid, rid) VALUES (%d, %d)", $uid, $rid);
@@ -811,7 +812,7 @@ function lm_paypal_user_gain_role($uid, $rid) {
       watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Failed to add user to role (uid %uid, rid %rid)', array('%uid' => $uid, '%rid' => $rid), WATCHDOG_ERROR);
       return;
     }
-    if ($_lm_paypal_debug) {
+    if ($debug) {
       watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Added user to role (uid %uid, rid %rid)', array('%uid' => $uid, '%rid' => $rid));
     }
 
@@ -831,9 +832,10 @@ function lm_paypal_user_gain_role($uid, $rid) {
  *   rid for the user to loose
  */
 function lm_paypal_user_loose_role($uid, $rid) {
+  $debug = variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
   $also = db_query("SELECT * FROM {lm_paypal_subscriptions} d INNER JOIN {lm_paypal_subscribers} s ON d.subid = s.subid WHERE uid = %d AND rid = %d AND s.status = 1 AND d.kind = 0", $uid, $rid);
   if (db_result($also)) {
-    if ($_lm_paypal_debug) {
+    if ($debug) {
       watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'User keeps role because of other subscriptions (uid %uid, rid %rid)', array('%uid' => $uid, '%rid' => $rid));
     }
     return;
@@ -841,7 +843,7 @@ function lm_paypal_user_loose_role($uid, $rid) {
 
   db_query("DELETE FROM {users_roles} WHERE uid = %d AND rid = %d", $uid, $rid);
 
-  if ($_lm_paypal_debug) {
+  if ($debug) {
     watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Drop user from role (uid %uid, rid %rid)', array('%uid' => $uid, '%rid' => $rid));
   }
 
@@ -861,7 +863,8 @@ function lm_paypal_user_loose_role($uid, $rid) {
 function lm_paypal_user_gain_group($uid, $gid) {
   og_save_subscription($gid, $uid, array('is_active' => 1));
 
-  if ($_lm_paypal_debug) {
+  $debug = variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
+  if ($debug) {
     watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Added user to group (uid %uid, gid %gid)', array('%uid' => $uid, '%gid' => $gid));
   }
 
@@ -880,9 +883,10 @@ function lm_paypal_user_gain_group($uid, $gid) {
  *   gid for the user to loose
  */
 function lm_paypal_user_loose_group($uid, $gid) {
+  $debug = variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
   $also = db_query("SELECT * FROM {lm_paypal_subscriptions} d INNER JOIN {lm_paypal_subscribers} s ON d.subid = s.subid WHERE uid = %d AND rid = %d AND s.status = 1 AND d.kind = 2", $uid, $rid);
   if (db_result($also)) {
-    if ($_lm_paypal_debug) {
+    if ($debug) {
       watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'User keeps group because of other subscriptions (uid %uid, gid %gid)', array('%uid' => $uid, '%gid' => $gid));
     }
     return;
@@ -890,7 +894,7 @@ function lm_paypal_user_loose_group($uid, $gid) {
 
   og_delete_subscription($gid, $uid);
 
-  if ($_lm_paypal_debug) {
+  if ($debug) {
     watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Drop user from group (uid %uid, gid %gid)', array('%uid' => $uid, '%gid' => $gid));
   }
 
