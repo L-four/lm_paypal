@@ -14,6 +14,7 @@ function lm_paypal_settings_form() {
   // others?
 
   // Show these in order of most likely to be changed
+  $site_name = variable_get('site_name', 'drupal');
   $form['lm_paypal_business'] = array(
     '#type' => 'textfield',
     '#title' => t('LM PayPal Business/Premier Email'),
