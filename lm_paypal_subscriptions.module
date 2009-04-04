@@ -389,7 +389,7 @@ function lm_paypal_subscriptions_load_subscription($subid) {
       $cache[$subid] = $subscription;
     }
   }
-  return $cache[$subid];
+  return isset($cache[$subid]) ? $cache[$subid] : NULL;
 }
 
 /**
@@ -642,20 +642,22 @@ function lm_paypal_subscriptions_node_subscribed($node) {
  *   TRUE only for role subscriptions and if the current user is subscribed
  */
 function lm_paypal_subscriptions_user_subscribed($subscription, $account = NULL) {
+  global $user;
   static $cache = array();
 
-  if (! $account) {
-    global $user;
-    $account = $user;
-  }
+  $subid = $subscription->subid;
+  $uid = $account ? $account->uid : $user->uid;
 
-  if (! isset($cache[$subid][$account->uid])) {
+  if (!isset($cache[$subid])) {
+    $cache[$subid] = array();
+  }
+  if (!isset($cache[$subid][$uid])) {
     // kind 0 is a role subscription, kind 2 is a group
-    $cache[$subid][$account->uid] = (bool) db_result(db_query("SELECT 1 FROM {lm_paypal_subscribers} WHERE uid = %d AND subid = %d AND status = 1 AND (kind = 0 OR kind = 2)", array(
-      $account->uid, $subscription->subid
+    $cache[$subid][$uid] = (bool) db_result(db_query("SELECT 1 FROM {lm_paypal_subscribers} WHERE uid = %d AND subid = %d AND status = 1 AND (kind = 0 OR kind = 2)", array(
+      $uid, $subid
     )));
   }
-  return $cache[$subid][$account->uid];
+  return $cache[$subid][$uid];
 }
 
 /**

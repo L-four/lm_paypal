@@ -85,6 +85,8 @@ function lm_paypal_ipns() {
     array('data' => t('User'), 'field' => 'custom'), // TODO: not 'custom' anymore
   );
 
+  $rows = array();
+
   $sql = "SELECT id, timestamp, txn_type, custom FROM {lm_paypal_ipns}";
   $tablesort = tablesort_sql($header);
 

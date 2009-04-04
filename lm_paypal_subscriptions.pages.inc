@@ -176,11 +176,8 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
     else if (strncmp($key, 't', 1) == 0 && strlen($key) == 2) {
       continue; // skip t (period-unit) fields
     }
-    $k = $field_names [$key];
-    if ($k == '') {
-      $k = $key;
-    }
-    $k = check_plain($k);
+
+    $k = isset($field_names[$key]) ? $field_names[$key] : check_plain($key);
     $value = check_plain($value);
     $rows[] = array('data' => array($k, $value));
   }
@@ -230,8 +227,13 @@ function lm_paypal_subscriptions_get_agreement($subid = NULL, $set = FALSE) {
     $_SESSION['lm_paypal_I_agree'] = $subid;
   }
   else {
-    $accepted = (bool) $_SESSION['lm_paypal_I_agree'] == $subid;
-    unset($_SESSION['lm_paypal_I_agree']);
+    if (isset($_SESSION['lm_paypal_I_agree'])) {
+      $accepted = (bool) $_SESSION['lm_paypal_I_agree'] == $subid;
+      unset($_SESSION['lm_paypal_I_agree']);
+    }
+    else {
+      $accepted = FALSE;
+    }
     return $accepted;
   }
 }
@@ -472,7 +474,6 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
         array('data' => $item_name, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell'),
         array('data' => $subscription->description, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell'),
         array('data' => $sub, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell')));
-      $count++;
     }
   }
   $output .= theme('table', $header, $rows);

@@ -37,7 +37,7 @@ function lm_paypal_paid_adverts_get_live_subscriptions($node_type = NULL, $reset
     }
   }
   if ($node_type) {
-    return $cache[$node_type];
+    return isset($cache[$node_type]) ? $cache[$node_type] : array();
   }
   else {
     return $cache;
