@@ -545,7 +545,7 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
       '#value' => serialize($custom),
       '#name' => 'custom',
     );
-    if (is_array($options['hidden']) && ! empty($options['hidden'])) {
+    if (isset($options['hidden']) && is_array($options['hidden']) && ! empty($options['hidden'])) {
       foreach ($options['hidden'] as $key => $value) {
         // Do not override existing values
         if (! isset($form[$key])) {
@@ -556,7 +556,7 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
         }
       }
     }
-    if ($button_url) {
+    if (isset($button_url) && $button_url) {
       // TODO button as url
       $form['submit'] = array(
         '#type' => 'submit',
