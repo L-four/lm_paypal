@@ -412,11 +412,21 @@ function lm_paypal_page_thanks() {
  *   Or FALSE if amount is not a valid positive float.
  */
 function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
+
+  // Check for the different forms of $amount allowed: either a value, or an
+  // array of values (with the default value being [value] rather than value.
+
   $valid_amount = FALSE;
+  $default_amount = FALSE;
   // Check amount is valid
   if (is_array($amount) && ! empty($amount)) {
     $valid_amount = array();
     foreach ($amount as $key => $value) {
+      if (is_array($value)) {
+        $value = array_pop($value);
+        $default_amount = $value;
+      }
+
       // Always prefer casts to *_val() php functions.
       if (( (float) $value) > 0) {
         $valid_amount["$value"] = $value;
@@ -428,152 +438,161 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
     $valid_amount = (float) $amount;
   }
 
-  if ($valid_amount) {
-    global $user;
-    // Check our user can access to return path
-    if (isset($options['return_path']) && menu_valid_path(array('item_link' => $options['return_path']))) {
-      $return_url = url($options['return_path'], array('absolute' => TRUE));
-    }
-    else {
-      $return_url = url($_GET['q'], array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
-    }
-    // And cancel path if set
-    if (isset($options['cancel_path']) && menu_valid_path(array('item_link' => $options['cancel_path']))) {
-      $cancel_url = url($options['cancel_path'], array('absolute' => TRUE));
-    }
-    else {
-      $cancel_url = $return_url;
-    }
 
-    // Check for a specified currency
-    $currency_code = isset($options['currency_code']) ? $options['currency_code'] : lm_paypal_api_get_currency_default();
-
-    // And check for button customisation
-    if (isset($options['button_url']) && check_url($options['button_url'])) {
-      $button_url = $options['button_url'];
-    }
-    if (isset($options['button_text'])) {
-      $button_text = check_plain($options['button_text']);
-    }
-    else {
-      $button_text = t('Proceed to paypal.com');
-    }
-
-    $form['#action'] = lm_paypal_api_get_host(TRUE);
-    $form['business'] = array(
-      '#type' => 'hidden',
-      '#name' => 'business',
-      '#value' => lm_paypal_api_get_business(),
-    );
-    $form['cmd'] = array(
-      '#type' => 'hidden',
-      '#value' => '_xclick',
-      '#name' => 'cmd',
-    );
-    $form['item_name'] = array(
-      '#type' => 'hidden',
-      // We will let empty name pass, sub module developers should be aware.
-      '#value' => isset($options['item_name']) ? check_plain($options['item_name']) : t('Donation'),
-      '#name' => 'item_name',
-    );
-    $form['item_number'] = array(
-      '#type' => 'hidden',
-      '#value' => isset($options['item_number']) ? ((int) $options['item_number']) : 0,
-      '#name' => 'item_number',
-    );
-    $form['no_shipping'] = array(
-      '#type' => 'hidden',
-      '#value' => 1,
-      '#name' => 'no_shipping',
-    );
-    $form['return'] = array(
-      '#type' => 'hidden',
-      '#value' => $return_url,
-      '#name' => 'return',
-    );
-    $form['cancel_url'] = array(
-      '#type' => 'hidden',
-      '#value' => $cancel_url,
-      '#name' => 'return',
-    );
-    $form['currency_code'] = array(
-      '#type' => 'hidden',
-      '#value' => $currency_code,
-      '#name' => 'currency_code',
-    );
-    if (isset($options['text'])) {
-      $form['amount_text'] = array(
-        '#type' => 'markup',
-        '#value' => $options['text'],
-      );
-    }
-    if (is_array($valid_amount)) {
-      $textual_currency = lm_paypal_api_get_currency($currency_code, FALSE);
-      if (! $textual_currency) {
-        $textual_currency = $currency_code;
-      }
-      $form['amount'] = array(
-        '#type' => 'select',
-        '#title' => t('Select amount'),
-        '#options' => $valid_amount,
-        '#description' => t('Value is @currency', array('@currency' => $textual_currency)),
-      );
-    }
-    else if (! (isset($options['display_amount']) && $options['display_amount'])) {
-      $form['amount_display'] = array(
-        '#type' => 'markup',
-        '#value' => '<p>'.t('Proceed with your !price payment', array(
-          '!price' => theme('lm_paypal_amount', $valid_amount, $currency_code, TRUE))).'</p>',
-      );
-      $form['amount'] = array(
-        '#type' => 'hidden',
-        '#value' => $valid_amount,
-        '#name' => 'amount',
-      );
-    }
-    $form['notify_url'] = array(
-      '#type' => 'hidden',
-      '#value' => lm_paypal_api_get_notify_url(),
-      '#name' => 'notify_url',
-    );
-    if (empty($custom) || is_array($custom)) {
-      $custom = array();
-    }
-    $custom['uid'] = $user->uid;
-    $form['custom'] = array(
-      '#type' => 'hidden',
-      '#value' => serialize($custom),
-      '#name' => 'custom',
-    );
-    if (isset($options['hidden']) && is_array($options['hidden']) && ! empty($options['hidden'])) {
-      foreach ($options['hidden'] as $key => $value) {
-        // Do not override existing values
-        if (! isset($form[$key])) {
-          $form[$key] = array(
-            '#type' => 'hidden',
-            '#value' => check_plain($value),
-          );
-        }
-      }
-    }
-    if (isset($button_url) && $button_url) {
-      // TODO button as url
-      $form['submit'] = array(
-        '#type' => 'submit',
-        '#value' => $button_text,
-        '#name' => 'submit',
-      );
-    }
-    else {
-      $form['submit'] = array(
-        '#type' => 'submit',
-        '#value' => $button_text,
-        '#name' => 'submit',
-      );
-    }
-    return $form;
+  if (!$valid_amount) {
+    return array();
   }
-  return array();
+
+
+
+  global $user;
+  // Check our user can access to return path
+  if (isset($options['return_path']) && menu_valid_path(array('item_link' => $options['return_path']))) {
+    $return_url = url($options['return_path'], array('absolute' => TRUE));
+  }
+  else {
+    $return_url = url($_GET['q'], array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
+  }
+  // And cancel path if set
+  if (isset($options['cancel_path']) && menu_valid_path(array('item_link' => $options['cancel_path']))) {
+    $cancel_url = url($options['cancel_path'], array('absolute' => TRUE));
+  }
+  else {
+    $cancel_url = $return_url;
+  }
+
+  // Check for a specified currency
+  $currency_code = isset($options['currency_code']) ? $options['currency_code'] : lm_paypal_api_get_currency_default();
+
+  // And check for button customisation
+  if (isset($options['button_url']) && check_url($options['button_url'])) {
+    $button_url = $options['button_url'];
+  }
+  if (isset($options['button_text'])) {
+    $button_text = check_plain($options['button_text']);
+  }
+  else {
+    $button_text = t('Proceed to paypal.com');
+  }
+
+  $form['#action'] = lm_paypal_api_get_host(TRUE);
+  $form['business'] = array(
+    '#type' => 'hidden',
+    '#name' => 'business',
+    '#value' => lm_paypal_api_get_business(),
+  );
+  $form['cmd'] = array(
+    '#type' => 'hidden',
+    '#value' => '_xclick',
+    '#name' => 'cmd',
+  );
+  $form['item_name'] = array(
+    '#type' => 'hidden',
+    // We will let empty name pass, sub module developers should be aware.
+    '#value' => isset($options['item_name']) ? check_plain($options['item_name']) : t('Donation'),
+    '#name' => 'item_name',
+  );
+  $form['item_number'] = array(
+    '#type' => 'hidden',
+    '#value' => isset($options['item_number']) ? ((int) $options['item_number']) : 0,
+    '#name' => 'item_number',
+  );
+  $form['no_shipping'] = array(
+    '#type' => 'hidden',
+    '#value' => 1,
+    '#name' => 'no_shipping',
+  );
+  $form['return'] = array(
+    '#type' => 'hidden',
+    '#value' => $return_url,
+    '#name' => 'return',
+  );
+  $form['cancel_url'] = array(
+    '#type' => 'hidden',
+    '#value' => $cancel_url,
+    '#name' => 'return',
+  );
+  $form['currency_code'] = array(
+    '#type' => 'hidden',
+    '#value' => $currency_code,
+    '#name' => 'currency_code',
+  );
+  if (isset($options['text'])) {
+    $form['amount_text'] = array(
+      '#type' => 'markup',
+      '#value' => $options['text'],
+    );
+  }
+
+  // Either display the textfield or the select
+  if (is_array($valid_amount)) {
+    $textual_currency = lm_paypal_api_get_currency($currency_code, FALSE);
+    if (! $textual_currency) {
+      $textual_currency = $currency_code;
+    }
+    $form['amount'] = array(
+      '#type' => 'select',
+      '#title' => t('Select amount'),
+      '#options' => $valid_amount,
+      '#description' => t('Value is @currency', array('@currency' => $textual_currency)),
+    );
+    if ($default_amount) {
+      $form['amount']['#default_value'] = $default_amount;
+    }
+  }
+  else if (! (isset($options['display_amount']) && $options['display_amount'])) {
+    $form['amount_display'] = array(
+      '#type' => 'markup',
+      '#value' => '<p>'.t('Proceed with your !price payment', array(
+        '!price' => theme('lm_paypal_amount', $valid_amount, $currency_code, TRUE))).'</p>',
+    );
+    $form['amount'] = array(
+      '#type' => 'hidden',
+      '#value' => $valid_amount,
+      '#name' => 'amount',
+    );
+  }
+  $form['notify_url'] = array(
+    '#type' => 'hidden',
+    '#value' => lm_paypal_api_get_notify_url(),
+    '#name' => 'notify_url',
+  );
+  if (empty($custom) || is_array($custom)) {
+    $custom = array();
+  }
+  $custom['uid'] = $user->uid;
+  $form['custom'] = array(
+    '#type' => 'hidden',
+    '#value' => serialize($custom),
+    '#name' => 'custom',
+  );
+  if (isset($options['hidden']) && is_array($options['hidden']) && ! empty($options['hidden'])) {
+    foreach ($options['hidden'] as $key => $value) {
+      // Do not override existing values
+      if (! isset($form[$key])) {
+        $form[$key] = array(
+          '#type' => 'hidden',
+          '#value' => check_plain($value),
+        );
+      }
+    }
+  }
+  if (isset($button_url) && $button_url) {
+    // TODO button as url
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => $button_text,
+      '#name' => 'submit',
+    );
+  }
+  else {
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => $button_text,
+      '#name' => 'submit',
+    );
+  }
+  return $form;
 }
 
 // =====================================================================
