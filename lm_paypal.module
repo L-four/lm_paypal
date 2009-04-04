@@ -522,8 +522,8 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
     else if (! (isset($options['display_amount']) && $options['display_amount'])) {
       $form['amount_display'] = array(
         '#type' => 'markup',
-        '#value' => '<p>'.t('Proceed your @price payment', array(
-          '@price' => theme('lm_paypal_amount', $valid_amount, $currency, TRUE))).'</p>',
+        '#value' => '<p>'.t('Proceed with your !price payment', array(
+          '!price' => theme('lm_paypal_amount', $valid_amount, $currency, TRUE))).'</p>',
       );
       $form['amount'] = array(
         '#type' => 'hidden',
