@@ -446,7 +446,7 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
     }
 
     // Check for a specified currency
-    $currency = isset($options['currency']) ? $options['currency'] : lm_paypal_api_get_currency_default();
+    $currency_code = isset($options['currency_code']) ? $options['currency_code'] : lm_paypal_api_get_currency_default();
 
     // And check for button customisation
     if (isset($options['button_url']) && check_url($options['button_url'])) {
@@ -498,7 +498,7 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
     );
     $form['currency_code'] = array(
       '#type' => 'hidden',
-      '#value' => $currency,
+      '#value' => $currency_code,
       '#name' => 'currency_code',
     );
     if (isset($options['text'])) {
@@ -508,9 +508,9 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
       );
     }
     if (is_array($valid_amount)) {
-      $textual_currency = lm_paypal_api_get_currency($currency, FALSE);
+      $textual_currency = lm_paypal_api_get_currency($currency_code, FALSE);
       if (! $textual_currency) {
-        $textual_currency = $currency;
+        $textual_currency = $currency_code;
       }
       $form['amount'] = array(
         '#type' => 'select',
@@ -523,7 +523,7 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
       $form['amount_display'] = array(
         '#type' => 'markup',
         '#value' => '<p>'.t('Proceed with your !price payment', array(
-          '!price' => theme('lm_paypal_amount', $valid_amount, $currency, TRUE))).'</p>',
+          '!price' => theme('lm_paypal_amount', $valid_amount, $currency_code, TRUE))).'</p>',
       );
       $form['amount'] = array(
         '#type' => 'hidden',

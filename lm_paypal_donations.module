@@ -240,27 +240,23 @@ function _lm_paypal_process_in_donate($ipn, $link, $uid, $other, $item_number) {
  */
 
 function lm_paypal_donate($amount, $ccc = NULL, $name = NULL, $button_url = NULL, $amount_label = NULL, $return_url = NULL) {
-  global $user;
-
   if (!user_access('access lm_paypal_donate')) {
     return t('Access to PayPal donation buttons denied');
   }
 
   $options = array();
-  if (! $ccc) {
-    $ccc = lm_paypal_api_get_currency_default();
-  }
+  $options['currency_code'] = $ccc;
   if ($name) {
     $options['item_name'] = check_plain($name);
   }
   if ($button_url) {
-    // TODO: hu
+    $options['button_url'] = $button_url;
   }
   if ($amount_label) {
     $options['text'] = check_plain($amount_label);
   }
-  if ($ret_url) {
-    $options['return_path'] = $ret_url;
+  if ($return_url) {
+    $options['return_path'] = $return_url;
   }
 
   return drupal_get_form('lm_paypal_api_payment_form', $amount, $options);
