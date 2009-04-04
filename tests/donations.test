@@ -134,7 +134,7 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
             'mc_gross' => 52.34 + $offset,
             'mc_gross1' => 49.34 + $offset,
             'txn_id' => 548954 + $offset,
-            'mc_currency' => 'USD',
+            'mc_currency' => 'NZD',
           )
         );
 
@@ -182,16 +182,16 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
         $this->assertText($ipn['mc_gross'], "Found $ipn[mc_gross]");
         $this->assertText($ipn['mc_currency'], "Found $ipn[mc_currency]");
       }
-      $num_matches = preg_match_all('#USD#is', $this->drupalGetContent(), $matches);
-      $this->assertEqual($num_matches, $num_donations_per_user, "Found $num_matches USD matches");
+      $num_matches = preg_match_all('#NZD#is', $this->drupalGetContent(), $matches);
+      $this->assertEqual($num_matches, $num_donations_per_user, "Found $num_matches NZD matches");
     }
 
     // Check All Donations page for all payments.
     $this->drupalLogin($this->admin_user);
     $this->drupalGet('lm_paypal/donations');
     $this->assertNoText('No donations found.');
-    $num_matches = preg_match_all('#USD#is', $this->drupalGetContent(), $matches);
-    $this->assertEqual($num_matches, $num_users * $num_donations_per_user, "Found $num_matches USD matches");
+    $num_matches = preg_match_all('#NZD#is', $this->drupalGetContent(), $matches);
+    $this->assertEqual($num_matches, $num_users * $num_donations_per_user, "Found $num_matches NZD matches");
 
     // Manual verification
     // $this->dumpAllIpns();
@@ -208,23 +208,25 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
     $this->drupalPost('admin/settings/filters/3', $edit, 'Save configuration');
 
 
-    // Create a Block with the Donate PHP in it
+    // Create a Block with the Donate PHP in it - updated for more diverse currencies
     $body = <<<EOF
 <?php
 if (function_exists('lm_paypal_donate')) {
   // 10 = amount, 'USD' is the currency followed by a description
-  print 'We would really like a $10 donation ' .
-    lm_paypal_donate(10, 'USD', 'donation to example.com') .'<br>';
+  print 'We would really like a 10000 yen donation ' .
+    lm_paypal_donate(10000, 'JPY', 'donation to example.com') .'<br>';
+
   // The amount is a one element array so an text input with the one value as
   //  default
-  print 'Write your own amount to give, we suggest $5' .
-    lm_paypal_donate(array(5), 'USD', 'donation to example.com') . '<br>';
+  print 'Write your own amount to give, we suggest 5 Euros' .
+    lm_paypal_donate(array(5), 'EUR', 'donation to example.com') . '<br>';
+
   // The amount is a multi element array so a select will be used. Note if one
   //   of the elements is itself an array that will be the default selection
   // The final two parameters are an alternative button (here we use the default)
   //   and a replacement label before the amount
   print 'We would really like a $10, or more, donation ' .
-    lm_paypal_donate(array(5,array(10),15), 'USD', 'donation to example.com', '', 'Donation') .'<br>';
+    lm_paypal_donate(array(5,array(10),15), 'AUD', 'donation to example.com', '', 'Donation') .'<br>';
 }
 EOF;
     $edit = array(
@@ -250,9 +252,22 @@ EOF;
 
     // Check the block appeared and was executed correctly
     $this->drupalGet('/');
-    $this->assertText('We would really like a $10 donation');
     $this->assertNoRaw('<?php', 'No unparsed PHP code found');
     $this->assertRaw('<form action="https://www.sandbox.paypal.com/cgi-bin/webscr"', 'Sandbox form(s) found');
+
+    $this->assertText('We would really like a 10000 yen donation');
+    $this->assertText('Proceed with your &#165;10000 payment');
+
+    $this->assertText('Write your own amount to give, we suggest 5 Euros');
+    // TODO: check textedit with default value of 5
+    $this->assertText('Value is Euro'); //
+
+    $this->assertText('We would really like a $10, or more, donation');
+    // TODO: check select list with suitable values! default 10
+    $this->assertText('Value is Australian Dollar'); //
+
+    // $this->writeFile('lm_paypal_block.html');
+    // $this->writeFile('lm_paypal_bock.txt', $this->plainTextContent);
   }
 
 }
