@@ -913,7 +913,7 @@ function lm_paypal_unpack_ipn_custom($ipn) {
     }
     else {
       // New serialized data
-      return unserialize($ipn->custom);
+      return @unserialize($ipn->custom); // In case the passed string is not unserializeable, FALSE is returned and E_NOTICE is issued.
     }
   }
   else {

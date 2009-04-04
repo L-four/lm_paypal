@@ -70,7 +70,7 @@ function lm_paypal_subscriptions_view_all_page() {
   $roles = lm_paypal_subscribable_roles(TRUE);
   $groups = lm_paypal_subscribable_groups();
 
-  $output .= '<h2>'. t('Subscriptions') .'</h2>';
+  $output = '<h2>'. t('Subscriptions') .'</h2>';
   $header = array(
     array('data' => t('ID'), 'field' => 'subid'),
     array('data' => t('Type'), 'field' => 'kind'),
@@ -549,7 +549,7 @@ function lm_paypal_subscriptions_edit_form_validate($form, &$form_state) {
   $srt = $values['srt'];
   $uid_admin = $values['uid_admin'];
   $rid = $values['rid'];
-  $gid = $values['gid'];
+  $gid = isset($values['gid']) ? $values['gid'] : 0; // not always set
   $kind = $values['kind'];
 
   if ($kind == 0 && (!is_numeric($rid) || $rid <= 0)) {
@@ -639,8 +639,13 @@ function lm_paypal_subscriptions_edit_form_validate($form, &$form_state) {
  */
 function lm_paypal_subscriptions_edit_form_submit($form, &$form_state) {
   $values = $form_state['values'];
-  $subid = (int) $values['edit_subid'];
-  $edit = (bool) $subid;
+  if (isset($values['edit_subid'])) {
+    $subid = (int) $values['edit_subid'];
+    $edit = (bool) $subid;
+  }
+  else {
+    $edit = FALSE;
+  }
 
   $kind = ($values['kind']);
 
@@ -743,13 +748,13 @@ function lm_paypal_subscriptions_edit_form_submit($form, &$form_state) {
   switch(drupal_write_record('lm_paypal_subscriptions', $object, $update)) {
     case SAVED_NEW:
       $message = t('Created subscription <em>@kind @sub</em>', array(
-        '@kind' => $k,
+        '@kind' => $kind,
         '@sub' => $object['item_name'],
       ));
       break;
     case SAVED_UPDATED:
       $message = t('Edited subscription <em>@kind @sub</em>', array(
-        '@kind' => $k,
+        '@kind' => $kind,
         '@sub' => $object['item_name'],
       ));
       break;
@@ -1031,9 +1036,8 @@ function lm_paypal_subscriptions_subscribers_view_page($subid = NULL) {
     $tablesort .= ', started DESC';
   }
 
-  if ($subid) {
-    $subid_str = " AND s.subid = '$subid' ";
-  }
+
+  $subid_str = $subid ? " AND s.subid = '$subid' " : '';
 
   $status_filter = lm_paypal_subscriptions_subscriber_filter_get();
   if (! empty($status_filter) && $status_filter != 'all') {
@@ -1131,7 +1135,7 @@ function lm_paypal_subscriptions_subscriber_filter_get($filter = NULL, $reset = 
   else if ($filter) {
     $_SESSION['lm_paypal_subs_filter'] = $filter;
   }
-  return $_SESSION['lm_paypal_subs_filter'];
+  return $filter;
 }
 
 /**

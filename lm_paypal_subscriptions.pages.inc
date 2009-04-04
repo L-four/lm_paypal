@@ -443,6 +443,7 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
   }
 
   $header = array(t('Name'), t('Description'), t('Action'));
+  $rows = array();
   while ($data = db_fetch_object($result)) {
     if ($subscription = lm_paypal_subscriptions_load_subscription($data->subid)) {
       $already = lm_paypal_subscriptions_user_subscribed($subscription, $account);
@@ -476,6 +477,7 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
   }
   $output .= theme('table', $header, $rows);
 
+  $business = variable_get('lm_paypal_business', '');
   $alias = urlencode($business);
   $unsuburl = lm_paypal_api_get_host(TRUE)."?cmd=_subscr-find&amp;alias=$alias";
 

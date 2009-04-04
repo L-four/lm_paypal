@@ -115,7 +115,7 @@ function lm_paypal_subscriptions_help($path, $arg) {
   switch ($path) {
     // admin/help/lm_paypal_subscriptions
     case 'admin/help#lm_paypal_subscriptions':
-      $output .= '<p><b>'. t('Special Notes') .':</b>';
+      $output = '<p><b>'. t('Special Notes') .':</b>';
       $output .= '<ul>';
       $output .= '<li><b>'. t('This module requires the module lm_paypal to be installed, enabled and configured.') .'</b></li>';
       $output .= '<li>'. t('This module does not provide access control. The subscriptions defined here allow paid membership of a role or Organic Group only. Use this module in conjunction with an access control module such as <a href="http://drupal.org/project/taxonomy_access">Taxonomy Access Control</a> or <a href="http://drupal.org/project/premium">Premium</a> to restrict the actions of a role on your site.') .'</li>';
@@ -173,12 +173,12 @@ if (function_exists(\'lm_paypal_can_subscribe\')) {
     case 'admin/settings/lm_paypal/subscriptions':
     // This appears at the start of the new subscription page
     case 'admin/settings/lm_paypal/subscriptions/new':
-      $output .= '<p>'. t("For detailed help please read !help_subs", array("!help_subs" => $help_subs)) .'</p>';
+      $output = '<p>'. t("For detailed help please read !help_subs", array("!help_subs" => $help_subs)) .'</p>';
       return $output;
 
     // This appears at the start of the subscriptions user page
     case 'lm_paypal/subscribe':
-      $output .= '<p>'. t('The following lists all the subcriptions available via PayPal on this system. To take out one of these subscriptions you will need a login on this web site and a PayPal account. If you do not already have a PayPal account then PayPal will show you how to get an account when you subscribe.') .'</p>';
+      $output = '<p>'. t('The following lists all the subcriptions available via PayPal on this system. To take out one of these subscriptions you will need a login on this web site and a PayPal account. If you do not already have a PayPal account then PayPal will show you how to get an account when you subscribe.') .'</p>';
       return $output;
   }
 }
@@ -621,12 +621,11 @@ function lm_paypal_subscriptions_node_subscribed($node) {
     $nid = $node;
   }
 
-  if (! $cache[$nid]) {
+  if (isset($cache[$nid])) {
     $result = db_query("SELECT subid FROM {lm_paypal_subscribers} WHERE status = 1 AND nid = %d", $nid);
     if ($data = db_fetch_object($result)) {
-      $subid = $data->subid;
+      $cache[$nid] = $data->subid;
     }
-    $cache[$nid] = $subid;
   }
 
   return isset($cache[$nid]) ? $cache[$nid] : FALSE;

@@ -103,7 +103,7 @@ class AbstractLmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
       'body' => isset($options['body']) ? $options['body'] : $this->randomName(20, 'BODY_'),
     );
 
-    static $node_info;
+    static $node_types;
     if (! $node_types) {
       $node_types = node_get_types();
     }

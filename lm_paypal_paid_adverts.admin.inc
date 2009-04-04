@@ -40,6 +40,7 @@ function lm_paypal_paid_adverts_settings_form() {
       foreach ($node_subs as $subid => $sub_data) {
         $subscription = lm_paypal_subscriptions_load_subscription($subid);
         $options[$subid] = theme('lm_paypal_subscription_name', $subscription);
+        // TODO: $data[$node_type] is not always set - fix notice
         $values[$subid] = $data[$node_type][$subid]->subid;
       }
       $form['live'][$node_type] = array(

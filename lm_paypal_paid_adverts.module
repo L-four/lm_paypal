@@ -28,11 +28,8 @@ define('LM_PAYPAL_PAID_ADVERTS', 'LM_PayPal_PaidAd');
  *   specified, an keyed array 'node type' => array of subscription id.
  */
 function lm_paypal_paid_adverts_get_live_subscriptions($node_type = NULL, $reset = FALSE) {
-  static $cache;
-  if ($reset) {
-    $cache  = NULL;
-  }
-  if (! $cache) {
+  static $cache = NULL;
+  if ($reset || $cache == NULL) {
     $cache = array();
     $result = db_query("SELECT a.* FROM {lm_paypal_paid_adverts} a JOIN {lm_paypal_subscriptions} s ON a.subid = s.subid WHERE s.status = 1");
     while ($object = db_fetch_object($result)) {
@@ -54,7 +51,10 @@ function lm_paypal_paid_adverts_get_live_subscriptions($node_type = NULL, $reset
  * @return boolean
  */
 function lm_paypal_paid_adverts_node_is_handled($node) {
-  return (bool) $node->lm_paypal_paid_adverts->is_handled;
+  if (isset($node) && isset($node->lm_paypal_paid_adverts)) {
+    return $node->lm_paypal_paid_adverts->is_handled;
+  }
+  return FALSE;
 }
 
 /**
@@ -104,7 +104,7 @@ function lm_paypal_paid_adverts_help($path, $arg) {
     // Does this node type have a PayPal subscription associated with it
     if (is_array($ts) && count($ts) > 0) {
       // It does so print some help
-      $output .= '<center><b>'. t('Nodes of this type will not be published until paid for.<br/>After Submitting this new node use the <em>PayPal Publish</em> tab to publish.<br/>The status of paid items can be found under <em>my account</em>.') .'</b></center>';
+      $output = '<center><b>'. t('Nodes of this type will not be published until paid for.<br/>After Submitting this new node use the <em>PayPal Publish</em> tab to publish.<br/>The status of paid items can be found under <em>my account</em>.') .'</b></center>';
       return $output;
     }
   }
@@ -112,7 +112,7 @@ function lm_paypal_paid_adverts_help($path, $arg) {
   switch ($path) {
     // admin/help/lm_paypal_paid_adverts
     case 'admin/help#lm_paypal_paid_adverts':
-      $output .= '<p>'. t('This module allow users to create Paid Advert pages, which are private by default. They can then make them publically viewable using a PayPal based subscription.') .'</p>';
+      $output = '<p>'. t('This module allow users to create Paid Advert pages, which are private by default. They can then make them publically viewable using a PayPal based subscription.') .'</p>';
 
       $output .= '<p><b>'. t('Special Notes') .':</b>';
       $output .= '<ul>';
@@ -142,7 +142,7 @@ function lm_paypal_paid_adverts_help($path, $arg) {
     case 'admin/settings/lm_paypal_paid_adverts':
     // This appears at the start of the paid_adverts admin page before the options
     case 'admin/settings/lm_paypal/paid_adverts':
-      $output .= '<p>'. t("For detailed help please read !help_pa", array("!help_pa" => $help_pa)) .'</p>';
+      $output = '<p>'. t("For detailed help please read !help_pa", array("!help_pa" => $help_pa)) .'</p>';
       return $output;
   }
 }
@@ -344,6 +344,7 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50) {
   }
   $tstr .= ')';
 
+  $rows = array();
   if ($nts > 0) {
     if ($uid == 0) {
       $sql = db_rewrite_sql("SELECT n.nid, n.uid, u.name, n.title, n.type FROM {node} n INNER JOIN {users} u ON n.uid = u.uid WHERE n.status = 1 AND n.type IN $tstr");
@@ -402,7 +403,7 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50) {
     $rows[] = array(array('data' => t('No paid adverts.'), 'colspan' => 5));
   }
 
-  $output .= theme('table', $header, $rows);
+  $output = theme('table', $header, $rows);
   $output .= theme('pager', NULL, $nodes_per_page, 0);
 
   return $output;
