@@ -521,38 +521,39 @@ function lm_paypal_subscriptions_save_subscriber($subscriber) {
 function lm_paypal_subscriptions_block($op = 'list', $delta = 0, $edit = array()) {
   global $user;
 
-  if ($op == 'list') {
-    $blocks = array();
-    // Output a list of all the live subscriptions (Role or Group)
-    $result = db_query("SELECT subid FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2)");
-    while ($data = db_fetch_object($result)) {
-      if ($subscription = lm_paypal_subscriptions_load_subscription($data->subid)) {
-        $blocks[$subscription->subid] =array(
-          'info' => t('Paypal subscription: %name', array('%name' => $subscription->item_name)),
-          'cache' => BLOCK_CACHE_PER_USER,
-        );
+  dsm("lm_paypal_subscriptions_block($op, $delta, $edit)");
+  switch ($op) {
+    case 'list':
+      // Output a list of all the live subscriptions (Role or Group)
+      $blocks = array();
+      $result = db_query("SELECT subid FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2)");
+      while ($data = db_fetch_object($result)) {
+        if ($subscription = lm_paypal_subscriptions_load_subscription($data->subid)) {
+          $blocks[$subscription->subid] =array(
+            'info' => t('Paypal subscription: %name', array('%name' => $subscription->item_name)),
+            'cache' => BLOCK_CACHE_PER_USER,
+          );
+        }
       }
-    }
-    return $blocks;
-  }
+      return $blocks;
+    case 'view':
+      if ($user->uid != 0) {
+        $subscription = lm_paypal_subscriptions_load_subscription($delta);
+        if ($subscription && !lm_paypal_subscriptions_user_subscribed($subscription)) {
+          if ($subscription->status == 1 && ($subscription->kind == 0 or $subscription->kind == 2)) {
+            // TODO: Fix this ugly require
+            require_once(drupal_get_path('module', 'lm_paypal_subscriptions').'/lm_paypal_subscriptions.pages.inc');
+            $block = array(
+              'subject' => t('PayPal subscription: %name', array(
+                '%name' => check_plain($subscription->item_name)
+              )),
+              'content' => lm_paypal_subscribe_subscription($subscription->subid, 2+8)
+            );
+            return $block;
+          }
+        }
+      }
 
-  // Ok, I'm a fat lazzy bastard, but this is still readable, uh?
-  else if ($op == 'view' && ! (
-    $user->uid == 0
-    or ! ($subscription = lm_paypal_subscriptions_load_subscription($delta))
-    or lm_paypal_subscriptions_user_subscribed($subscription)))
-  {
-    if ($subscription->status == 1 && ($subscription->kind == 0 or $subscription->kind == 2)) {
-      // TODO: Fix this ugly require
-      require_once(drupal_get_path('module', 'lm_paypal_subscriptions').'/lm_paypal_subscriptions.pages.inc');
-      $block = array(
-        'subject' => t('PayPal subscription: %name', array(
-          '%name' => check_plain($subscription->item_name)
-        )),
-        'content' => lm_paypal_subscribe_subscription($subid, 2+8)
-      );
-      return $block;
-    }
   }
 }
 
