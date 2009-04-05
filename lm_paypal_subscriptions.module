@@ -521,7 +521,6 @@ function lm_paypal_subscriptions_save_subscriber($subscriber) {
 function lm_paypal_subscriptions_block($op = 'list', $delta = 0, $edit = array()) {
   global $user;
 
-  dsm("lm_paypal_subscriptions_block($op, $delta, $edit)");
   switch ($op) {
     case 'list':
       // Output a list of all the live subscriptions (Role or Group)
