@@ -167,6 +167,18 @@ function lm_paypal_subscriptions_edit_form($form_state, $subid = NULL) {
   }
   else {
     // Initialise a new subscription
+    $so->item_name = '';
+    $so->description = '';
+    $so->kind = 0;
+    $so->rid = NULL;
+    $so->a1 = $so->p1 = $so->t1 = '';
+    $so->a2 = $so->p2 = $so->t2 = '';
+    $so->a3 = $so->p3 = $so->t3 = '';
+    $so->srt = NULL;
+    $so->currency_code = NULL;
+    $so->return_url = '';
+    
+    
     $so->src = 0;
     $so->uid_admin = LM_PAYPAL_SUBSCRIPTIONS_UID_ADMIN_DEFAULT;
     $so->send_admin_onsub = LM_PAYPAL_SUBSCRIPTIONS_SEND_ADMIN_ONSUB_DEFAULT;
