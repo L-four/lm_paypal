@@ -357,6 +357,12 @@ function lm_paypal_subscriptions_menu() {
  * to the page.
  */
 function lm_paypal_subscription_access($op, $subid) {
+  // Superuser access bypass
+  global $user;
+  if ($user->uid == 1) {
+    return TRUE;
+  }
+
   if (user_access('administer lm_paypal')) {
     switch ($op) {
       case 'subscription':
