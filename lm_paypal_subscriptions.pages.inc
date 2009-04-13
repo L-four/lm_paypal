@@ -372,18 +372,21 @@ function lm_paypal_subscribe_subscription($subid, $display = 15, $button_url = N
   $hidden['sra'] = "1";
   $hidden['no_note'] = "1";
   $hidden['usr_manage'] = "0";
-
-  $output .= drupal_get_form('lm_paypal_api_payment_form', 3, array(
-    'item_name' => $item_name,
-    'item_number' => $so->subid,
-    'return_path' => $return_path,
-    'currency_code' => $so->currency_code,
-    'custom' => array(
-      'nid' => $nid,
-      'module' => LM_PAYPAL_SUBSCRIPTIONS,
-    ),
-    'hidden' => $hidden,
-  ));
+  $output .= drupal_get_form(
+    'lm_paypal_api_payment_form',
+    $so->a3,
+    array(
+      'item_name' => $item_name,
+      'item_number' => $so->subid,
+      'return_path' => $return_path,
+      'currency_code' => $so->currency_code,
+      'custom' => array(
+        'nid' => $nid,
+        'module' => LM_PAYPAL_SUBSCRIPTIONS,
+      ),
+      'hidden' => $hidden,
+    )
+  );
 
   return $output;
 }
