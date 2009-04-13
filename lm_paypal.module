@@ -345,6 +345,7 @@ function lm_paypal_page_thanks() {
  * @param mixed $amount
  *   You can pass either a float value that will be passed in an hidden field
  *   either an array of integers values, which will display a select.
+ *   TODO: re-add support for a textfield with pre-populated value
  *
  * @param array $options = array()
  *   (optional) Pairs of setting => custom value where setting can be:

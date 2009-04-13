@@ -100,7 +100,7 @@ function lm_paypal_paid_adverts_help($path, $arg) {
     $type_subs = lm_paypal_paid_adverts_get_live_subscriptions();
 
     $type = substr($path, 9);
-    $ts = $type_subs[$type];
+    $ts = isset($type_subs[$type]) ? $type_subs[$type] : '';
     // Does this node type have a PayPal subscription associated with it
     if (is_array($ts) && count($ts) > 0) {
       // It does so print some help
