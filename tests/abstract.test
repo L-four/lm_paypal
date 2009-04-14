@@ -112,8 +112,6 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
     }
   }
 
-
-
   /**
    * Check to see if any messages with severity $severity or higher have been
    * recorded by watchdog(). This requires the dblog module to be enabled.
@@ -189,7 +187,7 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
   }
 
   function dumpTable($table, $failIfNotExists = FALSE) {
-    $output = '=== Starting '.$table.' table dump ===';
+    $output = "=== Starting '.$table.' table dump ===\n";
     if (! empty($table)) {
       $result = db_query("SELECT * FROM {%s}", $table);
       while ($object = db_fetch_object($result)) {
@@ -200,7 +198,7 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
       $this->fail(t('Table @table does not exists', array('@table' => $table)));
       $output .= 'Table does not exits.';
     }
-    $output .= '=== End of '.$table.' table dump ===';
+    $output .= "=== End of '.$table.' table dump ===\n";
     return $output;
   }
 
