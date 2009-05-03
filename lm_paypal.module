@@ -427,11 +427,13 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array(), $t
   // Check for the different forms of $amount allowed: either a value, or an
   // array of values (with the default value being [value] rather than value.
 
-  $valid_amount = FALSE;
+  $valid_amount   = NULL;
   $default_amount = FALSE;
+
   // Check amount is valid
   if (is_array($amount) && ! empty($amount)) {
     $valid_amount = array();
+
     foreach ($amount as $key => $value) {
       if (is_array($value)) {
         $value = array_pop($value);
@@ -443,17 +445,19 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array(), $t
         $valid_amount["$value"] = $value;
       }
     }
+
     $amount_is_valid = ! empty($amount);
   }
   else {
     $valid_amount = (float) $amount;
   }
 
-
-  if (!$valid_amount) {
+  if (empty($valid_amount)) {
     return array();
   }
-
+  else if (is_array($valid_amount)) {
+    $options['display_amount'] = FALSE;
+  }
 
   global $user;
   // Check our user can access to return path
