@@ -605,11 +605,12 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array(), $t
       }
     }
   }
+
   if (isset($button_url) && $button_url) {
-    // TODO button as url
     $form['submit'] = array(
-      '#type' => 'submit',
+      '#type' => 'image_button',
       '#value' => $button_text,
+      '#attributes' => array('src' => $button_url),
       '#name' => 'submit',
     );
   }
