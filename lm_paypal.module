@@ -20,6 +20,11 @@ define('LM_PAYPAL_CURRENCY_DEFAULT', 'EUR');
 define('LM_PAYPAL_DEBUG_DEFAULT', FALSE);
 define('LM_PAYPAL_VALIDATE_TIMEOUT', 30);
 
+// Paypal form: handle 'cmd' setting for paypal
+define('LM_PAYPAL_FORM_CMD_BUY_NOW',   1);
+define('LM_PAYPAL_FORM_CMD_DONATE',    2);
+define('LM_PAYPAL_FORM_CMD_SUBSCRIBE', 3);
+
 /**
  * Implementation of hook_perm().
  */
@@ -406,13 +411,18 @@ function lm_paypal_page_thanks() {
  *        form.
  *        Advanced usage only!
  *
+ *     'string $type': int
+ *        One of the LM_PAYPAL_FORM_CMD_* constants, this changes the 'cmd' form
+ *        setting sent to paypal.
+ *        Default is LM_PAYPAL_FORM_CMD_BUY_NOW
+ *
  *     More to come, module in active development.
  *
  * @return array
  *   Drupal well formated form you can then build with drupal's form API.
  *   Or FALSE if amount is not a valid positive float.
  */
-function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
+function lm_paypal_api_payment_form($form_state, $amount, $options = array(), $type = LM_PAYPAL_FORM_TYPE_DONATE) {
 
   // Check for the different forms of $amount allowed: either a value, or an
   // array of values (with the default value being [value] rather than value.
@@ -443,7 +453,6 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
   if (!$valid_amount) {
     return array();
   }
-
 
 
   global $user;
@@ -482,11 +491,29 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array()) {
     '#name' => 'business',
     '#value' => lm_paypal_api_get_business(),
   );
+
+  // Check for paypal cmd type
+  switch ($options['cmd']) {
+    case LM_PAYPAL_FORM_CMD_SUBSCRIBE:
+      $cmd = '_xclick-subscriptions';
+      break;
+
+    case LM_PAYPAL_FORM_CMD_DONATE:
+      $cmd = '_donations';
+      break;
+
+    case LM_PAYPAL_FORM_CMD_BUY_NOW:
+    default:
+      $cmd = '_xclick ';
+      break;
+  }
+
   $form['cmd'] = array(
     '#type' => 'hidden',
-    '#value' => '_xclick',
+    '#value' => $cmd,
     '#name' => 'cmd',
   );
+
   $form['item_name'] = array(
     '#type' => 'hidden',
     // We will let empty name pass, sub module developers should be aware.

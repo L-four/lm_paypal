@@ -246,6 +246,7 @@ function lm_paypal_donate($amount, $ccc = NULL, $name = NULL, $button_url = NULL
 
   $options = array();
   $options['currency_code'] = $ccc;
+  $options['cmd'] = LM_PAYPAL_FORM_CMD_DONATE;
   if ($name) {
     $options['item_name'] = check_plain($name);
   }
