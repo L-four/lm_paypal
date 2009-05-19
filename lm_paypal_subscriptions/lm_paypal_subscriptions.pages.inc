@@ -115,7 +115,7 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
       }
       $amount = theme('lm_paypal_amount', $so->a3, $so->currency_code, TRUE);
       $duration = lm_paypal_unit2str($so->p3, $so->t3);
-      $output .= t('Rate %amount for %duration. ', array('%amount' => $amount, '%duration' => $duration));
+      $output .= t('Rate !amount for %duration. ', array('!amount' => $amount, '%duration' => $duration));
       if ($so->src) {
         if ($so->srt != '') {
           $times = $so->srt;
