@@ -21,7 +21,7 @@ function lm_paypal_subscriptions_admin_settings($form_state) {
   $form['lm_paypal_subscriptions_menu_rebuild'] = array(
     '#type' => 'checkbox',
     '#title' => t('Rebuild menu cache on subscription change'),
-    '#default_value' => lm_paypal_subscription_menu_rebuild(),
+    '#default_value' => lm_paypal_subscriptions_menu_rebuild(),
     '#description' => t('On a user being added to/removed from a subscription rebuild the menu cache. Needed only if user logout/login fails to get the right menu items.'),
   );
   return system_settings_form($form);
@@ -67,7 +67,7 @@ function lm_paypal_subscriptions_view_all_page() {
     drupal_set_message(t("LM PayPal not yet configured! An administrator needs to do this at !settings", array("!settings" => $url)));
   }
 
-  $roles = lm_paypal_subscribable_roles(TRUE);
+  $roles = lm_paypal_subscriptions_roles_list(TRUE);
   $groups = lm_paypal_subscribable_groups();
 
   $output = '<h2>'. t('Subscriptions') .'</h2>';
@@ -241,7 +241,7 @@ function lm_paypal_subscriptions_edit_form($form_state, $subid = NULL) {
   $form['rid'] = array(
     '#type' => 'select',
     '#title' => t('Subscribers Role'),
-    '#options' => lm_paypal_subscribable_roles(TRUE),
+    '#options' => lm_paypal_subscriptions_roles_list(TRUE),
     '#default_value' => $so->rid,
     //'#required' => TRUE, - not required for node-subs only role-subs
     '#description' => t('The role subscribers become members of. Only used when kind is Role'),

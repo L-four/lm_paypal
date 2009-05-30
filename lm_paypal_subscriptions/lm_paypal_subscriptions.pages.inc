@@ -74,7 +74,7 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
     '@name' => $so->item_name,
   )));
 
-  $roles = lm_paypal_subscribable_roles(TRUE);
+  $roles = lm_paypal_subscriptions_roles_list(TRUE);
   $groups = lm_paypal_subscribable_groups();
 
   if ($display != 0) {
@@ -184,6 +184,15 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
   $output .= theme('table', $header, $rows);
   return $output;
 }
+
+// These are binary flags
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_ITEM_NAME',    1);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_DESCRIPTION',  2);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_DETAILS',      4);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_BUTTON',       8);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_BRIEF',       16);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_NOHEADERS',   32);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_LIST',        64);
 
 /**
  * Display either all live subscriptions or a single one with a link to PayPal.
@@ -502,12 +511,5 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
  *   A string containing the page contents.
  */
 function lm_paypal_subscriptions_inprogress_page() {
-  $output = "";
-  $output .= '<h2>'.t("Thank you!").'</h2>';
-  $output .= t("<p>Your subscription is in progress but for it to take effect you will have ".
-    "to logout and login again.</p>".
-    "<p>Then you can check your subscriptions by looking in \"my account\".</p>".
-    "<p><b>Special Note: </b>Although PayPal subscriptions are usually instantaneous sometimes, ".
-    "during really busy periods, it may take a few hours to take effect.</p>");
-  return $output;
+  return theme('lm_paypal_subscription_inprogress_message');
 }

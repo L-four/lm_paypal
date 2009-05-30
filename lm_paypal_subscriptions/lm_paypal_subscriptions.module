@@ -65,7 +65,7 @@ function lm_paypal_subscriptions_get_inprogress() {
   return variable_get('lm_paypal_subscriptions_inprogress', LM_PAYPAL_SUBSCRIPTIONS_INPROGRESS_DEFAULT);
 }
 
-function lm_paypal_subscription_menu_rebuild() {
+function lm_paypal_subscriptions_menu_rebuild() {
   return (bool) variable_get('lm_paypal_subscriptions_menu_rebuild', LM_PAYPAL_SUBSCRIPTIONS_MENU_REBUILD_DEFAULT);
 }
 
@@ -197,6 +197,10 @@ function lm_paypal_subscriptions_theme() {
   $items = array();
   $items['lm_paypal_subscription_name'] = array(
     'arguments' => array('subscription' => NULL),
+    'file' => 'lm_paypal_subscriptions.theme',
+  );
+  $items['lm_paypal_subscription_inprogress_message'] = array(
+    'arguments' => array(),
     'file' => 'lm_paypal_subscriptions.theme',
   );
   return $items;
@@ -389,12 +393,15 @@ function lm_paypal_subscription_access($op, $subid) {
  */
 function lm_paypal_subscriptions_load_subscription($subid) {
   static $cache = array();
+
   if (! isset($cache[$subid])) {
     $result = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE subid = %d", $subid);
+
     if ($subscription = db_fetch_object($result)) {
       $cache[$subid] = $subscription;
     }
   }
+
   return isset($cache[$subid]) ? $cache[$subid] : NULL;
 }
 
@@ -493,8 +500,10 @@ function lm_paypal_subscriptions_load_subscriber($search = array()) {
       return NULL;
     }
   }
+
   else {
     $ret = array();
+
     while ($subscriber = db_fetch_object($result)) {
       // Even if we did not read the cache, we can still write it!
       // As PHP has a really bad memory handling, lets keep some pointers that
@@ -503,6 +512,7 @@ function lm_paypal_subscriptions_load_subscriber($search = array()) {
       $cache_subscr_id[$subscriber->subscr_id] = $subscriber;
       $ret[] = $subscriber;
     }
+
     return $ret;
   }
 }
@@ -597,8 +607,10 @@ function lm_paypal_subscriptions_user($op, &$edit, &$account, $category = NULL) 
  */
 function lm_paypal_subscription_node_subs() {
   static $cache;
+
   if (! $cache) {
     $result = db_query('SELECT subid FROM {lm_paypal_subscriptions} WHERE status = 1 AND kind = 1');
+
     while ($data = db_fetch_object($result)) {
       // Use our load function may eventually preload data used later
       if ($subscription = lm_paypal_subscriptions_load_subscription($data->subid)) {
@@ -606,6 +618,7 @@ function lm_paypal_subscription_node_subs() {
       }
     }
   }
+
   return $cache;
 }
 
@@ -620,15 +633,11 @@ function lm_paypal_subscription_node_subs() {
 function lm_paypal_subscriptions_node_subscribed($node) {
   static $cache = array();
 
-  if (is_object($node)) {
-    $nid = $node->nid;
-  }
-  else {
-    $nid = $node;
-  }
+  $nid = is_object($node) ? $node->nid : $nid = $node;
 
-  if (isset($cache[$nid])) {
+  if (! isset($cache[$nid])) {
     $result = db_query("SELECT subid FROM {lm_paypal_subscribers} WHERE status = 1 AND nid = %d", $nid);
+
     if ($data = db_fetch_object($result)) {
       $cache[$nid] = $data->subid;
     }
@@ -657,12 +666,14 @@ function lm_paypal_subscriptions_user_subscribed($subscription, $account = NULL)
   if (!isset($cache[$subid])) {
     $cache[$subid] = array();
   }
+
   if (!isset($cache[$subid][$uid])) {
     // kind 0 is a role subscription, kind 2 is a group
     $cache[$subid][$uid] = (bool) db_result(db_query("SELECT 1 FROM {lm_paypal_subscribers} WHERE uid = %d AND subid = %d AND status = 1 AND (kind = 0 OR kind = 2)", array(
       $uid, $subid
     )));
   }
+
   return $cache[$subid][$uid];
 }
 
@@ -682,11 +693,153 @@ function lm_paypal_subscriptions_can_subscribe($subscription, $account = NULL) {
     $account = $user;
   }
 
-  if ($account->uid == 0 ) {
+  if ($account->uid == 0) {
     return FALSE;
   }
 
   return ! lm_paypal_subscriptions_user_subscribed($subscription, $account);
+}
+
+/**
+ * Return a full roles list acceptable for subscription.
+ * Only anonymous and authenticated roles are excluded from this list.
+ *
+ * @param boolean $none = FALSE
+ *   (optional) Set this to TRUE and first élement will be a textual 'None'
+ *   with NULL value.
+ * @return array
+ *   Roles array with all the drupal standard roles removed, keys are rid and
+ *   values are role name.
+ */
+function lm_paypal_subscriptions_roles_list($none = FALSE) {
+  $roles = user_roles(TRUE);
+
+  $ret = array();
+
+  foreach ($roles as $rid => $name) {
+    if ($rid == DRUPAL_ANONYMOUS_RID || $rid == DRUPAL_AUTHENTICATED_RID) {
+      continue;
+    }
+
+    $ret[$rid] = $name;
+  }
+
+  if ($none) {
+    return array(NULL => t('None')) + $ret;
+  }
+
+  return $ret;
+}
+
+/**
+ * Give the user the extra role if they dont already have it
+ *
+ * @param object $account
+ *   Valid Drupal account
+ * @param int $rid
+ *   Role rid for the user to gain
+ */
+function lm_paypal_subscriptions_user_gain_role($account, $rid) {
+  $roles = db_query("SELECT * FROM {users_roles} WHERE uid = %d AND rid = %d", $account->uid, $rid);
+
+  if (! db_result($roles)) {
+    $insert = db_query("INSERT INTO {users_roles} (uid, rid) VALUES (%d, %d)", $account->uid, $rid);
+
+    if (!$insert) {
+      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Failed to add user to role (uid %uid, rid %rid)', array('%uid' => $account->uid, '%rid' => $rid), WATCHDOG_ERROR);
+      return;
+    }
+
+    if (lm_paypal_debug()) {
+      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Added user to role (uid %uid, rid %rid)', array('%uid' => $account->uid, '%rid' => $rid));
+    }
+
+    if (lm_paypal_subscriptions_menu_rebuild()) {
+      menu_rebuild();
+    }
+  }
+}
+
+/**
+ * Drop the role from the user - ONLY if they have no other live
+ * subscriptions that also give them this role.
+ *
+ * @param object $account
+ *   Valid Drupal account
+ * @param $rid
+ *   Role rid for the user to loose
+ */
+function lm_paypal_subscriptions_user_loose_role($account, $rid) {
+  $also  = db_query("SELECT * FROM {lm_paypal_subscriptions} d INNER JOIN {lm_paypal_subscribers} s ON d.subid = s.subid WHERE uid = %d AND rid = %d AND s.status = 1 AND d.kind = 0", array($account->uid, $rid));
+  $debug = lm_paypal_debug();
+
+  if (db_result($also)) {
+    if ($debug) {
+      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'User keeps role because of other subscriptions (uid %uid, rid %rid)', array('%uid' => $account->uid, '%rid' => $rid));
+    }
+    return;
+  }
+
+  db_query("DELETE FROM {users_roles} WHERE uid = %d AND rid = %d", $account->uid, $rid);
+
+  if ($debug) {
+    watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Drop user from role (uid %uid, rid %rid)', array('%uid' => $account->uid, '%rid' => $rid));
+  }
+
+  if (lm_paypal_subscriptions_menu_rebuild()) {
+    menu_rebuild();
+  }
+}
+
+/**
+ * Give the user the extra group
+ *
+ * @param object $account
+ *   Valid Drupal account
+ * @param $gid
+ *   Group gid for the user to gain
+ */
+function lm_paypal_subscriptions_user_gain_group($account, $gid) {
+  og_save_subscription($gid, $account->uid, array('is_active' => 1));
+
+  if (lm_paypal_debug()) {
+    watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Added user to group (uid %uid, gid %gid)', array('%uid' => $account->uid, '%gid' => $gid));
+  }
+
+  if (lm_paypal_subscriptions_menu_rebuild()) {
+    menu_rebuild();
+  }
+}
+
+/**
+ * Drop the group from the user - ONLY if they have no other live
+ * subscriptions that also give them this group.
+ *
+ * @param object $account
+ *   Valid Drupal account
+ * @param $gid
+ *   Group gid for the user to loose
+ */
+function lm_paypal_subscriptions_user_loose_group($account, $gid) {
+  $also  = db_query("SELECT * FROM {lm_paypal_subscriptions} d INNER JOIN {lm_paypal_subscribers} s ON d.subid = s.subid WHERE uid = %d AND rid = %d AND s.status = 1 AND d.kind = 2", array($account->uid, $rid));
+  $debug = lm_paypal_debug();
+
+  if (db_result($also)) {
+    if ($debug) {
+      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'User keeps group because of other subscriptions (uid %uid, gid %gid)', array('%uid' => $account->uid, '%gid' => $gid));
+    }
+    return;
+  }
+
+  og_delete_subscription($gid, $account->uid);
+
+  if ($debug) {
+    watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Drop user from group (uid %uid, gid %gid)', array('%uid' => $account->uid, '%gid' => $gid));
+  }
+
+  if (lm_paypal_subscriptions_menu_rebuild()) {
+    menu_rebuild();
+  }
 }
 
 //////////////////// BELOW THIS LINE, CODE NEED SERIOUS REVIEW
@@ -721,7 +874,6 @@ function lm_paypal_subscriptions_can_subscribe($subscription, $account = NULL) {
 
 
 
-
 /**
  * Returns all the Organic groups available to subscriptions
  *
@@ -748,30 +900,6 @@ function lm_paypal_subscribable_groups() {
   }
 
   return $groups;
-}
-
-/**
- * Returns all the roles available to subscriptions
- *
- * @param boolean $none = FALSE
- *   (optional) Set this to TRUE and first élement will be a textual 'None'
- *   with NULL value.
- * @return
- *  a roles array with all the drupal standard roles removed
- */
-function lm_paypal_subscribable_roles($none = FALSE) {
-  $roles = user_roles(TRUE);
-  $ret = array();
-  foreach ($roles as $rid => $name) {
-    if ($rid == DRUPAL_ANONYMOUS_RID || $rid == DRUPAL_AUTHENTICATED_RID) {
-      continue;
-    }
-    $ret[$rid] = $name;
-  }
-  if ($none) {
-    return array(NULL => t('None')) + $ret;
-  }
-  return $ret;
 }
 
 /**
@@ -802,113 +930,7 @@ function _lm_paypal_subscriptions_ipn_is_valid($ipn) {
   return $subscription != NULL && $custom['module'] == LM_PAYPAL_SUBSCRIPTIONS;
 }
 
-/**
- * Give the user the extra role if they dont already have it
- *
- * @param $uid
- *   uid of the user to gain the role
- * @param $rid
- *   rid for the user to gain
- */
-function lm_paypal_user_gain_role($uid, $rid) {
-  $debug = variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
-  $roles = db_query("SELECT * FROM {users_roles} WHERE uid = %d AND rid = %d", $uid, $rid);
-  if (!db_result($roles)) {
-    $insert = db_query("INSERT INTO {users_roles} (uid, rid) VALUES (%d, %d)", $uid, $rid);
-    if (!$insert) {
-      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Failed to add user to role (uid %uid, rid %rid)', array('%uid' => $uid, '%rid' => $rid), WATCHDOG_ERROR);
-      return;
-    }
-    if ($debug) {
-      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Added user to role (uid %uid, rid %rid)', array('%uid' => $uid, '%rid' => $rid));
-    }
 
-    if (lm_paypal_subscription_menu_rebuild()) {
-      menu_rebuild();
-    }
-  }
-}
-
-/**
- * Drop the role from the user - ONLY if they have no other live
- * subscriptions that also give them this role.
- *
- * @param $uid
- *   uid of the user to loose the role
- * @param $rid
- *   rid for the user to loose
- */
-function lm_paypal_user_loose_role($uid, $rid) {
-  $debug = variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
-  $also = db_query("SELECT * FROM {lm_paypal_subscriptions} d INNER JOIN {lm_paypal_subscribers} s ON d.subid = s.subid WHERE uid = %d AND rid = %d AND s.status = 1 AND d.kind = 0", $uid, $rid);
-  if (db_result($also)) {
-    if ($debug) {
-      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'User keeps role because of other subscriptions (uid %uid, rid %rid)', array('%uid' => $uid, '%rid' => $rid));
-    }
-    return;
-  }
-
-  db_query("DELETE FROM {users_roles} WHERE uid = %d AND rid = %d", $uid, $rid);
-
-  if ($debug) {
-    watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Drop user from role (uid %uid, rid %rid)', array('%uid' => $uid, '%rid' => $rid));
-  }
-
-  if (lm_paypal_subscription_menu_rebuild()) {
-    menu_rebuild();
-  }
-}
-
-/**
- * Give the user the extra group
- *
- * @param $uid
- *   uid of the user to gain the role
- * @param $gid
- *   gid for the user to gain
- */
-function lm_paypal_user_gain_group($uid, $gid) {
-  og_save_subscription($gid, $uid, array('is_active' => 1));
-
-  $debug = variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
-  if ($debug) {
-    watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Added user to group (uid %uid, gid %gid)', array('%uid' => $uid, '%gid' => $gid));
-  }
-
-  if (lm_paypal_subscription_menu_rebuild()) {
-    menu_rebuild();
-  }
-}
-
-/**
- * Drop the group from the user - ONLY if they have no other live
- * subscriptions that also give them this group.
- *
- * @param $uid
- *   uid of the user to loose the role
- * @param $gid
- *   gid for the user to loose
- */
-function lm_paypal_user_loose_group($uid, $gid) {
-  $debug = variable_get('lm_paypal_debug', LM_PAYPAL_DEBUG_DEFAULT);
-  $also = db_query("SELECT * FROM {lm_paypal_subscriptions} d INNER JOIN {lm_paypal_subscribers} s ON d.subid = s.subid WHERE uid = %d AND rid = %d AND s.status = 1 AND d.kind = 2", $uid, $rid);
-  if (db_result($also)) {
-    if ($debug) {
-      watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'User keeps group because of other subscriptions (uid %uid, gid %gid)', array('%uid' => $uid, '%gid' => $gid));
-    }
-    return;
-  }
-
-  og_delete_subscription($gid, $uid);
-
-  if ($debug) {
-    watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Drop user from group (uid %uid, gid %gid)', array('%uid' => $uid, '%gid' => $gid));
-  }
-
-  if (lm_paypal_subscription_menu_rebuild()) {
-    menu_rebuild();
-  }
-}
 
 
 
@@ -1033,6 +1055,11 @@ function lm_paypal_subscriptions_lm_paypal_ipn_subscr_signup($ipn) {
 
   list($so, $uid, $nid) = _lm_paypal_subscriptions_ipn_get_vars($ipn);
 
+  // User validity check
+  if (! $account = user_load($uid)) {
+    return FALSE;
+  }
+
   // Note: a signup doesn't have a transaction id!
 
   if (! _lm_paypal_subscriptions_validate($ipn, $so, $link)) {
@@ -1085,10 +1112,10 @@ function lm_paypal_subscriptions_lm_paypal_ipn_subscr_signup($ipn) {
   lm_paypal_subscriptions_save_subscriber($subscriber);
 
   if ($so->kind == 0) {
-    lm_paypal_user_gain_role($uid, $so->rid);
+    lm_paypal_subscriptions_user_gain_role($account, $so->rid);
   }
   else if ($so->kind == 2) {
-    lm_paypal_user_gain_group($uid, $so->rid);
+    lm_paypal_subscriptions_user_gain_group($account, $so->rid);
   }
 
   if ($so->send_admin_onsub && is_numeric($so->uid_admin)) {
@@ -1141,6 +1168,11 @@ function lm_paypal_subscriptions_lm_paypal_ipn_subscr_payment($ipn) {
 
   list($so, $uid, $nid) = _lm_paypal_subscriptions_ipn_get_vars($ipn);
 
+  // User validity check
+  if (! $account = user_load($uid)) {
+    return FALSE;
+  }
+
   if (lm_paypal_already_processed($ipn->txn_id)) {
     watchdog(
       LM_PAYPAL_SUBSCRIPTIONS,
@@ -1189,6 +1221,11 @@ function _lm_paypal_subscriptions_ipn_cancel_or_eot($ipn) {
 
   list($so, $uid, $nid) = _lm_paypal_subscriptions_ipn_get_vars($ipn);
 
+  // User validity check
+  if (! $account = user_load($uid)) {
+    return FALSE;
+  }
+
   // Note: Cancel's dont get a transaction id!
   $end = check_plain(substr($ipn->txn_type, 7));
   if (lm_paypal_debug()) {
@@ -1220,10 +1257,10 @@ function _lm_paypal_subscriptions_ipn_cancel_or_eot($ipn) {
   lm_paypal_subscriptions_save_subscriber($subscriber);
 
   if ($so->kind == 0) {
-    lm_paypal_user_loose_role($uid, $so->rid);
+    lm_paypal_subscriptions_user_loose_role($account, $so->rid);
   }
   else if ($so->kind == 2) {
-    lm_paypal_user_loose_group($uid, $so->rid);
+    lm_paypal_subscriptions_user_loose_group($account, $so->rid);
   }
 
   if ($so->send_admin_onend && is_numeric($so->uid_admin)) {

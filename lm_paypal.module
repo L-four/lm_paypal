@@ -289,6 +289,7 @@ function lm_paypal_api_get_currency_default() {
   return variable_get('lm_paypal_currency_default', LM_PAYPAL_CURRENCY_DEFAULT);
 }
 
+// TODO: pounard: This method should be owned by subscription module, right?
 function lm_paypal_api_get_period_unit_list($default = FALSE) {
   static $cache;
   if (! $cache) {
@@ -638,6 +639,8 @@ function lm_paypal_api_payment_form($form_state, $amount, $options = array(), $t
 
 /**
  * Implementation of hook_help().
+ * 
+ * TODO: must be fully rewritten
  */
 /*
  function lm_paypal_help($path, $arg) {
