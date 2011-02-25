@@ -1,4 +1,3 @@
-; $Id$
 name = "LM Paypal Paid Adverts"
 description = "Provides PayPal paid advert pages."
 package = "LM PayPal"

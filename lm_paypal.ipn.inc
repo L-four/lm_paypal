@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Handle an incoming IPN.

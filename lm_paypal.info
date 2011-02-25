@@ -1,4 +1,3 @@
-; $Id$
 name = "LM PayPal"
 description = "Lowest level PayPal interface required by other LM PayPal modules."
 package = "LM PayPal"

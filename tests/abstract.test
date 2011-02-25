@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 // Why is this required? Otherwise I get PHP errors
 include_once 'sites/all/modules/simpletest/drupal_web_test_case.php';

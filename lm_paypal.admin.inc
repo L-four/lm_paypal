@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Return the main LM PayPal settings form.

@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Test the behaviour of the LM PayPal Subscriptions module by exercising the

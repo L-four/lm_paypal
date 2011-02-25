@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Theme the payment form. This is given 'as is' for themers which would want
