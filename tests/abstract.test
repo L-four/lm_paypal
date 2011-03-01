@@ -1,7 +1,7 @@
 <?php
 
 // Why is this required? Otherwise I get PHP errors
-include_once 'sites/all/modules/simpletest/drupal_web_test_case.php';
+include_once 'modules/simpletest/drupal_web_test_case.php';
 
 abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
 
@@ -84,14 +84,14 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
 
 
   function _getWatchdogMessageCount($message, $severity = NULL) {
-    if ($severity == NULL) {
-      $result = db_query("SELECT COUNT(*) c FROM {watchdog} WHERE message LIKE '%s'", $message);
+    $query = db_select('watchdog', 'wd')
+      ->condition('message', $message, 'LIKE');
+
+    if ($severity != NULL) {
+      $query->condition('severity', $severity);
     }
-    else {
-      $result = db_query("SELECT COUNT(*) c FROM {watchdog} WHERE message LIKE '%s' AND severity = %d", $message, $severity);
-    }
-    $row = db_fetch_array($result);
-    return $row['c'];
+    $count = $query->countQuery()->execute()->fetchField();
+    return $count;
   }
 
 
@@ -127,17 +127,21 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
       return FALSE;
     }
 
-    include_once drupal_get_path('module', 'dblog') .'/dblog.admin.inc';
+    include_once drupal_get_path('module', 'dblog') . '/dblog.admin.inc';
     $levels = watchdog_severity_levels();
 
     // Check if there are any errors in the watchdog log.
     $found = FALSE;
-    $result = db_query('SELECT type, severity, message, variables FROM {watchdog} WHERE severity <= %d', $severity);
-    while ($dblog = db_fetch_object($result)) {
+    $result = db_select('watchdog', 'wd')
+      ->fields('wd', array('type', 'severity', 'message', 'variables'))
+      ->condition('severity', $severity, '<=')
+      ->execute();
+    
+    foreach ($result as $dblog) {
       $vars = array(
         '%type' => t($dblog->type),
         '!severity' => $levels[$dblog->severity],
-        '!message' => _dblog_format_message($dblog),
+        '!message' => theme('dblog_message', array('event' => $dblog)),
       );
       $this->fail(t('Watchdog-!severity (%type) !message', $vars));
       $found = TRUE;
@@ -162,15 +166,17 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
 
   function deleteWatchdogMessage($message) {
     // TODO: document that $message is a SQL search string
-    db_query("DELETE FROM {watchdog} WHERE message LIKE '%s'", $message);
-    return db_affected_rows();
+    $num_deleted = db_delete('watchdog')
+      ->condition('message', $message, 'LIKE')
+      ->execute();
+    return $num_deleted;
   }
 
   function dumpRequest($request, $failIfNotExists = FALSE) {
     $args = func_get_args();
     $request = array_shift($args);
     $failIfNotExists = array_shift($args);
-    $output = '=== Starting '.$request.' table dump ===';
+    $output = '=== Starting ' . $request . ' table dump ===';
     if (! empty($request)) {
       $result = db_query($request, $args);
       while ($object = db_fetch_object($result)) {
@@ -181,12 +187,12 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
       $this->fail(t('Query error'));
       $output .= 'Query error.';
     }
-    $output .= '=== End of '.$request.' table dump ===';
+    $output .= '=== End of ' . $request . ' table dump ===';
     return $output;
   }
 
   function dumpTable($table, $failIfNotExists = FALSE) {
-    $output = "=== Starting '.$table.' table dump ===\n";
+    $output = "=== Starting ' . $table . ' table dump ===\n";
     if (! empty($table)) {
       $result = db_query("SELECT * FROM {%s}", $table);
       while ($object = db_fetch_object($result)) {
@@ -197,7 +203,7 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
       $this->fail(t('Table @table does not exists', array('@table' => $table)));
       $output .= 'Table does not exits.';
     }
-    $output .= "=== End of '.$table.' table dump ===\n";
+    $output .= "=== End of ' . $table .' table dump ===\n";
     return $output;
   }
 
@@ -206,7 +212,7 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
       return FALSE;
     }
 
-    include_once drupal_get_path('module', 'dblog') .'/dblog.admin.inc';
+    include_once drupal_get_path('module', 'dblog') . '/dblog.admin.inc';
     $levels = watchdog_severity_levels();
 
     // Check if there are any errors in the watchdog log.

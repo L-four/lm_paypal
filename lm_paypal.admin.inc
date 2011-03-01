@@ -3,11 +3,11 @@
 /**
  * Return the main LM PayPal settings form.
  */
-function lm_paypal_settings_form() {
+function lm_paypal_settings_form($form, &$form_state) {
   // TODO: add better support for switching to dev/sandbox site : maybe two sets
   // of options (defaulting to sane options), with a radio button to switch
   // between them.
-  
+
   // pounard: Or, like the old simple_paypal module, 2 per default options,
   // sandbox and paypal in host, but do not let the choice to user to add
   // others?
@@ -75,59 +75,83 @@ function lm_paypal_settings_form() {
 function lm_paypal_ipns() {
   $ipns_per_page = 50;
 
-  $output = drupal_get_form('lm_paypal_ipns_filter');
+  $output = drupal_render(drupal_get_form('lm_paypal_ipns_filter'));
 
   $header = array(
-    array('data' => t('Id'), 'field' => 'id'),
-    array('data' => t('Date'), 'field' => 'timestamp', 'sort' => 'desc'),
-    array('data' => t('Txn Type'), 'field' => 'txn_type'),
-    array('data' => t('User'), 'field' => 'custom'), // TODO: not 'custom' anymore
+    array(
+      'data' => t('Id'),
+      'field' => 'id',
+    ),
+    array(
+      'data' => t('Date'),
+      'field' => 'timestamp',
+      'sort' => 'desc',
+    ),
+    array(
+      'data' => t('Txn Type'),
+      'field' => 'txn_type',
+    ),
+    array(
+      'data' => t('User'),
+      'field' => 'custom',
+    ), // TODO: not 'custom' anymore
   );
-
-  $rows = array();
-
-  $sql = "SELECT id, timestamp, txn_type, custom FROM {lm_paypal_ipns}";
-  $tablesort = tablesort_sql($header);
-
+  
+  //@todo wat is this
   // If not sorting by timestamp then make that the 2nd field to sort on
-  if (strpos($tablesort, 'timestamp') === FALSE) {
-    $tablesort .= ', timestamp DESC';
-  }
-
+  // if (strpos($tablesort, 'timestamp') === FALSE) {// no timestamp sort add one
+    // $tablesort .= ', timestamp DESC';
+  // }
+  
+  $select = db_select('lm_paypal_ipns', 'ipns')
+    ->extend('TableSort')
+    ->fields('ipns', array('id', 'timestamp', 'txn_type'))
+    ->orderByHeader($header)
+    ->extend('PagerDefault')
+    ->limit($ipns_per_page);
+  
   $type = $_SESSION['lm_paypal_ipns_filter'];
   if ($type != 'all') {
     if (strpos($type, '%') === FALSE) {
-      $result = pager_query($sql ." WHERE txn_type = '%s'". $tablesort, $ipns_per_page, 0, NULL, $type);
+      $op = '=';
     }
     else {
-      // If type contains a '%' use like to match it
-      $result = pager_query($sql ." WHERE txn_type like '%s'". $tablesort, $ipns_per_page, 0, NULL, $type);
+      $op = 'like';
     }
+    $select->condition('txn_type', $type, $op);
   }
-  else {
-    $result = pager_query($sql . $tablesort, $ipns_per_page);
-  }
-
-  while ($ipn = db_fetch_object($result)) {
+  
+  $result = $select->execute();
+  $rows = array();
+  foreach  ($result as $ipn) {
     $custom = lm_paypal_unpack_ipn_custom($ipn);
     // $uid = $custom['uid'];
     // $other = ($ipn->custom >> 16) & 0xFFFF;
+    if (!empty($custom)) {
+      $custom_data = $custom['uid'] . ($custom['other'] == '' ? '' : " ($custom[other])");
+    }
+    else {
+      $custom_data = "This is a Test IPN";
+    }
     $rows[] = array(
       'data' => array(
-        l($ipn->id, "admin/settings/lm_paypal/id/$ipn->id"),
-        format_date($ipn->timestamp, 'small'),
+        l($ipn->id, "admin/config/lm_paypal/id/$ipn->id"),
+        format_date($ipn->timestamp, 'short'),
         check_plain($ipn->txn_type),
-        $custom['uid'] . ($custom['other'] == '' ? '' : " ($custom[other])"),
+        $custom_data,
       ),
     );
   }
 
   if (!$rows) {
-    $rows[] = array(array('data' => t('No ipns found.'), 'colspan' => 3));
+    $rows[] = array(array(
+        'data' => t('No ipns found.'),
+        'colspan' => 3,
+      ));
   }
 
-  $output .= theme('table', $header, $rows);
-  $output .= theme('pager', NULL, $ipns_per_page, 0);
+  $output .= theme('table', array('header' => $header, 'rows' => $rows));
+  $output .= theme('pager', array('tags' => NULL, 'element' => 0));
 
   return $output;
 }
@@ -156,10 +180,16 @@ function lm_paypal_id($id = '') {
   }
 
   // Output the transaction as a table of fields/values (skip the empty ones)
-  $output = '<h2>'. t('Transaction %id', array('%id' => $id)) .'</h2>';
+  $output = '<h2>' . t('Transaction %id', array('%id' => $id)) . '</h2>';
   $header = array(t('field'), t('value'));
-  $ipns = db_query("SELECT * FROM {lm_paypal_ipns} WHERE id = %d", $id);
-  foreach (db_fetch_array($ipns) as $key => $value) {
+
+  $ipns = db_select('lm_paypal_ipns', 'ipns')
+    ->fields('ipns')
+    ->condition('id', $id)
+    ->execute()
+    ->fetch();
+  $rows = array();
+  foreach ($ipns as $key => $value) {
     if ($value == '' || $key == 'ipn') {
       continue;
     }
@@ -171,13 +201,17 @@ function lm_paypal_id($id = '') {
     }
     $rows[] = array('data' => array($key, $value));
   }
-  $output .= theme('table', $header, $rows);
+  $output .= theme('table', array('header' => $header, 'rows' => $rows));
   return $output;
 }
 
 
 
-function lm_paypal_ipns_filter() {
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function lm_paypal_ipns_filter($form) {
   $names = array(
     'all' => t('all messages'),
     'web_accept' => t('donation/sent money (web_accept)'),
@@ -188,7 +222,7 @@ function lm_paypal_ipns_filter() {
     'subscr_eot' => t('subscription eot'),
   );
 
-// TODO: seems like we should be using form state for this?
+  // TODO: seems like we should be using form state for this?
   if (empty($_SESSION['lm_paypal_ipns_filter'])) {
     $_SESSION['lm_paypal_ipns_filter'] = 'all';
   }
@@ -201,9 +235,12 @@ function lm_paypal_ipns_filter() {
     '#options' => $names,
     '#default_value' => $_SESSION['lm_paypal_ipns_filter'],
   );
-  $form['#action'] = url('admin/settings/lm_paypal/ipns');
+  $form['#action'] = url('admin/config/lm_paypal/base/ipns');
 
-  $form['submit'] = array('#type' => 'submit', '#value' => t('Filter'));
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Filter'),
+  );
 
   return $form;
 }

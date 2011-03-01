@@ -1,5 +1,16 @@
+; $Id: lm_paypal.info,v 1.24.6.1 2008/10/13 04:24:39 lyricnz Exp $
 name = "LM PayPal"
 description = "Lowest level PayPal interface required by other LM PayPal modules."
 package = "LM PayPal"
-core = 6.x
+core = 7.x
+
+files[] = tests/base_ipn_validation.test
+files[] = tests/abstract.test
+files[] = tests/base_api.test
+
+; Information added by drupal.org packaging script on 2009-02-06
+version = "6.x-2.0-alpha1"
+core = 7.x
+project = "lm_paypal"
+datestamp = "1233959131"
 

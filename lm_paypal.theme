@@ -23,29 +23,35 @@ function theme_lm_paypal_payment_form($form) {
  * Note that in case of unknown currency code, the module will output the string
  * without modification.
  *
- * @param float $n
- *   A numeric amount
- * @param string $ccc
- *   A PayPal three letter currency code (eg: USD)
- * @param boolean $syms = TRUE
- *   Display either "$5" or "5 US Dollar". With TRUE display it with symbol.
+ * @param array $options
+ *   - float 'amount
+ *      A numeric amount
+ *   - string 'ccc'
+ *     A PayPal three letter currency code (eg: USD)
+ *   - boolean 'syms' = TRUE
+ *     Display either "$5" or "5 US Dollar". With TRUE display it with symbol.
  * @return
  *   (x)html output
  */
-function theme_lm_paypal_amount($n, $ccc, $syms = TRUE) {
+ 
+function theme_lm_paypal_amount($options = array()) {
+  $options += array(
+    'ccc' => lm_paypal_api_get_currency_default(),
+    'syms' => TRUE
+  );
   // Get textual representation
-  $textual = lm_paypal_api_get_currency($ccc, $syms);
+  $textual = lm_paypal_api_get_currency($options['ccc'], $options['syms']);
 
   // Do not display a NULL currency
   if (! $textual) {
-    $textual = $ccc;
-    $syms = TRUE;
+    $textual = $options['ccc'];
+    $options['syms'] = TRUE;
   }
 
-  if ($syms) {
-    return t('!symbol!amount', array('!amount' => $n, '!symbol' => $textual));
+  if ($options['syms']) {
+    return t('!symbol !amount', array('!amount' => $options['amount'], '!symbol' => $textual));
   }
   else {
-    return t('!amount !currency', array('!amount' => $n, '!currency' => $textual));
+    return t('!amount !currency', array('!amount' => $options['amount'], '!currency' => $textual));
   }
 }

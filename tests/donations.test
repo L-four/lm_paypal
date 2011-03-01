@@ -1,6 +1,6 @@
 <?php
 
-require_once(drupal_get_path('module', 'lm_paypal').'/tests/abstract.test');
+require_once(drupal_get_path('module', 'lm_paypal') . '/tests/abstract.test');
 
 class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
 
@@ -53,7 +53,7 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
     // Check Settings page.
     $thanks_page = variable_get('lm_paypal_donations_thanks', NULL);
     $this->drupalLogin($this->admin_user);
-    $this->drupalGet('admin/settings/lm_paypal/donations');
+    $this->drupalGet('admin/config/lm_paypal/donations');
     $this->assertField('lm_paypal_donations_thanks');
     $this->assertRaw($thanks_page);
 
@@ -204,7 +204,7 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
     $edit = array(
       'roles[2]' => TRUE, // authenticated user
     );
-    $this->drupalPost('admin/settings/filters/3', $edit, 'Save configuration');
+    $this->drupalPost('admin/config/content/formats/php_code', $edit, 'Save configuration');
 
 
     // Create a Block with the Donate PHP in it - updated for more diverse currencies
@@ -213,41 +213,74 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
 if (function_exists('lm_paypal_donate')) {
   // 10 = amount, 'USD' is the currency followed by a description
   print 'We would really like a 10000 yen donation ' .
-    lm_paypal_donate(10000, 'JPY', 'donation to example.com') .'<br>';
+    drupal_render(
+      lm_paypal_donate(
+        10000,
+        array(
+          'currency_code' => 'JPY',
+          'display_amount' => TRUE,
+          'txt' => 'donation to example.com'
+        )
+      )
+    ) .'<br>';
 
   // The amount is a one element array so an text input with the one value as
   //  default
   print 'Write your own amount to give, we suggest 5 Euros' .
-    lm_paypal_donate(array(5), 'EUR', 'donation to example.com') . '<br>';
+    drupal_render(
+      lm_paypal_donate(
+        array(5),
+        array(
+          'currency_code' => 'EUR',
+          'display_amount' => TRUE,
+          'text' => 'donation to example.com'
+        )
+      )
+    ) . '<br>';
 
   // The amount is a multi element array so a select will be used. Note if one
   //   of the elements is itself an array that will be the default selection
   // The final two parameters are an alternative button (here we use the default)
   //   and a replacement label before the amount
   print 'We would really like a $10, or more, donation ' .
-    lm_paypal_donate(array(5,array(10),15), 'AUD', 'donation to example.com', '', 'Donation') .'<br>';
+    drupal_render(
+      lm_paypal_donate(
+        array(
+          5,
+          array(10),
+           15
+        ),
+        array( 
+          'currency_code' =>'AUD',
+          'text' => 'donation to example.com',
+          'display_amount' => TRUE,
+          'item_name' =>'Donation'
+        )
+      )
+    ) .'<br>';
 }
 EOF;
     $edit = array(
       'info' => $this->randomName(),
       'title' => $this->randomName(),
-      'body' => $body,
-      'format' => 3, // PHP
+      'body[value]' => $body,
+      'body[format]' => 'php_code', // PHP
     );
-    $this->drupalPost('admin/build/block/add', $edit, t('Save block'));
+    $this->drupalPost('admin/structure/block/add', $edit, t('Save block'));
 
-    // Confirm that the box has been created, and then query the created bid.
-    $this->assertText(t('The block has been created.'), t('Box successfully created.'));
-    $bid = db_result(db_query("SELECT bid FROM {boxes} WHERE info = '%s'", array($edit['info'])));
+    // Confirm that the block has been created, and then query the created bid.
+    $this->assertText(t('The block has been created.'), t('block successfully created.'));
+    $delta = db_query("SELECT delta FROM {block} WHERE title = :title", array(':title' => $edit['title']))
+      ->fetchField();
 
-    // Check to see if the box was created by checking that it's in the database..
-    $this->assertNotNull($bid, t('Box found in database'));
+    // Check to see if the block was created by checking that it's in the database..
+    $this->assertNotNull($delta, t('block found in database'));
 
     // Set the created box to a specific region.
     // TODO: Implement full region checking.
     $edit = array();
-    $edit['block_' . $bid . '[region]'] = 'left';
-    $this->drupalPost('admin/build/block', $edit, t('Save blocks'));
+    $edit['blocks[block_' . $delta . '][region]'] = 'sidebar_first';
+    $this->drupalPost('admin/structure/block', $edit, t('Save blocks'));
 
     // Check the block appeared and was executed correctly
     $this->drupalGet('/');
@@ -255,14 +288,14 @@ EOF;
     $this->assertRaw('<form action="https://www.sandbox.paypal.com/cgi-bin/webscr"', 'Sandbox form(s) found');
 
     $this->assertText('We would really like a 10000 yen donation');
-    $this->assertText('Proceed with your &#165;10000 payment');
+    $this->assertText('Proceed with your &#165; 10000 payment');
 
     $this->assertText('Write your own amount to give, we suggest 5 Euros');
     // TODO: check textedit with default value of 5
     $this->assertText('Value is Euro'); //
 
     $this->assertText('We would really like a $10, or more, donation');
-    // TODO: check select list with suitable values! default 10
+    //check select list with suitable values! default 10
     $this->assertText('Value is Australian Dollar'); //
 
     // $this->writeFile('lm_paypal_block.html');

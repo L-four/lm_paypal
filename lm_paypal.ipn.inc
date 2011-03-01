@@ -34,6 +34,7 @@ function lm_paypal_ipn_in() {
 
   $validated = _lm_paypal_validate_ipn($_POST);
 
+
   // Sanitize and remove risky fields from $_POST to make it suitable for
   // drupal_write_record. Include the entire POST data for debugging.
   $ipn = $_POST;
@@ -45,14 +46,16 @@ function lm_paypal_ipn_in() {
   $wr = drupal_write_record('lm_paypal_ipns', $ipn);
   if ($wr == SAVED_NEW) {
     $last = $ipn['id'];
-    watchdog(LM_PAYPAL, 'lm_paypal_ipn_in $last = '. $ipn['id'], NULL);
-    $link = l(t('view'), "admin/settings/lm_paypal/id/$ipn[id]");
+    watchdog(LM_PAYPAL, 'lm_paypal_ipn_in $last = ' . $ipn['id'], NULL);
+    $link = l(t('view'), "admin/config/lm_paypal/id/$ipn[id]");
 
     if ($validated) {
       watchdog(LM_PAYPAL, 'IPN incoming %type', array('%type' => check_plain($ipn['txn_type'])), WATCHDOG_NOTICE, $link);
-      lm_paypal_process_in((object)$ipn);
+      lm_paypal_process_in((object) $ipn);
     }
     else {
+      // @todo actualy return ->data
+      $validate_result->data = '';
       watchdog(LM_PAYPAL, 'IPN incoming NOT VERIFIED %type got %ret', array('%type' => check_plain($_POST['txn_type']), '%ret' => check_plain($validate_result->data)), WATCHDOG_ERROR, $link);
     }
   }
@@ -78,9 +81,9 @@ function lm_paypal_ipn_in() {
  */
 function lm_paypal_process_in($ipn) {
   $business = lm_paypal_api_get_business();
-  $link = l(t('view'), "admin/settings/lm_paypal/id/$ipn->id");
+  $link = l(t('view'), "admin/config/lm_paypal/id/$ipn->id");
 
-  if ($ipn->test_ipn != '' && ! variable_get('lm_paypal_obey_test_ipns', FALSE)) {
+  if ($ipn->test_ipn != '' && !variable_get('lm_paypal_obey_test_ipns', FALSE)) {
     watchdog(LM_PAYPAL, 'test_ipn received - ignoring', array(), WATCHDOG_WARNING, $link);
     return;
   }
@@ -199,7 +202,7 @@ function _lm_paypal_process_in_web_accept($ipn) {
     watchdog(LM_PAYPAL, 'in_web_accept');
   }
 
-  $link = l(t('view'), "admin/settings/lm_paypal/id/$ipn->id");
+  $link = l(t('view'), "admin/config/lm_paypal/id/$ipn->id");
 
   if (lm_paypal_already_processed($ipn->txn_id)) {
     watchdog(
@@ -224,11 +227,10 @@ function _lm_paypal_process_in_web_accept($ipn) {
   }
 
   $custom = lm_paypal_unpack_ipn_custom($ipn);
-  $uid = $custom['uid'];
-  $other = $custom['other'];
+  $uid = (isset($custom['uid']))?$custom['uid']:'';
+  $other = (isset($custom['other']))?$custom['other']:'';
 
   if ($uid == '') {
-    $uid = 0;
     if ($debug) {
       watchdog(
         LM_PAYPAL,
@@ -237,9 +239,15 @@ function _lm_paypal_process_in_web_accept($ipn) {
         WATCHDOG_WARNING,
         $link);
     }
-    $users = db_query("SELECT uid FROM {users} WHERE LOWER(mail) = LOWER('%s')", $ipn->payer_email);
-    $user = db_fetch_object($users);
-    if (!$user) {
+
+    // In 6.x this was using lower on the mail from the database and $ipn 
+    // @todo: find the D7 way to do LOWER()
+    $uid = db_select('users', 'u')
+      ->fields('u', array('uid'))
+      ->condition('mail', $ipn->payer_email)
+      ->execute()->fetchField();
+        
+    if (!$uid) {
       watchdog(
         LM_PAYPAL,
         'IPN web_accept no uid presuming uid 0, cannot find payer_email: %email',
@@ -249,7 +257,6 @@ function _lm_paypal_process_in_web_accept($ipn) {
       $uid = 0;
     }
     else {
-      $uid = $user->uid;
       watchdog(
         LM_PAYPAL,
         'IPN web_accept no uid, found payer_email %email for uid %uid',
@@ -258,7 +265,7 @@ function _lm_paypal_process_in_web_accept($ipn) {
         $link);
     }
   }
-  else if (!is_numeric($uid) || intval($uid) != $uid || $uid < 0) {
+  elseif (!is_numeric($uid) || intval($uid) != $uid || $uid < 0) {
     watchdog(
       LM_PAYPAL,
       'Invalid uid, ignoring IPN: %uid',
@@ -271,8 +278,10 @@ function _lm_paypal_process_in_web_accept($ipn) {
   // If I receive a web_accept without a uid then presume it came from anon
   if ($uid != '') {
     // Is this uid valid?
-    $users = db_query("SELECT * FROM {users} WHERE uid = %d", $uid);
-    $user = db_fetch_object($users);
+    $user = db_select('users', 'u')
+      ->fields('u')
+      ->condition('uid', $uid)
+      ->execute();
     if (!$user) {
       watchdog(
         LM_PAYPAL,
@@ -295,13 +304,13 @@ function _lm_paypal_process_in_web_accept($ipn) {
     }
     $item_number = 0;
   }
-  else if ($item_number == '') {
+  elseif ($item_number == '') {
     if ($debug) {
       watchdog(LM_PAYPAL, "empty item_number - being converted to web_accept");
     }
     $item_number = 0;
   }
-  else if (!is_numeric($item_number) || intval($item_number) != $item_number || $item_number < 0) {
+  elseif (!is_numeric($item_number) || intval($item_number) != $item_number || $item_number < 0) {
     watchdog(
       LM_PAYPAL,
       'Invalid item_number, ignoring IPN: %item_number',
@@ -314,6 +323,10 @@ function _lm_paypal_process_in_web_accept($ipn) {
   return lm_paypal_web_accept_invoke($ipn, $link, $uid, $other, $item_number);
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function lm_paypal_web_accept_invoke($ipn, $link, $uid, $other, $item_number) {
   // error_log("lm_paypal_web_accept_invoke($ipn->txn_id)");
 
@@ -370,20 +383,24 @@ function _lm_paypal_validate_ipn($post) {
   if (variable_get('lm_paypal_skip_validation', FALSE)) {
     return TRUE;
   }
-
+  
   // Build the IPN validation request from the $post fields
   $req = 'cmd=_notify-validate';
   foreach ($post as $key => $value) {
     $req .= "&$key=" . urlencode(stripslashes($value));
   }
+  
+
 
   // Validate this incoming IPN by sending it to PayPal to be checked
   $lm_paypal_host = variable_get('lm_paypal_host', LM_PAYPAL_HOST_DEFAULT);
   $validate_result = drupal_http_request(
     lm_paypal_api_get_host(TRUE),
-    array('Content-Type' => 'application/x-www-form-urlencoded'),
-    'POST',
-    $req
+    array(
+      'headers' => array('Content-Type' => 'application/x-www-form-urlencoded'),
+      'method' => 'POST',
+      'data' => $req
+    )
   );
 
   return $validate_result->data == 'VERIFIED';

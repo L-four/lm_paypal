@@ -1,7 +1,17 @@
 name = "LM PayPal Donations"
 description = "Provides PayPal donation buttons."
 package = "LM PayPal"
-core = 6.x
+core = 7.x
 dependencies[] = lm_paypal
 
 
+
+; Information added by drupal.org packaging script on 2009-02-06
+version = "6.x-2.0-alpha1"
+core = 7.x
+project = "lm_paypal"
+datestamp = "1233959131"
+
+files[] = ../tests/donations.test
+files[] = lm_paypal_donations.install
+files[] = lm_paypal_donations.module
