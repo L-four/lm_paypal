@@ -1,4 +1,3 @@
-; $Id: lm_paypal.info,v 1.24.6.1 2008/10/13 04:24:39 lyricnz Exp $
 name = "LM PayPal"
 description = "Lowest level PayPal interface required by other LM PayPal modules."
 package = "LM PayPal"
