@@ -1,4 +1,5 @@
 <?php
+// $Id: lm_paypal_subscriptions.pages.inc,v 1.1.2.4 2009/05/30 17:05:54 pounard Exp $
 
 /**
  * @file
@@ -71,7 +72,7 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
 
   drupal_set_title(t('Subscription @name', array(
     '@name' => $so->item_name,
-  )));
+  )), PASS_THROUGH);
 
   $roles = lm_paypal_subscriptions_roles_list(TRUE);
   $groups = lm_paypal_subscribable_groups();
@@ -80,19 +81,19 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
     $output = '';
     if (($display & 1) != 0) {
       if (($display & 16) != 0) {
-        $output .= '<b>'. check_plain($so->item_name) .'</b> ';
+        $output .= '<b>' . check_plain($so->item_name) . '</b> ';
       }
       else {
-        $output .= '<h3>'. check_plain($so->item_name) .'</h3>';
+        $output .= '<h3>' . check_plain($so->item_name) . '</h3>';
       }
     }
     if (($display & 2) != 0) {
       if (($display & 16) != 0) {
         // This is "brief"--we may want to make it so by keeping only the first line
-        $output .= '"'.  $so->description .'"';
+        $output .= '"' .  $so->description . '"';
       }
       else {
-        $output .= '<p>'.  $so->description .'</p>';
+        $output .= '<p>' .  $so->description . '</p>';
       }
     }
     if (($display & 4) != 0) {
@@ -103,25 +104,28 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
         $output .= '<p>';
       }
       if ($so->p1 != '' && $so->p1 > 0) {
+        // TODO Please change this theme call to use an associative array for the $variables parameter.
         $amount = theme('lm_paypal_amount', $so->a1, $so->currency_code, TRUE);
         $duration = lm_paypal_unit2str($so->p1, $so->t1);
         $output .= t('First trial period %amount for %duration.', array('%amount' => $amount, '%duration' => $duration));
       }
       if ($so->p2 != '' && $so->p2 > 0) {
+        // TODO Please change this theme call to use an associative array for the $variables parameter.
         $amount = theme('lm_paypal_amount', $so->a2, $so->currency_code, TRUE);
         $duration = lm_paypal_unit2str($so->p2, $so->t2);
         $output .= t('Second trial period %amount for %duration.', array('%amount' => $amount, '%duration' => $duration));
       }
+      // TODO Please change this theme call to use an associative array for the $variables parameter.
       $amount = theme('lm_paypal_amount', $so->a3, $so->currency_code, TRUE);
       $duration = lm_paypal_unit2str($so->p3, $so->t3);
       $output .= t('Rate !amount for %duration. ', array('!amount' => $amount, '%duration' => $duration));
       if ($so->src) {
         if ($so->srt != '') {
           $times = $so->srt;
-          $output .= t('Recurs %times times.', array('%times' => $times)) ;
+          $output .= t('Recurs %times times.', array('%times' => $times));
         }
         else {
-          $output .= t('Recurs till cancelled') .'. ';
+          $output .= t('Recurs till cancelled') . '. ';
         }
       }
       if ($so->kind == 0) {
@@ -152,7 +156,7 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
     return $output;
   }
 
-  $output = '<h2>'. t('Subscription %subid', array('%subid' => $subid)) .'</h2>';
+  $output = '<h2>' . t('Subscription %subid', array('%subid' => $subid)) . '</h2>';
   $header = array(t('field'), t('value'));
   foreach ($so as $key => $value) {
     if ($value == '') {
@@ -165,11 +169,11 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
       $value = t($value ? 'recurring' : 'not recurring');
     }
     else if ($key == 'rid') {
-      $value = $roles [$value];
+      $value = $roles[$value];
     }
     else if (strncmp($key, 'p', 1) == 0 && strlen($key) == 2) {
       // use 'p' (period-count) and 't' (period-unit) to format a period
-      $unit = $so->{'t' . substr($key,1)};
+      $unit = $so->{'t' . substr($key, 1)};
       $value = lm_paypal_unit2str($value, $unit);
     }
     else if (strncmp($key, 't', 1) == 0 && strlen($key) == 2) {
@@ -180,22 +184,22 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
     $value = check_plain($value);
     $rows[] = array('data' => array($k, $value));
   }
-  $output .= theme('table', $header, $rows);
+  $output .= theme('table', array('header' => $header, 'rows' => $rows));
   return $output;
 }
 
 // These are binary flags
-define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_ITEM_NAME',    1);
-define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_DESCRIPTION',  2);
-define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_DETAILS',      4);
-define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_BUTTON',       8);
-define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_BRIEF',       16);
-define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_NOHEADERS',   32);
-define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_LIST',        64);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_ITEM_NAME',     1);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_DESCRIPTION',   2);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_DETAILS',       4);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_BUTTON',        8);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_BRIEF',        16);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_NOHEADERS',    32);
+define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_LIST',         64);
 
 /**
  * Display either all live subscriptions or a single one with a link to PayPal.
- * 
+ *
  * TODO: unless this is used by crazy dynamic code, this wrapper is useless.
  *
  * @param int $subid
@@ -212,7 +216,7 @@ define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_LIST',        64);
  *   These can be added to get combinations (eg: 11 = 1 + 2 + 8)
  *  64 = output a comma seperated list the current users subscriptions
  *       (or just none)
- * TODO: change this ugly button 
+ * TODO: change this ugly button
  * @param string button_url
  *   The url of the button to display
  * @param int nid
@@ -230,6 +234,10 @@ function lm_paypal_subscribe($subid = NULL, $display = 15, $button_url = NULL, $
   }
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function lm_paypal_subscriptions_get_agreement($subid = NULL, $set = FALSE) {
   if ($set) {
     $_SESSION['lm_paypal_I_agree'] = $subid;
@@ -249,7 +257,7 @@ function lm_paypal_subscriptions_get_agreement($subid = NULL, $set = FALSE) {
 /**
  * The user has to agree to the terms and conditions
  */
-function lm_paypal_subscriptions_terms_form($form_state, $subid, $terms, $terms_format) {
+function lm_paypal_subscriptions_terms_form($form, $form_state, $subid, $terms, $terms_format) {
   $form['#submit'] = array('lm_paypal_subscription_terms_submit');
 
   // This reset the subid agreement
@@ -313,7 +321,7 @@ function lm_paypal_subscription_terms_submit($form, &$form_state) {
  */
 function lm_paypal_subscribe_subscription($subid, $display = 15, $button_url = NULL, $nid = NULL) {
   $output = '';
-  $output .= '<p>'. lm_paypal_subscriptions_details($subid, $display) .'</p>';
+  $output .= '<p>' . lm_paypal_subscriptions_details($subid, $display) . '</p>';
 
   $so = lm_paypal_subscriptions_load_subscription($subid);
 
@@ -384,17 +392,17 @@ function lm_paypal_subscribe_subscription($subid, $display = 15, $button_url = N
     'lm_paypal_api_payment_form',
     $so->a3,
     array(
-      'item_name' => $item_name,
-      'item_number' => $so->subid,
-      'return_path' => $return_path,
-      'currency_code' => $so->currency_code,
-      'custom' => array(
-        'nid' => $nid,
-        'module' => LM_PAYPAL_SUBSCRIPTIONS,
-      ),
-      'hidden' => $hidden,
-      'cmd' => LM_PAYPAL_FORM_CMD_SUBSCRIBE,
-    )
+    'item_name' => $item_name,
+    'item_number' => $so->subid,
+    'return_path' => $return_path,
+    'currency_code' => $so->currency_code,
+    'custom' => array(
+      'nid' => $nid,
+      'module' => LM_PAYPAL_SUBSCRIPTIONS,
+    ),
+    'hidden' => $hidden,
+    'cmd' => LM_PAYPAL_FORM_CMD_SUBSCRIBE,
+  )
   );
 
   return $output;
@@ -428,7 +436,7 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
 
   // Output a list of all the live role or group subscriptions
   $output = '';
-  $result = db_query('SELECT subid FROM {lm_paypal_subscriptions} WHERE status = 1 AND (kind = 0 OR kind = 2)');
+  $result = db_query('SELECT subid FROM {lm_paypal_subscriptions} WHERE status = :status AND (kind = :(kind OR kind = :kind', array(':status' => 1, ':(kind' => 0, ':kind' => 2));
 
   if (($display & 64) != 0) {
     $nsubs = 0;
@@ -442,8 +450,8 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
         if ($nsubs > 0) {
           $output .= ", ";
         }
-        $output .= '"'. $item_name .'"';
-        $nsubs ++;
+        $output .= '"' . $item_name . '"';
+        $nsubs++;
       }
       if ($nsubs == 0) {
         $output .= t('<b>none</b>');
@@ -453,7 +461,7 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
   }
 
   if (($display & 32) == 0) {
-    $output .= '<h2>'. t('Subscriptions') .'</h2>';
+    $output .= '<h2>' . t('Subscriptions') . '</h2>';
   }
 
   $header = array(t('Name'), t('Description'), t('Action'));
@@ -461,7 +469,7 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
   while ($data = db_fetch_object($result)) {
     if ($subscription = lm_paypal_subscriptions_load_subscription($data->subid)) {
       $already = lm_paypal_subscriptions_user_subscribed($subscription, $account);
-  
+
       $item_name = check_plain($subscription->item_name);
       if ($already) {
         $sub = t('already subscribed');
@@ -478,26 +486,37 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
             "lm_paypal/subscribe/$subscription->subid",
             array('attributes' => array(
               'alt' => t('Link to the subscription page'),
-              'title' => t('Click here to subscribe now!'))));
+              'title' => t('Click here to subscribe now!'),
+            )));
         }
       }
-  
+
       $rows[] = array('data' => array(
-        array('data' => $item_name, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell'),
-        array('data' => $subscription->description, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell'),
-        array('data' => $sub, 'class' => 'lm_paypal_paid_adverts_subscriptions_cell')));
+          array(
+            'data' => $item_name,
+            'class' => 'lm_paypal_paid_adverts_subscriptions_cell',
+          ),
+          array(
+            'data' => $subscription->description,
+            'class' => 'lm_paypal_paid_adverts_subscriptions_cell',
+          ),
+          array(
+            'data' => $sub,
+            'class' => 'lm_paypal_paid_adverts_subscriptions_cell',
+          ),
+        ));
     }
   }
-  $output .= theme('table', $header, $rows);
+  $output .= theme('table', array('header' => $header, 'rows' => $rows));
 
   $business = variable_get('lm_paypal_business', '');
   $alias = urlencode($business);
-  $unsuburl = lm_paypal_api_get_host(TRUE)."?cmd=_subscr-find&amp;alias=$alias";
+  $unsuburl = lm_paypal_api_get_host(TRUE) . "?cmd=_subscr-find&amp;alias=$alias";
 
-  $output .= '<h4>'. t('To Unsubscribe') .'</h4>';
+  $output .= '<h4>' . t('To Unsubscribe') . '</h4>';
   $output .= '<p>';
   $output .= t('Click unsubscribe to log in to your PayPal account. Click the Details of the subscription in question. Click Cancel Subscription.');
-  $output .= "</p><p><a href=\"$unsuburl\">". t('Unsubscribe') .'</a>';
+  $output .= "</p><p><a href=\"$unsuburl\">" . t('Unsubscribe') . '</a>';
   $output .= '</p>';
 
   return $output;

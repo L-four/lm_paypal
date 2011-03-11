@@ -1,6 +1,12 @@
+; $Id: lm_paypal_subscriptions.info,v 1.1.2.1 2009/04/17 00:33:48 lyricnz Exp $
 name = "LM PayPal Subscriptions"
 description = "Provides PayPal subscriptions to Drupal roles."
 package = "LM PayPal"
-core = 6.x
+core = 7.x
 dependencies[] = lm_paypal
 
+files[] = ../tests/subscriptions.test
+files[] = lm_paypal_subscriptions.admin.inc
+files[] = lm_paypal_subscriptions.install
+files[] = lm_paypal_subscriptions.module
+files[] = lm_paypal_subscriptions.pages.inc

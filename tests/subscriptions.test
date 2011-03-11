@@ -1,4 +1,5 @@
 <?php
+// $Id: subscriptions.test,v 1.1.2.3 2009/02/19 08:44:55 pounard Exp $
 
 /**
  * Test the behaviour of the LM PayPal Subscriptions module by exercising the
@@ -119,20 +120,20 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
   function testLmPaypalSubscriptions() {
     // Check Settings page.
     $this->drupalLogin($this->admin_user);
-    $this->drupalGet('admin/settings/lm_paypal/subscriptions/settings');
+    $this->drupalGet('admin/config/lm_paypal/subscriptions/settings');
     $this->assertField('lm_paypal_subscriptions_inprogress');
     $this->assertRaw(variable_get('lm_paypal_subscriptions_inprogress', NULL)); // TODO: check value is IN field?
     $this->assertField('lm_paypal_subscriptions_menu_rebuild');
     // $this->assertRaw(variable_get('lm_paypal_subscriptions_menu_rebuild', NULL)); // TODO: check value is IN field?
 
     // Check the help page.
-    $this->drupalGet('admin/settings/lm_paypal/subscriptions');
+    $this->drupalGet('admin/config/lm_paypal/subscriptions');
     $this->clickLink('LM PayPal Subscriptions Help');
     $this->assertText('LM PayPal Subscriptions');
     $this->assertText('Initial Configuration');
 
     // Check the (empty) Subscriptions page.
-    $this->drupalGet('admin/settings/lm_paypal/subscriptions');
+    $this->drupalGet('admin/config/lm_paypal/subscriptions');
     $this->assertNoRaw('<td');
     // TODO: check form
 
@@ -145,7 +146,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     // TODO: check filter functionality
 
     // Create Subscription pages.
-    $this->drupalGet('admin/settings/lm_paypal/subscriptions/view');
+    $this->drupalGet('admin/config/lm_paypal/subscriptions/view');
     $this->clickLink('Create new subscription');
     $this->assertText('Create subscription');
 
@@ -185,7 +186,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
 
     // Click on the link to the subscription.
     $this->clickLink($subscription['item_name']);
-    $this->assertText('Subscription '.$subscription['item_name']);
+    $this->assertText('Subscription ' . $subscription['item_name']);
     $this->assertText('Subscription 1');
     $this->assertText($subscription['item_name']);
     $this->assertText($subscription['description']);
@@ -194,13 +195,13 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     $this->assertText($subscription['currency_code']);
 
     // Go back and click on the link to the role.
-    $this->drupalGet('admin/settings/lm_paypal/subscriptions');
+    $this->drupalGet('admin/config/lm_paypal/subscriptions');
     $this->clickLink($role_name);
     $this->assertText('Permissions');
     $this->assertText($role_name);
 
     // Go back and click on the link to the subscribers.
-    $this->drupalGet('admin/settings/lm_paypal/subscriptions');
+    $this->drupalGet('admin/config/lm_paypal/subscriptions');
     $this->clickLink('Subscribers');
     $this->assertText('Subscribers');
     $this->assertField('filter');
@@ -234,37 +235,37 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     $ipn1 = $this->postPreparedIpn(
       'sandbox-subscription-ipn1.txt',
       array(
-        'item_number' => $sub_id,
-        'receiver_email' => variable_get('lm_paypal_business', NULL),
-        'payer_email' => $this->web_user->mail,
-        'custom' => serialize(array(
-          'module' => LM_PAYPAL_SUBSCRIPTIONS,
-          'uid' => $this->web_user->uid,
-        )),
-      )
+      'item_number' => $sub_id,
+      'receiver_email' => variable_get('lm_paypal_business', NULL),
+      'payer_email' => $this->web_user->mail,
+      'custom' => serialize(array(
+        'module' => LM_PAYPAL_SUBSCRIPTIONS,
+        'uid' => $this->web_user->uid,
+      )),
+    )
     );
     //$this->writeFile('SubBeforeIPN2.txt', $this->dumpTable('lm_paypal_subscribers'));
     $ipn2 = $this->postPreparedIpn(
       'sandbox-subscription-ipn2.txt',
       array(
-        //'txn_type' => 'subscr_signup', // subscription
-        //'txn_type' => 'subscr_payment', // payment
-        'item_number' => $sub_id,
-        'receiver_email' => $ipn1['receiver_email'],
-        'payer_email' => $ipn1['payer_email'],
-        'custom' => serialize(array(
-          'module' => LM_PAYPAL_SUBSCRIPTIONS,
-          'uid' => $this->web_user->uid,
-        )),
-        'mc_amount3' => $subscription['a3'], // 20
-        'mc_currency' => $subscription['currency_code'], // AUD
-        'period3' => $subscription['p3'] . ' ' . $subscription['t3'], // "30 D"
-      )
+      //'txn_type' => 'subscr_signup', // subscription
+      //'txn_type' => 'subscr_payment', // payment
+      'item_number' => $sub_id,
+      'receiver_email' => $ipn1['receiver_email'],
+      'payer_email' => $ipn1['payer_email'],
+      'custom' => serialize(array(
+        'module' => LM_PAYPAL_SUBSCRIPTIONS,
+        'uid' => $this->web_user->uid,
+      )),
+      'mc_amount3' => $subscription['a3'], // 20
+      'mc_currency' => $subscription['currency_code'], // AUD
+      'period3' => $subscription['p3'] . ' ' . $subscription['t3'], // "30 D"
+    )
     );
     //$this->writeFile('SubAfterIPNS.txt', $this->dumpTable('lm_paypal_subscribers'));
     // Check IPN have been processed by our module
     $this->assertNoWatchdogErrors(WATCHDOG_WARNING, TRUE);
-    
+
     // $this->assertWatchdogError('Update this $ipn->custom stuff', WATCHDOG_ERROR);
     // error_log("SUBSCRIPTION IPN = " . print_r($ipn, TRUE));
 
@@ -276,16 +277,16 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
 
     // As the admin, check all subscribers page
     $this->drupalLogin($this->admin_user);
-    $this->drupalGet('admin/settings/lm_paypal/subscribers');
-//    $this->writeFile('users.out', $this->dumpTable('users'));
-//    $this->writeFile('lm_paypal_subscriptions.out', $this->dumpTable('lm_paypal_subscriptions'));
-//    $this->writeFile('lm_paypal_subscribers.out', $this->dumpTable('lm_paypal_subscribers'));
-//    $this->writeFile('custom_query.out', $this->dumpRequest(
-//      "SELECT u.name, d.item_name, s.kind, s.usid, s.uid, s.nid, s.subid, s.started, s.status, s.subscr_id
-//        FROM {lm_paypal_subscriptions} d
-//        JOIN {lm_paypal_subscribers} s ON s.subid = d.subid 
-//        JOIN {users} u ON s.uid = u.uid"
-//    ));
+    $this->drupalGet('admin/config/lm_paypal/subscribers');
+    //    $this->writeFile('users.out', $this->dumpTable('users'));
+    //    $this->writeFile('lm_paypal_subscriptions.out', $this->dumpTable('lm_paypal_subscriptions'));
+    //    $this->writeFile('lm_paypal_subscribers.out', $this->dumpTable('lm_paypal_subscribers'));
+    //    $this->writeFile('custom_query.out', $this->dumpRequest(
+    //      "SELECT u.name, d.item_name, s.kind, s.usid, s.uid, s.nid, s.subid, s.started, s.status, s.subscr_id
+    //        FROM {lm_paypal_subscriptions} d
+    //        JOIN {lm_paypal_subscribers} s ON s.subid = d.subid
+    //        JOIN {users} u ON s.uid = u.uid"
+    //    ));
     $this->assertNoText('No subs found.');
     $this->assertText('Role');
     $this->assertText($this->web_user->name);
@@ -300,7 +301,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     //$this->writeFile('sub1.html');
 
     // Check sub edit
-    $this->drupalGet('admin/settings/lm_paypal/subscribers');
+    $this->drupalGet('admin/config/lm_paypal/subscribers');
     $this->clickLink('edit');
     $this->assertText('Subscriber');
     $this->assertText('Uid ' . $this->web_user->uid); // ick, but that's what's shown

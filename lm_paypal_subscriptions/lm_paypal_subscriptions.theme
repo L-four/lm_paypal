@@ -1,11 +1,16 @@
 <?php
 
-function theme_lm_paypal_subscription_name($subscription) {
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function theme_lm_paypal_subscription_name($variables) {
+  $subscription = $variables['subscription'];
   $output = '';
   $name = check_plain($subscription->item_name);
 
   if ($subscription->status) {
-    $output .= '<stroke>'.$name.'</stroke>';
+    $output .= '<stroke>' . $name . '</stroke>';
   }
   else {
     $output .= $name;
@@ -14,13 +19,17 @@ function theme_lm_paypal_subscription_name($subscription) {
   return $output;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function theme_lm_paypal_subscription_inprogress_message() {
   $output = "";
-  $output .= '<h2>'.t("Thank you!").'</h2>';
-  $output .= t("<p>Your subscription is in progress but for it to take effect you will have ".
-    "to logout and login again.</p>".
-    "<p>Then you can check your subscriptions by looking in \"my account\".</p>".
-    "<p><b>Special Note: </b>Although PayPal subscriptions are usually instantaneous sometimes, ".
+  $output .= '<h2>' . t("Thank you!") . '</h2>';
+  $output .= t("<p>Your subscription is in progress but for it to take effect you will have " .
+    "to logout and login again.</p>" .
+    "<p>Then you can check your subscriptions by looking in \"my account\".</p>" .
+    "<p><b>Special Note: </b>Although PayPal subscriptions are usually instantaneous sometimes, " .
     "during really busy periods, it may take a few hours to take effect.</p>");
   return $output;
 }
