@@ -98,13 +98,20 @@ function lm_paypal_subscriptions_view_all_page() {
     array('data' => t('Actions')),
   );
 
-  // Output a list of all the existing subscriptions
-  $tablesort = tablesort_sql($header);
-  $query = "SELECT subid, item_name, description, status, kind, rid FROM {lm_paypal_subscriptions}" . $tablesort;
-  $result = pager_query($query, 20, 0);
+  // Output a list of all the existing subscriptions 102
+  
+    $select = db_select('lm_paypal_subscriptions', 'subs')
+    ->extend('TableSort')
+    ->fields('subs', array('subid', 'item_name', 'description', 'status', 'kind', 'rid'))
+    ->orderByHeader($header)
+    ->extend('PagerDefault')
+    ->limit(20);
+    
+  $result = $select->execute();
+  #$result = pager_query($query, 20, 0);
 
   $rows = array();
-  while ($so = db_fetch_object($result)) {
+  foreach ($result as $so) {
     $kind = $so->kind;
     $linkso = $so->subid;
     $item_name = l($so->item_name, 'admin/config/lm_paypal/subscriptions/' . $so->subid . '/view');
@@ -213,7 +220,6 @@ function lm_paypal_subscriptions_edit_form($form, $form_state, $subid = NULL) {
     $so->send_user_onend_body = LM_PAYPAL_SUBSCRIPTIONS_SEND_USER_ONEND_BODY_DEFAULT;
 
     $so->terms = LM_PAYPAL_SUBSCRIPTIONS_TERMS_DEFAULT;
-    $so->terms_format = FILTER_FORMAT_DEFAULT;
   }
 
   $form['item_name'] = array(
@@ -527,8 +533,8 @@ function lm_paypal_subscriptions_edit_form($form, $form_state, $subid = NULL) {
     '#title' => t('Terms and conditions'),
     '#default_value' => $so->terms,
     '#description' => t('Terms and conditions the user must agree to. If empty no terms or conditions are required.'),
+    '#format' => isset($edit['format']) ? $edit['format'] : NULL,
   );
-  $form['terms_format'] = filter_form($so->terms_format, NULL, array('terms_format') );
 
   if ($edit) {
     $form['status'] = array(
@@ -1079,7 +1085,7 @@ function lm_paypal_subscriptions_subscribers_view_page($subid = NULL) {
     $output = '<h2>' . t('Subscribers') . '</h2>';
   }
 
-  $output .= drupal_get_form('lm_paypal_subscriptions_subscriber_filter_form', $subid);
+  $output .= drupal_render(drupal_get_form('lm_paypal_subscriptions_subscriber_filter_form', $subid));
 
   $header = array(
     array(
@@ -1117,30 +1123,54 @@ function lm_paypal_subscriptions_subscribers_view_page($subid = NULL) {
     ),
   );
 
-  $sql = "SELECT u.name, d.item_name,s.kind, s.usid, s.uid, s.nid,s.subid, s.started, s.status, s.subscr_id FROM {lm_paypal_subscriptions} d JOIN {lm_paypal_subscribers} s ON s.subid = d.subid  JOIN {users} u ON s.uid = u.uid";
+ /*
+ $sql = "SELECT u.name, d.item_name,s.kind, s.usid, s.uid, s.nid,s.subid, s.started, s.status, s.subscr_id FROM {lm_paypal_subscriptions} d JOIN {lm_paypal_subscribers} s ON s.subid = d.subid  JOIN {users} u ON s.uid = u.uid";
+ $tablesort = tablesort_sql($header);
+ */
 
-  $tablesort = tablesort_sql($header);
+  $query = db_select('lm_paypal_subscriptions', 'd');
+  $alias = $query->join('lm_paypal_subscribers','s','s.subid = d.subid');
+  $alias = $query->join('users','u','s.uid = u.uid');
+  $query = $query->fields('u', array('name'))
+            ->fields('d', array('item_name'))
+            ->fields('s', array(
+              'kind',
+              'usid',
+              'uid',
+              'nid',
+              'subid',
+              'started',
+              'status',
+              'subscr_id'
+            ))
+            ->extend('TableSort')
+            ->extend('PagerDefault')
+            ->orderByHeader($header)
+            ->limit($limit);
+
 
   // If not sorting by started then make that the 2nd field to sort on
-  if (strpos($tablesort, 'started') === FALSE) {
-    $tablesort .= ', started DESC';
+  //if (strpos($tablesort, 'started') === FALSE) {
+  //  $tablesort .= ', started DESC';
+  //}
+
+  if ($subid) {
+    $query->condition('s.subid', $subid);
   }
-
-
-  $subid_str = $subid ? " AND s.subid = '$subid' " : '';
 
   $status_filter = lm_paypal_subscriptions_subscriber_filter_get();
+  
   if (! empty($status_filter) && $status_filter != 'all') {
-    $sql .= " AND s.status = '%s'" . $subid_str . $tablesort;
-    $result = pager_query($sql, $limit, 0, NULL, $status_filter);
+    $query->condition('s.status', $status_filter);
   }
-  else {
-    $sql .= $subid_str . $tablesort;
-    $result = pager_query($sql, $limit, 0);
-  }
-
+  
+  $result = $query->execute();
+  
+  
+  
   $rows = array();
-  while ($sub = db_fetch_object($result)) {
+  foreach ($result as $sub) {
+    dpm($sub);
     $ss = lm_paypal_subscription_get_status($sub->status);
     if ($ss == '') {
       $ss = $sub->status;

@@ -260,16 +260,16 @@ function lm_paypal_subscriptions_menu() {
     'page arguments' => array('lm_paypal_subscriptions_edit_form'),
     'access arguments' => array('administer lm_paypal', NULL),
     'file' => 'lm_paypal_subscriptions.admin.inc',
-    'type' => MENU_CALLBACK,
+    'type' => MENU_NORMAL_ITEM,
   );
   $items['admin/config/lm_paypal/subscriptions/%/delete'] = array(
     'title' => 'Delete subscription',
-    'type' => MENU_CALLBACK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_subscription_delete_confirm_form', 4),
     'access callback' => 'lm_paypal_subscription_access',
     'access arguments' => array('subscription', 4),
     'file' => 'lm_paypal_subscriptions.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
   );
 
   // View and edit tabs
@@ -410,7 +410,7 @@ function lm_paypal_subscriptions_load_subscription($subid) {
   if (! isset($cache[$subid])) {
     $result = db_query("SELECT * FROM {lm_paypal_subscriptions} WHERE subid = :subid", array(':subid' => $subid));
 
-    if ($subscription = db_fetch_object($result)) {
+    foreach ($result as $subscription) {
       $cache[$subid] = $subscription;
     }
   }
@@ -562,7 +562,7 @@ function lm_paypal_subscriptions_block_info() {
     if ($subscription = lm_paypal_subscriptions_load_subscription($data->subid)) {
       $blocks[$subscription->subid] = array(
         'info' => t('Paypal subscription: %name', array('%name' => $subscription->item_name)),
-        'cache' => BLOCK_CACHE_PER_USER,
+        'cache' => DRUPAL_CACHE_PER_USER,
       );
     }
   }

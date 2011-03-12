@@ -436,11 +436,11 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
 
   // Output a list of all the live role or group subscriptions
   $output = '';
-  $result = db_query('SELECT subid FROM {lm_paypal_subscriptions} WHERE status = :status AND (kind = :(kind OR kind = :kind', array(':status' => 1, ':(kind' => 0, ':kind' => 2));
+  $result = db_query('SELECT subid FROM {lm_paypal_subscriptions} WHERE status = :status AND (kind = :kind OR kind = :kind2)', array(':status' => 1, ':kind' => 0, ':kind2' => 2));
 
   if (($display & 64) != 0) {
     $nsubs = 0;
-    while ($data = db_fetch_object($result)) {
+    foreach ($result as $data) {
       if ($subscription = lm_paypal_subscriptions_load_subscription($data->subid)) {
         $already = lm_paypal_subscriptions_user_subscribed($so, $account);
         if (!$already) {
@@ -466,7 +466,7 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
 
   $header = array(t('Name'), t('Description'), t('Action'));
   $rows = array();
-  while ($data = db_fetch_object($result)) {
+  foreach ($result as $data) {
     if ($subscription = lm_paypal_subscriptions_load_subscription($data->subid)) {
       $already = lm_paypal_subscriptions_user_subscribed($subscription, $account);
 
