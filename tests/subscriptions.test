@@ -138,7 +138,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     // TODO: check form
 
     // Check (empty) All Subscriptions page.
-    $this->clickLink('Subscribers');
+    $this->clickLink('View all subscribers');
     $this->assertText('Filter subscribers');
     $this->assertText('No subs found.');
     $this->assertField('filter');
@@ -155,8 +155,10 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     // Create a dummy user to get the Role that comes with it.
     $dummy_user = $this->drupalCreateUser(array('access user profiles'));
     $role_ids = array_keys($dummy_user->roles);
-    $rid = array_pop($role_ids);
-    $role_name = $dummy_user->roles[$rid];
+    $rid = array_shift($role_ids);
+    // For some reason $dummy_user->roles only contains the id for the new role
+    $role = user_role_load($rid);
+    $role_name = $role->name;
 
     // Create a basic subscription.
     $subscription = array(
@@ -194,15 +196,16 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     $this->assertText(lm_paypal_unit2str(30, 'D'));
     $this->assertText($subscription['currency_code']);
 
+    
     // Go back and click on the link to the role.
     $this->drupalGet('admin/config/lm_paypal/subscriptions');
     $this->clickLink($role_name);
-    $this->assertText('Permissions');
+    $this->assertText('Permission');
     $this->assertText($role_name);
 
     // Go back and click on the link to the subscribers.
     $this->drupalGet('admin/config/lm_paypal/subscriptions');
-    $this->clickLink('Subscribers');
+    $this->clickLink('View all subscribers');
     $this->assertText('Subscribers');
     $this->assertField('filter');
     $this->assertText('No subs found.');

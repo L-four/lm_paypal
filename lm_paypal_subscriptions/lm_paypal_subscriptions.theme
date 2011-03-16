@@ -5,9 +5,8 @@
  * @see http://drupal.org/node/1354
  */
 function theme_lm_paypal_subscription_name($variables) {
-  $subscription = $variables['subscription'];
   $output = '';
-  $name = check_plain($subscription->item_name);
+  $name = check_plain($variables['subscription']->item_name);
 
   if ($subscription->status) {
     $output .= '<stroke>' . $name . '</stroke>';

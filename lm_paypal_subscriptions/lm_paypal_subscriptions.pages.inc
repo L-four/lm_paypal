@@ -70,9 +70,7 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
   $subid = (int) $subid;
   $so = lm_paypal_subscriptions_load_subscription($subid);
 
-  drupal_set_title(t('Subscription @name', array(
-    '@name' => $so->item_name,
-  )), PASS_THROUGH);
+  drupal_set_title(t('Subscription @name', array('@name' => $so->item_name)), PASS_THROUGH);
 
   $roles = lm_paypal_subscriptions_roles_list(TRUE);
   $groups = lm_paypal_subscribable_groups();
@@ -90,10 +88,10 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
     if (($display & 2) != 0) {
       if (($display & 16) != 0) {
         // This is "brief"--we may want to make it so by keeping only the first line
-        $output .= '"' .  $so->description . '"';
+        $output .= '"' . $so->description . '"';
       }
       else {
-        $output .= '<p>' .  $so->description . '</p>';
+        $output .= '<p>' . $so->description . '</p>';
       }
     }
     if (($display & 4) != 0) {
@@ -104,21 +102,18 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
         $output .= '<p>';
       }
       if ($so->p1 != '' && $so->p1 > 0) {
-        // TODO Please change this theme call to use an associative array for the $variables parameter.
-        $amount = theme('lm_paypal_amount', $so->a1, $so->currency_code, TRUE);
+        $amount = theme('lm_paypal_amount', array('amount' => $so->a1, 'ccc' => $so->currency_code, 'syms' => TRUE));
         $duration = lm_paypal_unit2str($so->p1, $so->t1);
         $output .= t('First trial period %amount for %duration.', array('%amount' => $amount, '%duration' => $duration));
       }
       if ($so->p2 != '' && $so->p2 > 0) {
-        // TODO Please change this theme call to use an associative array for the $variables parameter.
-        $amount = theme('lm_paypal_amount', $so->a2, $so->currency_code, TRUE);
+        $amount = theme('lm_paypal_amount', array('amount' => $so->a2, 'ccc' => $so->currency_code, 'syms' => TRUE));
         $duration = lm_paypal_unit2str($so->p2, $so->t2);
         $output .= t('Second trial period %amount for %duration.', array('%amount' => $amount, '%duration' => $duration));
       }
-      // TODO Please change this theme call to use an associative array for the $variables parameter.
-      $amount = theme('lm_paypal_amount', $so->a3, $so->currency_code, TRUE);
+      $amount = theme('lm_paypal_amount', array('amount' => $so->a3, 'ccc' => $so->currency_code, 'syms' => TRUE));
       $duration = lm_paypal_unit2str($so->p3, $so->t3);
-      $output .= t('Rate !amount for %duration. ', array('!amount' => $amount, '%duration' => $duration));
+      $output .= t('Rate !amount for %duration.', array('!amount' => $amount, '%duration' => $duration));
       if ($so->src) {
         if ($so->srt != '') {
           $times = $so->srt;
@@ -130,14 +125,14 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
       }
       if ($so->kind == 0) {
         $role = $roles[$so->rid];
-        $output .= t('User becomes member of role %role. ', array('%role' => $role));
+        $output .= t('User becomes member of role %role.', array('%role' => $role));
       }
-      else if ($so->kind == 1) {
-        $output .= t('Node becomes viewable by others after the payment was confirmed. ');
+      elseif ($so->kind == 1) {
+        $output .= t('Node becomes viewable by others after the payment was confirmed.');
       }
-      else if ($so->kind == 2) {
+      elseif ($so->kind == 2) {
         $group = $groups[$so->rid];
-        $output .= t('User becomes member of Organic Group %group. ', array('%group' => $group));
+        $output .= t('User becomes member of Organic Group %group.', array('%group' => $group));
       }
 
       // Calculate the length of the subscription - just for debugging for now
@@ -165,18 +160,18 @@ function lm_paypal_subscriptions_details($subid, $display = 0) {
     if ($key == 'status') {
       $value = t($value ? 'live' : 'defunct');
     }
-    else if ($key == 'src') {
+    elseif ($key == 'src') {
       $value = t($value ? 'recurring' : 'not recurring');
     }
-    else if ($key == 'rid') {
+    elseif ($key == 'rid') {
       $value = $roles[$value];
     }
-    else if (strncmp($key, 'p', 1) == 0 && strlen($key) == 2) {
+    elseif (strncmp($key, 'p', 1) == 0 && strlen($key) == 2) {
       // use 'p' (period-count) and 't' (period-unit) to format a period
       $unit = $so->{'t' . substr($key, 1)};
       $value = lm_paypal_unit2str($value, $unit);
     }
-    else if (strncmp($key, 't', 1) == 0 && strlen($key) == 2) {
+    elseif (strncmp($key, 't', 1) == 0 && strlen($key) == 2) {
       continue; // skip t (period-unit) fields
     }
 
@@ -333,7 +328,7 @@ function lm_paypal_subscribe_subscription($subid, $display = 15, $button_url = N
   $terms = trim($so->terms);
   if (! empty($terms)) {
     if (! lm_paypal_subscriptions_get_agreement($subid)) {
-      $output .= drupal_get_form('lm_paypal_subscriptions_terms_form', $subid, $so->terms, $so->terms_format);
+      $output .= drupal_render(drupal_get_form('lm_paypal_subscriptions_terms_form', $subid, $so->terms, $so->terms_format));
       return $output;
     }
   }
@@ -388,21 +383,23 @@ function lm_paypal_subscribe_subscription($subid, $display = 15, $button_url = N
   $hidden['sra'] = "1";
   $hidden['no_note'] = "1";
   $hidden['usr_manage'] = "0";
-  $output .= drupal_get_form(
-    'lm_paypal_api_payment_form',
-    $so->a3,
-    array(
-    'item_name' => $item_name,
-    'item_number' => $so->subid,
-    'return_path' => $return_path,
-    'currency_code' => $so->currency_code,
-    'custom' => array(
-      'nid' => $nid,
-      'module' => LM_PAYPAL_SUBSCRIPTIONS,
-    ),
-    'hidden' => $hidden,
-    'cmd' => LM_PAYPAL_FORM_CMD_SUBSCRIBE,
-  )
+  $output .= drupal_render(
+    drupal_get_form(
+      'lm_paypal_api_payment_form',
+      $so->a3,
+      array(
+        'item_name' => $item_name,
+        'item_number' => $so->subid,
+        'return_path' => $return_path,
+        'currency_code' => $so->currency_code,
+        'custom' => array(
+          'nid' => $nid,
+          'module' => LM_PAYPAL_SUBSCRIPTIONS,
+        ),
+        'hidden' => $hidden,
+        'cmd' => LM_PAYPAL_FORM_CMD_SUBSCRIBE,
+      )
+    )
   );
 
   return $output;
@@ -529,5 +526,5 @@ function lm_paypal_subscribe_select($display = 15, $account = NULL) {
  *   A string containing the page contents.
  */
 function lm_paypal_subscriptions_inprogress_page() {
-  return theme('lm_paypal_subscription_inprogress_message');
+  return drupal_render(theme('lm_paypal_subscription_inprogress_message'));
 }

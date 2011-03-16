@@ -16,7 +16,7 @@ function lm_paypal_subscriptions_admin_settings($form, $form_state) {
     '#default_value' => lm_paypal_subscriptions_get_inprogress(),
     '#maxlength' => 100,
     '#required' => TRUE,
-    '#description' => t('The page the user is sent to by PayPal after a subscribe. The default is ') . LM_PAYPAL_SUBSCRIPTIONS_INPROGRESS_DEFAULT . t(' but you might want to point it at a page you have created yourself.'),
+    '#description' => t('The page the user is sent to by PayPal after a subscribe. The default is @default but you might want to point it at a page you have created yourself.', array('@default' => LM_PAYPAL_SUBSCRIPTIONS_INPROGRESS_DEFAULT)),
   );
   $form['lm_paypal_subscriptions_menu_rebuild'] = array(
     '#type' => 'checkbox',
@@ -122,13 +122,13 @@ function lm_paypal_subscriptions_view_all_page() {
     if ($kind == 0) {
       $kind = t('Role');
       $linksb = l(t('subscribers'), 'admin/config/lm_paypal/subscriptions/subscribers/' . $so->subid);
-      $role = l($roles[$so->rid], "admin/user/permissions/$so->rid");
+      $role = l($roles[$so->rid], "admin/people/permissions/$so->rid");
     }
-    else if ($kind == 1) {
+    elseif ($kind == 1) {
       $kind = t('Node');
       $linksb = l(t('subscribed nodes'), 'admin/config/lm_paypal/subscriptions/' . $so->subid . '/view');
     }
-    else if ($kind == 2) {
+    elseif ($kind == 2) {
       $kind = t('Organic Group');
       $linksb = l(t('subscribers'), 'admin/config/lm_paypal/subscriptions/' . $so->subid . '/view');
       $group = $groups[$so->rid];
@@ -171,7 +171,6 @@ function lm_paypal_subscriptions_view_all_page() {
  */
 function lm_paypal_subscriptions_edit_form($form, $form_state, $subid = NULL) {
   $form = array();
-  $form_state['#redirect'] = 'admin/config/lm_paypal/subscriptions/view';
 
   $subid = (int) $subid;
   $edit = $subid > 0;
@@ -183,9 +182,7 @@ function lm_paypal_subscriptions_edit_form($form, $form_state, $subid = NULL) {
       '#type' => 'value',
       '#value' => $subid,
     );
-    drupal_set_title(t('Subscription @name', array(
-      '@name' => $so->item_name,
-    )), PASS_THROUGH);
+    drupal_set_title(t('Subscription @name', array('@name' => $so->item_name)), PASS_THROUGH);
   }
   else {
     // Initialise a new subscription
@@ -249,7 +246,7 @@ function lm_paypal_subscriptions_edit_form($form, $form_state, $subid = NULL) {
 
   if ($og) {
     $kinds[2] = 'Organic Group';
-    $descr .= t(' Organic Group for users to gain a group');
+    $descr .= t('Organic Group for users to gain a group');
     $og = TRUE;
   }
 
@@ -609,7 +606,7 @@ function lm_paypal_subscriptions_edit_form_validate($form, &$form_state) {
   if ($kind == 0) {
     unset($values['gid']);
   }
-  else if ($kind == 2) {
+  elseif ($kind == 2) {
     unset($values['rid']);
   }
 
@@ -681,6 +678,8 @@ function lm_paypal_subscriptions_edit_form_validate($form, &$form_state) {
  * Updates or inserts subscriptions in the lm_paypal_subscriptions table.
  */
 function lm_paypal_subscriptions_edit_form_submit($form, &$form_state) {
+  $form_state['redirect'] = array('admin/config/lm_paypal/subscriptions/view');
+  
   $values = $form_state['values'];
   if (isset($values['edit_subid'])) {
     $subid = (int) $values['edit_subid'];
@@ -792,7 +791,7 @@ function lm_paypal_subscriptions_edit_form_submit($form, &$form_state) {
       continue;
     }
 
-    $value = $values[$key];
+    $value = (isset($values[$key])) ? $values[$key] : '';
     // NOTE: Reusing the db rid field for the Organic Group id
     if ($key == 'gid') {
       $key = 'rid';
@@ -849,7 +848,8 @@ function lm_paypal_subscription_delete_confirm_form($form_state, $subid) {
     'admin/config/lm_paypal/subscriptions/' . $subscription->subid . '/edit',
     t('This action cannot be undone.')
   );
-  $form_state['#redirect'] = 'admin/config/lm_paypal/subscriptions/view';
+    $form_state['redirect'] = array('admin/config/lm_paypal/subscriptions/view'
+    );
   return $form;
 }
 
@@ -898,7 +898,7 @@ function lm_paypal_subscriber_pay_form($form_state, $subid = NULL, $nid = NULL, 
   );
 
   if ($destination = drupal_get_destination()) {
-    $form_state['#redirect'] = $destination;
+    $form_state['redirect'] = array($destination);
   }
 
   $form['pay_subid'] = array(
@@ -991,7 +991,7 @@ function lm_paypal_subscriber_pay_form_submit($form, &$form_state) {
   }
   $usid = $sb->usid;
 
-  $form_state['redirect'] = "admin/config/lm_paypal/subscriber_edit/$usid";
+  $form_state['redirect'] = array("admin/config/lm_paypal/subscriber_edit/$usid");
 }
 
 /**
@@ -1060,8 +1060,8 @@ function lm_paypal_subscriptions_subscriber_edit_form_submit($form, &$form_state
     watchdog(LM_PAYPAL_SUBSCRIPTIONS, $msg);
     drupal_set_message($msg);
   }
-
-  $form_state['redirect'] = "admin/config/lm_paypal/subscriber_edit/$usid";
+  
+  $form_state['redirect'] = array("admin/config/lm_paypal/subscriber_edit/$usid");
 }
 
 /**
@@ -1074,12 +1074,11 @@ function lm_paypal_subscriptions_subscriber_edit_form_submit($form, &$form_state
  */
 function lm_paypal_subscriptions_subscribers_view_page($subid = NULL) {
   $limit = 50;
+  $output = '';
 
   if ($subid = (int) $subid
      && $so = lm_paypal_subscriptions_load_subscription($subid)) {
-    drupal_set_title(t('Subscribers for @name', array(
-      '@name' => $so->item_name,
-    )), PASS_THROUGH);
+    drupal_set_title(t('Subscribers for @name', array('@name' => $so->item_name)), PASS_THROUGH);
   }
   else {
     $output = '<h2>' . t('Subscribers') . '</h2>';
@@ -1129,8 +1128,8 @@ function lm_paypal_subscriptions_subscribers_view_page($subid = NULL) {
  */
 
   $query = db_select('lm_paypal_subscriptions', 'd');
-  $alias = $query->join('lm_paypal_subscribers','s','s.subid = d.subid');
-  $alias = $query->join('users','u','s.uid = u.uid');
+  $alias = $query->join('lm_paypal_subscribers', 's', 's.subid = d.subid');
+  $alias = $query->join('users', 'u', 's.uid = u.uid');
   $query = $query->fields('u', array('name'))
             ->fields('d', array('item_name'))
             ->fields('s', array(
@@ -1148,7 +1147,7 @@ function lm_paypal_subscriptions_subscribers_view_page($subid = NULL) {
             ->orderByHeader($header)
             ->limit($limit);
 
-
+  
   // If not sorting by started then make that the 2nd field to sort on
   //if (strpos($tablesort, 'started') === FALSE) {
   //  $tablesort .= ', started DESC';
@@ -1170,7 +1169,6 @@ function lm_paypal_subscriptions_subscribers_view_page($subid = NULL) {
   
   $rows = array();
   foreach ($result as $sub) {
-    dpm($sub);
     $ss = lm_paypal_subscription_get_status($sub->status);
     if ($ss == '') {
       $ss = $sub->status;
@@ -1182,14 +1180,15 @@ function lm_paypal_subscriptions_subscribers_view_page($subid = NULL) {
     else {
       $nid = '';
     }
+    
 
     if ($sub->kind == 0) {
       $kind = t('Role');
     }
-    else if ($sub->kind == 1) {
+    elseif ($sub->kind == 1) {
       $kind = t('Node');
     }
-    else if ($sub->kind == 2) {
+    elseif ($sub->kind == 2) {
       $kind = t('Group');
     }
 
@@ -1264,7 +1263,7 @@ function lm_paypal_subscriptions_subscriber_filter_get($filter = NULL, $reset = 
   if ($reset) {
     unset($_SESSION['lm_paypal_subs_filter']);
   }
-  else if ($filter) {
+  elseif ($filter) {
     $_SESSION['lm_paypal_subs_filter'] = $filter;
   }
   return $filter;

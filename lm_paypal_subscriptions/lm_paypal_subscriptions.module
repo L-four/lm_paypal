@@ -114,8 +114,8 @@ function lm_paypal_subscriptions_help($path, $arg) {
   $subs = l(t('LM PayPal Subscriptions'), 'admin/config/lm_paypal/subscriptions');
 
   $admin = l('LM PayPal Admin', 'admin/config/lm_paypal');
-  $roles = l(t('user management > roles'), 'admin/user/roles');
-  $access = l(t('user management > permissions'), 'admin/user/permissions');
+  $roles = l(t('user management > roles'), 'admin/people/permissions/roles');
+  $access = l(t('user management > permissions'), 'admin/people/permissions');
   $blocks = l(t('site building > blocks'), 'admin/structure/block');
 
   $help_subs = l(t('LM PayPal Subscriptions Help'), 'admin/help/lm_paypal_subscriptions');
@@ -142,7 +142,7 @@ function lm_paypal_subscriptions_help($path, $arg) {
       $new = l(t('Create New Subscription'), 'admin/config/lm_paypal/subscriptions/new');
       $output .= '<li> ' . t("Use !new to create one or more subscription definitions.", array("!new" => $new)) . '</li>';
       $output .= '<li>' . t("Make sure the right roles (usually just 'authenticated user') can see these subscription definitions by enabling it in !access under <b>lm_paypal_module</b> 'access lm_paypal_subscribe'. ", array("!access" => $access));
-      $output .=    t('<em>Special note:</em> If anonymous users are allowed to view the subscriptions pages then they are asked to login or register instead of subscribing. ') . '</li>';
+      $output .=    t('<em>Special note:</em> If anonymous users are allowed to view the subscriptions pages then they are asked to login or register instead of subscribing.') . '</li>';
       $output .= '<li>' . t('Once completed the new menu item <b>PayPal Subscribe</b> will become available allowing users to select the subscriptions they wish to purchase. Users can also view their subscriptions under <b>my account</b>.') . '</li>';
       $output .= '</ul>';
       $output .= '</p>';
@@ -231,7 +231,7 @@ function lm_paypal_subscriptions_menu() {
     'page callback' => 'lm_paypal_subscriptions_view_all_page',
     'access arguments' => array('administer lm_paypal'),
     'file' => 'lm_paypal_subscriptions.admin.inc',
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_NORMAL_ITEM,
     'weight' => 33,
   );
   // Tab 2.1: Subscription Settings
@@ -282,7 +282,7 @@ function lm_paypal_subscriptions_menu() {
     'access arguments' => array('subscription', 4),
     'file' => 'lm_paypal_subscriptions.pages.inc',
   );
-  $items['admin/config/lm_paypal/subscriptions/%/view'] = array(
+  $items['admin/config/lm_paypal/subscriptions/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => 1,
@@ -318,6 +318,7 @@ function lm_paypal_subscriptions_menu() {
     'file' => 'lm_paypal_subscriptions.admin.inc',
     'weight' => 32,
   );
+
   // View and edit a subscriber
   $items['admin/config/lm_paypal/subscribers/subscriber/%'] = array(
     'title' => 'Subscriber',
@@ -392,6 +393,7 @@ function lm_paypal_subscription_access($op, $subid) {
   return FALSE;
 }
 
+
 /**
  * Load a subscription from database.
  *
@@ -451,10 +453,10 @@ function lm_paypal_subscriptions_load($subids) {
  */
 function lm_paypal_subscriptions_load_subscriber($search = array()) {
   static $fields = array(
-    'usid' => "%d",
-    'subscr_id' => "'%s'",
-    'uid' => "%d",
-    'nid' => "%d",
+    'usid',
+    'subscr_id',
+    'uid',
+    'nid',
   );
 
   // Static cache for later use
@@ -485,22 +487,22 @@ function lm_paypal_subscriptions_load_subscriber($search = array()) {
         return $cache_usid[$search['usid']];
       }
     }
-    else if (isset($cache_usid[$search['subscr_id']])) {
+    elseif (isset($cache_subscr_id[$search['subscr_id']])) {
       return $cache_subscr_id[$search['subscr_id']];
     }
   }
 
   // We could not it cache, then continue with sql request
   
-  $query = db_select('lm_paypal_subscribers', 'subs');
-
-
-  foreach ($fields as $field => $pattern) {
+  $query = db_select('lm_paypal_subscribers', 'subs')
+            ->fields('subs');
+  
+  foreach ($fields as $field) {
     if (isset($search[$field])) {
-      if (empty($search[$field])) {
-        $query->condition($field, "NULL");
+      if (empty($search[$field]) && $search[$field] != 0) {
+        $query->condition($field, NULL);
       }
-      else {
+      elseif (!is_array($search[$field])) {
         $query->condition($field, $search[$field]);
       }
     }
@@ -511,20 +513,18 @@ function lm_paypal_subscriptions_load_subscriber($search = array()) {
   
   
   if ($single) {
-    if ($subscriber = db_fetch_object($result)) {
+    foreach ($result as $subscriber) {
       $cache_usid[$subscriber->usid] = $subscriber;
       $cache_subscr_id[$subscriber->subscr_id] = $subscriber;
       return $subscriber;
     }
-    else {
-      return NULL;
-    }
+    return NULL;
   }
 
   else {
     $ret = array();
 
-    while ($subscriber = db_fetch_object($result)) {
+    foreach ($result as $subscriber) {
       // Even if we did not read the cache, we can still write it!
       // As PHP has a really bad memory handling, lets keep some pointers that
       // may be usefull later.
@@ -603,18 +603,21 @@ function lm_paypal_subscriptions_block_OLD($op = 'list', $delta = 0, $edit = arr
  * Implements hook_user_view().
  */
 function lm_paypal_subscriptions_user_view($account, $view_mode) {
+  global $user;
+  
   if (TRUE && (user_access('administer lm_paypal') || $user->uid == $account->uid)) {
     $account->content['subscriptions'] = array(
       '#type' => 'user_profile_category',
       '#title' => t('Subscriptions'),
       '#weight' => 7, // under History which is 5 and Paid Adverts which is 6.
+      '#markup' => '',
     );
     // TODO: fix this ugly require
     require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'lm_paypal_subscriptions') . '/lm_paypal_subscriptions.pages.inc';
     $account->content['subscriptions']['subs'] = array(
       '#type' => 'user_profile_item',
       '#title' => t('Current subscription status:'),
-      '#value' => lm_paypal_subscribe_select(32, $account),
+      '#markup' => lm_paypal_subscribe_select(32, $account),
     );
   }
 }
@@ -643,7 +646,7 @@ function lm_paypal_subscription_node_subs() {
   if (! $cache) {
     $result = db_query('SELECT subid FROM {lm_paypal_subscriptions} WHERE status = :status AND kind = :kind', array(':status' => 1, ':kind' => 1));
 
-    while ($data = db_fetch_object($result)) {
+    foreach ($result as $data) {
       // Use our load function may eventually preload data used later
       if ($subscription = lm_paypal_subscriptions_load_subscription($data->subid)) {
         $cache[$data->subid] = $subscription->item_name;
@@ -668,10 +671,10 @@ function lm_paypal_subscriptions_node_subscribed($node) {
   $nid = is_object($node) ? $node->nid : $nid = $node;
 
   if (! isset($cache[$nid])) {
-    $result = db_query("SELECT subid FROM {lm_paypal_subscribers} WHERE status = :status AND nid = :nid", array(':status' => 1, ':nid' => $nid));
+    $result = db_query("SELECT subid FROM {lm_paypal_subscribers} WHERE status = :status AND nid = :nid", array(':status' => 1, ':nid' => $nid))->fetchField();
 
-    if ($data = db_fetch_object($result)) {
-      $cache[$nid] = $data->subid;
+    if (!empty($result)) {
+      $cache[$nid] = $result->subid;
     }
   }
 
@@ -700,11 +703,23 @@ function lm_paypal_subscriptions_user_subscribed($subscription, $account = NULL)
   }
 
   if (!isset($cache[$subid][$uid])) {
-    // kind 0 is a role subscription, kind 2 is a group
-    $cache[$subid][$uid] = (bool) db_query("SELECT 1 FROM {lm_paypal_subscribers} WHERE uid = :uid AND subid = :subid AND status = :status AND (kind = :(kind OR kind = :kind", array(':uid' => array(
-        $uid,
-        $subid,
-      ), ':subid' => 1, ':status' => 0, ':(kind' => 2))->fetchField();
+    // kind 0 is a role subscription, kind 2 is a group  
+    $cache[$subid][$uid] = (bool) db_query("
+      SELECT 1 
+      FROM {lm_paypal_subscribers} 
+      WHERE uid = :uid
+        AND subid = :subid 
+        AND status = :status 
+        AND ( kind = :role OR kind = :group )",
+      array(
+        ':uid' => $uid,
+        ':subid' => $subid,
+        ':status' => 1,
+        ':role' => 0,
+        ':group' => 2
+      )
+    )
+    ->fetchField();
   }
 
   return $cache[$subid][$uid];
@@ -778,14 +793,15 @@ function lm_paypal_subscriptions_user_gain_role($account, $rid) {
   if (! $roles->fetchField()) {
     // TODO Please review the conversion of this statement to the D7 database API syntax.
     /* db_query("INSERT INTO {users_roles} (uid, rid) VALUES (%d, %d)", $account->uid, $rid) */
-    $insert = $id = db_insert('users_roles')
-  ->fields(array(
-      'uid' => $account->uid,
-      'rid' => $rid,
-    ))
-  ->execute();
-
-    if (!$insert) {
+    $id = db_insert('users_roles')
+      ->fields(array(
+          'uid' => $account->uid,
+          'rid' => $rid,
+        ))
+      ->execute();
+    debug($id);
+    
+    if (empty($id) && $id != 0) {
       watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Failed to add user to role (uid %uid, rid %rid)', array('%uid' => $account->uid, '%rid' => $rid), WATCHDOG_ERROR);
       return;
     }
@@ -932,7 +948,22 @@ function lm_paypal_subscribable_groups() {
 
   // This SQL borrowed from: function og_list_groups_page and added to the WHERE
   // a condition to match og.selective = OG_INVITE_ONLY (2)
-  $sql = db_rewrite_sql("SELECT og.nid, n.title, r.body, n.uid, u.name, og.og_description FROM {og} og INNER JOIN {node} n ON og.nid = n.nid INNER JOIN {node_revisions} r ON r.vid = n.vid INNER JOIN {users} u ON n.uid = u.uid WHERE og.og_directory=1 AND n.status=1 AND og.og_selective = 2 ORDER BY og.nid DESC", 'og', 'nid');
+  $sql = db_rewrite_sql("
+    SELECT og.nid, n.title, r.body, n.uid, u.name, og.og_description 
+    FROM {og} og 
+    INNER JOIN {node} n 
+      ON og.nid = n.nid 
+    INNER JOIN {node_revisions} r 
+      ON r.vid = n.vid 
+    INNER JOIN {users} u 
+      ON n.uid = u.uid 
+    WHERE og.og_directory=1 
+      AND n.status=1 
+      AND og.og_selective = 2 
+    ORDER BY og.nid 
+    DESC", 'og', 'nid');
+  
+  $query = db_select('og');
   // TODO Please convert this statement to the D7 database API syntax.
   $gs = db_query($sql);
 
@@ -1152,7 +1183,7 @@ function lm_paypal_subscriptions_lm_paypal_ipn_subscr_signup($ipn) {
 
         // A payment arrived first. Now obey the signup
       case LM_PAYPAL_SUBSCRIPTIONS_STATUS_PAID:
-        watchdog(LM_PAYPAL_SUBSCRIPTIONS, t('Signup received after payment, obeying it anyway'));
+        watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Signup received after payment, obeying it anyway');
         break;
     }
   }
@@ -1165,7 +1196,7 @@ function lm_paypal_subscriptions_lm_paypal_ipn_subscr_signup($ipn) {
   if ($so->kind == 0) {
     lm_paypal_subscriptions_user_gain_role($account, $so->rid);
   }
-  else if ($so->kind == 2) {
+  elseif ($so->kind == 2) {
     lm_paypal_subscriptions_user_gain_group($account, $so->rid);
   }
 
@@ -1179,8 +1210,8 @@ function lm_paypal_subscriptions_lm_paypal_ipn_subscr_signup($ipn) {
         '%Node' => '',
       );
     }
-    else if ($so->kind == 1) {
-      $node = t(" on node !nid", array("!nid" => $nid));
+    elseif ($so->kind == 1) {
+      $node = t("on node !nid", array("!nid" => $nid));
       $variables = array(
         '%Subscription' => $so->item_name,
         '%Node' => $node,
@@ -1204,7 +1235,7 @@ function lm_paypal_subscriptions_lm_paypal_ipn_subscr_signup($ipn) {
         '%Node' => '',
       );
     }
-    else if ($so->kind == 1) {
+    elseif ($so->kind == 1) {
       $variables = array(
         '%Subscription' => $so->item_name,
         '%Node' => $node,
@@ -1326,7 +1357,7 @@ function _lm_paypal_subscriptions_ipn_cancel_or_eot($ipn) {
   if ($so->kind == 0) {
     lm_paypal_subscriptions_user_loose_role($account, $so->rid);
   }
-  else if ($so->kind == 2) {
+  elseif ($so->kind == 2) {
     lm_paypal_subscriptions_user_loose_group($account, $so->rid);
   }
 
@@ -1341,8 +1372,8 @@ function _lm_paypal_subscriptions_ipn_cancel_or_eot($ipn) {
         '%Node' => '',
       );
     }
-    else if ($so->kind == 1) {
-      $node = t(" on node !nid", array("!nid" => $nid));
+    elseif ($so->kind == 1) {
+      $node = t("on node !nid", array("!nid" => $nid));
       $variables = array(
         '%Subscription' => $so->item_name,
         '%End' => $end,
@@ -1368,7 +1399,7 @@ function _lm_paypal_subscriptions_ipn_cancel_or_eot($ipn) {
         '%Node' => '',
       );
     }
-    else if ($so->kind == 1) {
+    elseif ($so->kind == 1) {
       $variables = array(
         '%Subscription' => $so->item_name,
         '%End' => $end,
@@ -1683,7 +1714,7 @@ function lm_paypal_subscriptions_cron() {
     // Find all the subscribers to this subscription
     $sbs = db_query("SELECT * FROM {lm_paypal_subscribers} WHERE status = :status AND subid = :subid", array(':status' => 1, ':subid' => $subid));
 
-    while ($sb = db_fetch_object($sbs)) {
+    foreach ($sbs as $sb) {
       if ($sb->email_sent) {
         //watchdog(LM_PAYPAL_SUBSCRIPTIONS, "cron email_sent already");
         continue;
@@ -1708,7 +1739,7 @@ function lm_paypal_subscriptions_cron() {
             '%Node' => '',
           );
         }
-        else if ($so->kind == 1) {
+        elseif ($so->kind == 1) {
           $variables = array(
             '%Subscription' => $so->item_name,
             '%Days' => $nearend_days,

@@ -660,7 +660,7 @@ function lm_paypal_api_payment_form($form, $form_state, $amount, $options = arra
  function lm_paypal_help($path, $arg) {
 
   $admin = l('LM PayPal Admin', 'admin/config/lm_paypal');
-  $access = l('administer permissions', 'admin/user/permissions');
+  $access = l('administer permissions', 'admin/people/permissions');
 
   $help = l('LM PayPal Help', 'admin/help/lm_paypal');
   $ipn = url('lm_paypal/ipn', array('query' => NULL, 'fragment' => NULL, 'absolute' => TRUE));
