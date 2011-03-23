@@ -45,35 +45,34 @@ function lm_paypal_menu() {
   // Each of the LM Paypal modules has a tab under admin/config/lm_paypal.
   // Their "main settings page" should be the default, and any other
   // view/configure pages should be second-level tabs.
+  
+  
+      
 
   $items['admin/config/lm_paypal'] = array(
+    'title' => 'LM PayPal',
+    'description' => 'LM PayPal',
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+  $items['admin/config/lm_paypal/settings'] = array(
     'file' => 'lm_paypal.admin.inc',
     'title' => 'LM PayPal',
     'description' => 'LM PayPal is a set of modules that interface to paypal.com',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_settings_form'),
     'access arguments' => array('administer lm_paypal'),
-    'type' => MENU_NORMAL_ITEM,
   );
-  $items['admin/config/lm_paypal/base'] = array(
-    'title' => 'Base',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 1,
-  );
-  // Tab 1.1: LM Paypal Settings
-  $items['admin/config/lm_paypal/base/settings'] = array(
-    'title' => 'Settings',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 1,
-  );
+
   // Tab 1.2: LM Paypal Settings
-  $items['admin/config/lm_paypal/base/ipns'] = array(
+  $items['admin/config/lm_paypal/ipns'] = array(
     'file' => 'lm_paypal.admin.inc',
     'title' => 'Saved IPNs',
     'description' => 'Show details of all saved PayPal IPN\'s',
     'page callback' => 'lm_paypal_ipns',
     'access arguments' => array('administer lm_paypal'),
-    'type' => MENU_LOCAL_TASK,
     'weight' => 2,
   );
 

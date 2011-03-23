@@ -227,29 +227,23 @@ function lm_paypal_subscriptions_menu() {
 
   // Main tab
   $items['admin/config/lm_paypal/subscriptions'] = array(
-    'title' => 'Subscriptions',
+    'title' => 'View Subscriptions',
+    'description' => 'View PayPal subscriptions.',
     'page callback' => 'lm_paypal_subscriptions_view_all_page',
     'access arguments' => array('administer lm_paypal'),
     'file' => 'lm_paypal_subscriptions.admin.inc',
-    'type' => MENU_NORMAL_ITEM,
-    'weight' => 33,
+    'weight' => 3,
   );
-  // Tab 2.1: Subscription Settings
-  $items['admin/config/lm_paypal/subscriptions/view'] = array(
-    'title' => 'View subscriptions',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 1,
-  );
+  
   // Tab 2.2 Subscription admin
-  $items['admin/config/lm_paypal/subscriptions/settings'] = array(
-    'title' => 'Settings',
-    'description' => 'View PayPal subscriptions.',
+  $items['admin/config/lm_paypal/subscriptions_settings'] = array(
+    'title' => 'Subscriptions Settings',
+    'description' => 'PayPal subscriptions Settings.',
     'access arguments' => array('administer lm_paypal'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_subscriptions_admin_settings'),
     'file' => 'lm_paypal_subscriptions.admin.inc',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 20,
+    'weight' => 4,
   );
 
   // Add and delete a subscription
@@ -260,7 +254,6 @@ function lm_paypal_subscriptions_menu() {
     'page arguments' => array('lm_paypal_subscriptions_edit_form'),
     'access arguments' => array('administer lm_paypal', NULL),
     'file' => 'lm_paypal_subscriptions.admin.inc',
-    'type' => MENU_NORMAL_ITEM,
   );
   $items['admin/config/lm_paypal/subscriptions/%/delete'] = array(
     'title' => 'Delete subscription',
@@ -282,14 +275,9 @@ function lm_paypal_subscriptions_menu() {
     'access arguments' => array('subscription', 4),
     'file' => 'lm_paypal_subscriptions.pages.inc',
   );
-  $items['admin/config/lm_paypal/subscriptions/view'] = array(
-    'title' => 'View',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 1,
-  );
+  
   $items['admin/config/lm_paypal/subscriptions/%/edit'] = array(
     'title' => 'Edit',
-    'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_subscriptions_edit_form', 4),
     'access callback' => 'lm_paypal_subscription_access',
@@ -300,7 +288,6 @@ function lm_paypal_subscriptions_menu() {
   // View subscribers for one subscription
   $items['admin/config/lm_paypal/subscriptions/%/subscribers'] = array(
     'title' => 'Subscribers',
-    'type' => MENU_LOCAL_TASK,
     'page callback' => 'lm_paypal_subscriptions_subscribers_view_page',
     'page arguments' => array(4),
     'access callback' => 'lm_paypal_subscription_access',
@@ -312,35 +299,28 @@ function lm_paypal_subscriptions_menu() {
   // View all suscribers
   $items['admin/config/lm_paypal/subscribers'] = array(
     'title' => 'Subscribers',
-    'type' => MENU_LOCAL_TASK,
+    'description' => 'View PayPal subscribers.',
     'page callback' => 'lm_paypal_subscriptions_subscribers_view_page',
     'access arguments' => array('administer lm_paypal'),
     'file' => 'lm_paypal_subscriptions.admin.inc',
-    'weight' => 32,
+    'weight' => 6,
   );
 
   // View and edit a subscriber
-  $items['admin/config/lm_paypal/subscribers/subscriber/%'] = array(
+  $items['admin/config/lm_paypal/subscribers/%'] = array(
     'title' => 'Subscriber',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lm_paypal_subscriptions_subscriber_edit_form', 5),
+    'page arguments' => array('lm_paypal_subscriptions_subscriber_edit_form', 4),
     'access callback' => 'lm_paypal_subscription_access',
-    'access arguments' => array('subscriber', 5),
+    'access arguments' => array('subscriber', 4),
     'file' => 'lm_paypal_subscriptions.admin.inc',
-    'type' => MENU_CALLBACK,
-    'weight' => 1,
-  );
-  $items['admin/config/lm_paypal/subscribers/subscriber/%/edit'] = array(
-    'title' => 'Edit',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => 1,
   );
 
-  $items['admin/lm_paypal/subscriber/pay/%/%/%'] = array(
+  $items['admin/config/lm_paypal/subscriber/pay/%/%/%'] = array(
     'title' => 'Pay',
-    'type' => MENU_LOCAL_TASK,
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lm_paypal_subscriber_pay_form', 4, 5, 6),
+    'page arguments' => array('lm_paypal_subscriber_pay_form', 5, 6, 7),
     'access arguments' => array('administer lm_paypal'),
     'description' => 'Mark a node as paid bypassing Paypal.',
     'file' => 'lm_paypal_subscriptions.admin.inc',
@@ -798,7 +778,6 @@ function lm_paypal_subscriptions_user_gain_role($account, $rid) {
           'rid' => $rid,
         ))
       ->execute();
-    debug($id);
     
     if (empty($id) && $id != 0) {
       watchdog(LM_PAYPAL_SUBSCRIPTIONS, 'Failed to add user to role (uid %uid, rid %rid)', array('%uid' => $account->uid, '%rid' => $rid), WATCHDOG_ERROR);
@@ -1052,7 +1031,7 @@ function _lm_paypal_subscriptions_ipn_is_valid($ipn) {
  *   FALSE if IPN is not for us or has wrong data
  */
 function _lm_paypal_subscriptions_ipn_get_vars($ipn) {
-  $link = l(t('view'), "admin/config/lm_paypal/id/$ipn->id");
+  $link = l(t('view'), 'admin/config/lm_paypal/id/' . $ipn->id);
 
   $var_so = NULL;
   $var_uid = NULL;
@@ -1060,7 +1039,13 @@ function _lm_paypal_subscriptions_ipn_get_vars($ipn) {
 
   if ($ipn->payment_status == 'Pending') {
     $message = 'Ignoring IPN with status: Pending. Check your PayPal account to see why it is pending. Note: pending_reason: %reason';
-    $message_vars = array('%reason' => check_plain($ipn->pending_reason));
+    if (isset($ipn->pending_reason)) {
+      $reason = check_plain($ipn->pending_reason); 
+    }
+    else {
+      $reason = 'No reason given';
+    }
+    $message_vars = array('%reason' => $reason);
     watchdog(LM_PAYPAL_SUBSCRIPTIONS, $message, $message_vars, WATCHDOG_ERROR, $link);
     return FALSE;
   }
@@ -1085,11 +1070,13 @@ function _lm_paypal_subscriptions_ipn_get_vars($ipn) {
   if (! $var_so->status) {
     $var_so = NULL;
   }
-
-  $var_uid = $custom['uid'];
+  if (isset($custom['uid'])) {
+    $var_uid = $custom['uid'];
+  }
   // This is usually true and doesn't hurt otherwise
-  $var_nid = $custom['nid'];
-
+  if (isset($custom['nid'])) {
+    $var_nid = $custom['nid'];
+  }
   // Look up the subscription
   if (! $var_so || ! $var_so->status) {
     $message = 'IPN uses unknown or defunct subscription, ignored: %subid';
@@ -1106,7 +1093,7 @@ function _lm_paypal_subscriptions_ipn_get_vars($ipn) {
     return FALSE;
   }
 
-  return array($var_so, $var_uid, $var_nid);
+  return array($var_so, $var_uid, $var_nid, $link);
 }
 
 /**
@@ -1132,7 +1119,7 @@ function lm_paypal_subscriptions_lm_paypal_ipn_subscr_signup($ipn) {
     return FALSE;
   }
 
-  list($so, $uid, $nid) = _lm_paypal_subscriptions_ipn_get_vars($ipn);
+  list($so, $uid, $nid, $link) = _lm_paypal_subscriptions_ipn_get_vars($ipn);
 
   // User validity check
   // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
@@ -1259,7 +1246,7 @@ function lm_paypal_subscriptions_lm_paypal_ipn_subscr_payment($ipn) {
     return FALSE;
   }
 
-  list($so, $uid, $nid) = _lm_paypal_subscriptions_ipn_get_vars($ipn);
+  list($so, $uid, $nid, $link) = _lm_paypal_subscriptions_ipn_get_vars($ipn);
 
   // User validity check
   // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
@@ -1314,7 +1301,7 @@ function _lm_paypal_subscriptions_ipn_cancel_or_eot($ipn) {
     return FALSE;
   }
 
-  list($so, $uid, $nid) = _lm_paypal_subscriptions_ipn_get_vars($ipn);
+  list($so, $uid, $nid, $link) = _lm_paypal_subscriptions_ipn_get_vars($ipn);
 
   // User validity check
   // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.

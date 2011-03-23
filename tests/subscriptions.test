@@ -93,7 +93,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
       'access administration pages',
       // 'administer blocks',
       // 'administer filters',
-      // 'access user profiles',
+      'access user profiles',
       'administer permissions',
     );
     $this->admin_user = $this->drupalCreateUser($admin_permissions);
@@ -120,7 +120,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
   function testLmPaypalSubscriptions() {
     // Check Settings page.
     $this->drupalLogin($this->admin_user);
-    $this->drupalGet('admin/config/lm_paypal/subscriptions/settings');
+    $this->drupalGet('admin/config/lm_paypal/subscriptions_settings');
     $this->assertField('lm_paypal_subscriptions_inprogress');
     $this->assertRaw(variable_get('lm_paypal_subscriptions_inprogress', NULL)); // TODO: check value is IN field?
     $this->assertField('lm_paypal_subscriptions_menu_rebuild');
@@ -146,7 +146,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     // TODO: check filter functionality
 
     // Create Subscription pages.
-    $this->drupalGet('admin/config/lm_paypal/subscriptions/view');
+    $this->drupalGet('admin/config/lm_paypal/subscriptions');
     $this->clickLink('Create new subscription');
     $this->assertText('Create subscription');
 
@@ -307,7 +307,7 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     $this->drupalGet('admin/config/lm_paypal/subscribers');
     $this->clickLink('edit');
     $this->assertText('Subscriber');
-    $this->clickLink($dummy_user->name);
+    $this->clickLink($this->web_user->name);
     
     // Check Unsubscribe
     $this->assertText('To Unsubscribe');
