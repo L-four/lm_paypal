@@ -327,7 +327,7 @@ function lm_paypal_subscriptions_menu() {
     'access callback' => 'lm_paypal_subscription_access',
     'access arguments' => array('subscriber', 5),
     'file' => 'lm_paypal_subscriptions.admin.inc',
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_CALLBACK,
     'weight' => 1,
   );
   $items['admin/config/lm_paypal/subscribers/subscriber/%/edit'] = array(
@@ -479,16 +479,15 @@ function lm_paypal_subscriptions_load_subscriber($search = array()) {
 
   // Check for cache
   if ($single) {
-    if (isset($cache_usid[$search['usid']])) {
-      if (isset($search['subscr_id'])) {
-        return ($test->subscr_id == $search['usid']) ? $cache_usid[$search['usid']] : NULL;
-      }
-      else {
+    if (isset($search['usid'])) {
+      if (isset($cache_usid[$search['usid']])) {
         return $cache_usid[$search['usid']];
       }
     }
-    elseif (isset($cache_subscr_id[$search['subscr_id']])) {
-      return $cache_subscr_id[$search['subscr_id']];
+    elseif (isset($search['subscr_id'])){
+      if(isset($cache_subscr_id[$search['subscr_id']])) {
+        return $cache_subscr_id[$search['subscr_id']];
+      }
     }
   }
 

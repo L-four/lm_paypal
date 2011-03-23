@@ -307,7 +307,10 @@ class LmPaypalSubscriptionsTestCase extends AbstractLmPaypalTestCase {
     $this->drupalGet('admin/config/lm_paypal/subscribers');
     $this->clickLink('edit');
     $this->assertText('Subscriber');
-    $this->assertText('Uid ' . $this->web_user->uid); // ick, but that's what's shown
+    $this->clickLink($dummy_user->name);
+    
+    // Check Unsubscribe
+    $this->assertText('To Unsubscribe');
     //$this->writeFile('sub1edit.html');
     // TODO: test edit subscriber
 

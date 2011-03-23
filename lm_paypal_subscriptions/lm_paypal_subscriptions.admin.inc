@@ -1006,10 +1006,10 @@ function lm_paypal_subscriber_pay_form_submit($form, &$form_state) {
  */
 function lm_paypal_subscriptions_subscriber_edit_form($form, $form_state, $usid) {
   $sb = lm_paypal_subscriptions_load_subscriber($usid);
-
-  $form['Edit subscriber'] = array(
-    '#type' => 'markup',
-    '#value' => '<p>Uid ' . $sb->uid . '</p>',
+  debug($sb);
+  $user = user_load($sb->uid);
+  $form['edit_subscriber'] = array(
+    '#markup' => '<p>User: ' . l($user->name, "user/$user->uid") . '</p>',
   );
 
   $form['edit_usid'] = array(
