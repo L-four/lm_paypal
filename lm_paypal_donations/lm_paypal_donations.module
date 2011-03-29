@@ -123,21 +123,13 @@ function lm_paypal_donations_menu() {
   $items = array();
 
   // LM PayPal Donations Settings
-  $items['admin/config/lm_paypal/donations'] = array(
-    'title' => 'Donations',
+  $items['admin/config/lm_paypal/donations_settings'] = array(
+    'title' => 'Donations Settings',
     'description' => 'PayPal donations interface configuration.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_donations_settings_form'),
     'access arguments' => array('administer lm_paypal'),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 2,
-  );
-  // Tab 2.1 this is just to keep consistency with other modules
-  $items['admin/config/lm_paypal/donations/settings'] = array(
-    'title' => 'Settings',
-    'access arguments' => array('administer lm_paypal'),
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 11,
+    'weight' => 3,
   );
 
   // admin - print all donations - TODO: move to /admin? fix links to it
@@ -468,10 +460,10 @@ function lm_paypal_donations($uid, $per_page = 50) {
 function lm_paypal_donations_block_info() {
   return array(
     'lm_paypal_donation_block' => array(
-      'info' => t('Mymodule block #1 shows ...'),
+      'info' => t('lLM PayPal Donations Examples'),
       'weight' => 0,
       'status' => 1,
-      'region' => 'First sidebar',
+      'region' => 'sidebar_first',
       'cache' => DRUPAL_CACHE_GLOBAL
     )
   );
@@ -527,7 +519,7 @@ function lm_paypal_donations_block_view($delta) {
           array(10),
            15
         ),
-        array( 
+        array(
           'currency_code' =>'AUD',
           'text' => 'donation to example.com',
           'display_amount' => TRUE,

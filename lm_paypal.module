@@ -46,8 +46,7 @@ function lm_paypal_menu() {
   // Their "main settings page" should be the default, and any other
   // view/configure pages should be second-level tabs.
   
-  
-      
+
 
   $items['admin/config/lm_paypal'] = array(
     'title' => 'LM PayPal',
@@ -59,7 +58,7 @@ function lm_paypal_menu() {
   );
   $items['admin/config/lm_paypal/settings'] = array(
     'file' => 'lm_paypal.admin.inc',
-    'title' => 'LM PayPal',
+    'title' => 'LM PayPal Settings',
     'description' => 'LM PayPal is a set of modules that interface to paypal.com',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lm_paypal_settings_form'),
@@ -210,6 +209,7 @@ function lm_paypal_api_get_business() {
 }
 
 /**
+ * TODO: use currency module if they have it? http://drupal.org/project/currency
  * Get currency localized textual description or symbol.
  * 
  * If you don't specify a currency code you want, this function will return an
@@ -227,7 +227,7 @@ function lm_paypal_api_get_business() {
  */
 function lm_paypal_api_get_currency($currency = NULL, $syms = FALSE) {
   static $currencies_text, $currencies_syms;
-
+  // TODO:plurals
   if (! $syms && ! $currencies_text) {
     $currencies_text = array(
       // '' => t('default currency'),  Force a currency to be specified
@@ -252,7 +252,7 @@ function lm_paypal_api_get_currency($currency = NULL, $syms = FALSE) {
   if ($syms && ! $currencies_syms) {
     $currencies_syms = array(
       '' => '?',
-      'AUD' => 'A$',
+      'AUD' => 'AUD$',
       'CAD' => 'Can$',
       //'EUR' => '&euro;',  This causes problems depending on the fonts
       // available and the version of the browser used
@@ -396,14 +396,18 @@ function lm_paypal_page_thanks() {
  *        Don't forget to check_plain() your text!
  *        Default is no text displayed.
  *
- *     'button_text': string
- *        Whatever you want to display on submit button.
+ *     'button': array
+ *        'text': string
+ *            Whatever you want to display on submit button.
  *
- *     'button_url': string
- *        In case you want to display a image from an external (or internal)
- *        website, use this opton to put the url.
- *        Note that if you specify this, button_text will be used as alternative
- *        text for the image.
+ *        'url': string
+ *          In case you want to display a image from an external (or internal)
+ *          website, use this opton to put the url.
+ *          Note that if you specify this, button_text will be used as alternative
+ *          text for the image.
+ *
+ *     'amount_label': string
+ *        Changes the label for the select textfield/selectfield
  *
  *     'display_amount': boolean
  *        Set this to FALSE if you dont want the price to be displayed (or if
@@ -412,7 +416,7 @@ function lm_paypal_page_thanks() {
  *        Note that if you gave an array of amounts, it will remain FALSE,
  *        whatever you pass to this option.
  *
- *     'hidden_fields': array
+ *     'hidden': array
  *        Keyed array of values you want to pass as hidden values through paypal
  *        form.
  *        Advanced usage only!
@@ -483,15 +487,16 @@ function lm_paypal_api_payment_form($form, $form_state, $amount, $options = arra
   // Check for a specified currency
   $currency_code = isset($options['currency_code']) ? $options['currency_code'] : lm_paypal_api_get_currency_default();
 
+  $button_text = t('Proceed to paypal.com');
+  
   // And check for button customisation
-  if (isset($options['button_url']) && check_url($options['button_url'])) {
-    $button_url = $options['button_url'];
-  }
-  if (isset($options['button_text'])) {
-    $button_text = check_plain($options['button_text']);
-  }
-  else {
-    $button_text = t('Proceed to paypal.com');
+  if (isset($options['button']) && is_array($options['button'])) {
+    if (isset($options['button']['url']) && check_url($options['url'])) {
+      $button_url = $options['url'];
+    }
+    if (isset($options['button']['text'])) {
+      $button_text = check_plain($options['button']['text']);
+    }
   }
 
   $form['#action'] = lm_paypal_api_get_host(TRUE);
@@ -544,7 +549,7 @@ function lm_paypal_api_payment_form($form, $form_state, $amount, $options = arra
     '#value' => $return_url,
     '#name' => 'return',
   );
-  $form['cancel_url'] = array(
+  $form['cancel_return'] = array(
     '#type' => 'hidden',
     '#value' => $cancel_url,
     '#name' => 'return',
@@ -560,16 +565,16 @@ function lm_paypal_api_payment_form($form, $form_state, $amount, $options = arra
       '#markup' => $options['text'],
     );
   }
-
+  
   // Either display the textfield or the select
   if (is_array($valid_amount)) {
     $textual_currency = lm_paypal_api_get_currency($currency_code, FALSE);
     if (! $textual_currency) {
       $textual_currency = $currency_code;
     }
+    $label = t('Select an amount');
     $form['amount'] = array(
       '#type' => 'select',
-      '#title' => t('Select amount'),
       '#options' => $valid_amount,
       '#description' => t('Value is @currency', array('@currency' => $textual_currency)),
     );
@@ -579,11 +584,19 @@ function lm_paypal_api_payment_form($form, $form_state, $amount, $options = arra
     }
 
     if(count($valid_amount) === 1){
+      $label = t('Enter an amount');
       $form['amount']['#type'] = 'textfield';
       $form['amount']['#value'] = current($valid_amount);
       $form['amount']['#size'] = '';
       unset($form['amount']['#options']);
     }
+    
+    //use label if set
+    if (isset($options['amount_label'])) {
+      $label = $options['amount_label'];
+    }
+    
+    $form['amount']['#title'] = t($label); 
   }
   elseif ((isset($options['display_amount']) && $options['display_amount'])) {
     $form['amount_display'] = array(
@@ -602,18 +615,18 @@ function lm_paypal_api_payment_form($form, $form_state, $amount, $options = arra
     '#value' => lm_paypal_api_get_notify_url(),
     '#name' => 'notify_url',
   );
-  if (empty($custom) || is_array($custom)) {
-    $custom = array();
+  if (empty($options['custom']) || !is_array($options['custom'])) {
+    $options['custom'] = array();
   }
-  $custom['uid'] = $user->uid;
+  $options['custom']['uid'] = $user->uid;
   $form['custom'] = array(
     '#type' => 'hidden',
-    '#value' => serialize($custom),
+    '#value' => serialize($options['custom']),
     '#name' => 'custom',
   );
   
-  if (isset($options['hidden']) && is_array($options['hidden']) && ! empty($options['hidden'])) {
-    foreach ($options['hidden'] as $key => $value) {
+  if (isset($options['hidden_fields']) && is_array($options['hidden_fields']) && ! empty($options['hidden_fields'])) {
+    foreach ($options['hidden_fields'] as $key => $value) {
       // Do not override existing values
       if (! isset($form[$key])) {
         $form[$key] = array(
