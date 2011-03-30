@@ -198,7 +198,7 @@ class LmPaypalTestCase extends AbstractLmPaypalTestCase {
       array(array('CZK'), t('Czech Koruna')),
       array(array('NOK', FALSE), t('Norwegian Krone')),
       // Unknown syms asked
-      array(array('AUD', TRUE), 'A$'),
+      array(array('AUD', TRUE), 'AUD$'),
     );
     foreach ($test_cases as $case) {
       $return = @call_user_func_array('lm_paypal_api_get_currency', $case[0]);

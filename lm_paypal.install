@@ -19,15 +19,6 @@
  * @todo Please document this function.
  * @see http://drupal.org/node/1354
  */
-function lm_paypal_install() {
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.
-  // drupal_install_schema('lm_paypal')
-}
-
-/**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
- */
 function lm_paypal_uninstall() {
   // TODO The drupal_(un)install_schema functions are called automatically in D7.
   // drupal_uninstall_schema('lm_paypal')

@@ -53,7 +53,7 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
     // Check Settings page.
     $thanks_page = variable_get('lm_paypal_donations_thanks', NULL);
     $this->drupalLogin($this->admin_user);
-    $this->drupalGet('admin/config/lm_paypal/donations');
+    $this->drupalGet('admin/config/lm_paypal/donations_settings');
     $this->assertField('lm_paypal_donations_thanks');
     $this->assertRaw($thanks_page);
 
