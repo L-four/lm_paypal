@@ -518,7 +518,7 @@ function lm_paypal_api_payment_form($form, $form_state, $amount, $options = arra
 
     case LM_PAYPAL_FORM_CMD_BUY_NOW:
     default:
-      $cmd = '_xclick ';
+      $cmd = '_xclick';
       break;
   }
 
