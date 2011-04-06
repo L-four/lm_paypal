@@ -304,6 +304,8 @@ function lm_paypal_schema() {
         'type' => 'numeric',
         'precision' => 10,
         'scale' => 2,
+        'not null' => FALSE,
+        'default' => 0,
         'description' => 'Full USD amount of the customer\'s payment, before transaction fee is subtracted. Will be empty for non-USD payments. This is a legacy field replaced by mc_gross. If this amount is negative, it signifies a refund or reversal, and either of those payment statuses can be for the full or partial amount of the original transaction.',
       ),
       'mc_fee' => array(
@@ -323,6 +325,22 @@ function lm_paypal_schema() {
         'precision' => 10,
         'scale' => 2,
         'description' => 'Amount that is deposited into the accounts primary baal nce after a currency conversion from automatic conversion (through your Payment Receiving Preferences) or manual conversion (through manually accepting a payment).',
+      ),
+      'handling_amount' => array( /* Undocumented IPN Variable */
+        'description' => 'Fi',
+        'type' => 'numeric',
+        'precision' => 10,
+        'scale' => 2,
+      ),
+      'protection_eligibility' => array(
+        'type' => 'varchar',
+        'length' => 30,
+        'description' => 'The protection eligibility of the payment.',
+      ),
+      'transaction_subject' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'description' => 'Custom value as passed by you, the merchant. These are passthrough variables that are never presented to your customer',
       ),
       'settle_currency' => array(
         'type' => 'varchar',
