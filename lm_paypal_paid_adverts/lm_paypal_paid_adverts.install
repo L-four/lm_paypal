@@ -32,10 +32,6 @@ function lm_paypal_paid_adverts_schema() {
   return $schema;
 }
 
-function lm_paypal_paid_adverts_install() {
-  drupal_install_schema('lm_paypal_paid_adverts');
-}
-
 function lm_paypal_paid_adverts_update_6200() {
   $ret = array();
   drupal_install_schema('lm_paypal_paid_adverts');
@@ -52,8 +48,4 @@ function lm_paypal_paid_adverts_update_6200() {
   }
   variable_del('lm_paypal_paid_adverts_type_subs');
   return $ret;
-}
-
-function lm_paypal_paid_adverts_uninstall() {
-  drupal_uninstall_schema('lm_paypal_paid_adverts');
 }

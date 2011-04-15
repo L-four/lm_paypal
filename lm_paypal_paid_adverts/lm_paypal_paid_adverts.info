@@ -1,7 +1,7 @@
 name = "LM Paypal Paid Adverts"
 description = "Provides PayPal paid advert pages."
 package = "LM PayPal"
-core = 6.x
+core = 7.x
 
 dependencies[] = lm_paypal
 dependencies[] = lm_paypal_subscriptions
