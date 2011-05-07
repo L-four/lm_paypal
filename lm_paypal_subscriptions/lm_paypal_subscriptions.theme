@@ -8,7 +8,7 @@ function theme_lm_paypal_subscription_name($variables) {
   $output = '';
   $name = check_plain($variables['subscription']->item_name);
 
-  if ($subscription->status) {
+  if ($variables['subscription']->status) {
     $output .= '<stroke>' . $name . '</stroke>';
   }
   else {

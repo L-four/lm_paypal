@@ -889,7 +889,7 @@ function lm_paypal_subscription_delete_confirm_form_submit($form, &$form_state) 
  *
  * TODO: describe params
  */
-function lm_paypal_subscriber_pay_form($form_state, $subid = NULL, $nid = NULL, $uid = NULL) {
+function lm_paypal_subscriber_pay_form($form, &$form_state, $subid = NULL, $nid = NULL, $uid = NULL) {
   // if anything is missing, no form presented
   if ($subid == NULL || $nid == NULL || $uid == NULL) {
     $form['Invalid Request'] = array(
@@ -952,9 +952,10 @@ function lm_paypal_subscriber_pay_form_submit($form, &$form_state) {
   // retrieve the kind
   $so = NULL;
   $sql = "SELECT kind FROM {lm_paypal_subscriptions} WHERE subid = %d AND status = 1";
-  $db_res = db_query("SELECT kind FROM {lm_paypal_subscriptions} WHERE subid = :subid AND status = :status", array(':subid' => $subid, ':status' => 1));
-  if ($db_res) {
-    $so = db_fetch_object($db_res);
+  $db_res = db_query("SELECT kind FROM {lm_paypal_subscriptions} WHERE subid = :subid AND status = :status", array(':subid' => $subid, ':status' => 1))->fetchCol();
+  dpm($db_res);
+  if (is_array($db_res)) {
+    $so = $db_res[0];
   }
   if (!$so) {
     $msg = t('Failed to mark node !nid as paid by subscriber !uid with subscription !subid (sql: !sql)',
@@ -972,7 +973,7 @@ function lm_paypal_subscriber_pay_form_submit($form, &$form_state) {
   }
 
   $subscr_id = ':auto:node:' . $nid;
-  if (!lm_paypal_add_subscriber($so->kind, $uid, $nid, $subid, $subscr_id, LM_PAYPAL_SUBSCRIPTIONS_STATUS_LIVE)) {
+  if (!lm_paypal_add_subscriber($so, $uid, $nid, $subid, $subscr_id, LM_PAYPAL_SUBSCRIPTIONS_STATUS_LIVE)) {
     $msg = t('Failed to mark node as paid by subscriber (by adding subscriber to that node).');
     watchdog(LM_PAYPAL_SUBSCRIPTIONS, check_plain($msg), NULL, WATCHDOG_ERROR);
     drupal_set_message($msg);
