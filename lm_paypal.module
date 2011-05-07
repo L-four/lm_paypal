@@ -583,7 +583,7 @@ function lm_paypal_api_payment_form($form, $form_state, $amount, $options = arra
       $form['amount']['#default_value'] = $default_amount;
     }
 
-    if(count($valid_amount) === 1){
+    if (count($valid_amount) === 1) {
       $label = t('Enter an amount');
       $form['amount']['#type'] = 'textfield';
       $form['amount']['#value'] = current($valid_amount);

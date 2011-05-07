@@ -7,3 +7,4 @@ files[] = tests/base_ipn_validation.test
 files[] = tests/abstract.test
 files[] = tests/base_api.test
 
+configure = admin/config/lm_paypal/settings

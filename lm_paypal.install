@@ -289,6 +289,8 @@ function lm_paypal_schema() {
         'type' => 'numeric',
         'precision' => 10,
         'scale' => 2,
+        'not null' => FALSE,
+        'default' => 0,
         'description' => 'USD transaction fee associated with the payment.  payment_gross minus payment_fee equals the amount deposited into the receiver email account. Is empty for non-USD payments. If this amount is negative, it signifies a refund or reversal, and either of those payment statuses can be for the full or partial amount of the original transaction fee.  NOTE: This is a deprecated field. Use mc_fee instead.',
       ),
       'payment_gross' => array(

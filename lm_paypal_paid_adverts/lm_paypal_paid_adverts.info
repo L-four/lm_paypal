@@ -3,6 +3,10 @@ description = "Provides PayPal paid advert pages."
 package = "LM PayPal"
 core = 7.x
 
+files[] = ../tests/paid_adverts.test
+files[] = ../tests/paid_adverts_api.test
+files[] = ../tests/paid_adverts_general.test
+
 dependencies[] = lm_paypal
 dependencies[] = lm_paypal_subscriptions
 
