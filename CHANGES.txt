@@ -1,6 +1,10 @@
 
 6.x-2.x-dev - Status at 2009-02-18
 ==================================
+* Set the cancel url to the 'cancel_return' field, not the 'return' field. [#872456].
+
+6.x-2.x-dev - Status at 2009-02-18
+==================================
 
 * Did *A LOT* of cleaning in subscriptions module.
 * Fixed some wrong tests in paid_adverts module.
