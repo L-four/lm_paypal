@@ -552,7 +552,7 @@ function lm_paypal_api_payment_form($form, $form_state, $amount, $options = arra
   $form['cancel_return'] = array(
     '#type' => 'hidden',
     '#value' => $cancel_url,
-    '#name' => 'return',
+    '#name' => 'cancel_return',
   );
   $form['currency_code'] = array(
     '#type' => 'hidden',
