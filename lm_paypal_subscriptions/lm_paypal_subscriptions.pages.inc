@@ -398,7 +398,7 @@ function lm_paypal_subscribe_subscription($subid, $display = 15, $button_url = N
         ),
         'hidden_fields' => $hidden,
       ),
-      LM_PAYPAL_FORM_CMD_SUBSCRIBE,
+      LM_PAYPAL_FORM_CMD_SUBSCRIBE
     )
   );
 
