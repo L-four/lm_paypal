@@ -1,0 +1,7 @@
+name = "LM Paypal Rules"
+description = "Provides rule intergration for lm_paypal"
+package = "LM PayPal"
+core = "7.x"
+
+dependencies[] = "rules"
+dependencies[] = lm_paypal
