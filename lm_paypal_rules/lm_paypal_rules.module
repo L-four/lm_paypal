@@ -11,7 +11,7 @@ function lm_paypal_rules_rules_event_info() {
           'label' => t('ipn object'),
         ),
         'txn_type' => array(
-          'type' => 'string',
+          'type' => 'text',
           'label' => t('transaction type'),
         ),
       ),
@@ -30,23 +30,27 @@ function lm_paypal_rules_lm_paypal_ipn($ipn) {
 }
 
 /*
- * implments hook_lm_paypal_ipn($ipn)
+ * implments hook_rules_data_info($ipn)
  */
 
 function lm_paypal_rules_rules_data_info() {
-    return array(
-    'log_entry' => array(
-      'label' => t('watchdog log entry'),
-      'wrap' => TRUE,
+  $rules_data = array(
+    'ipn' => array(
+      'label' => t('Paypal IPN'),
+      'wrap' => FALSE,
       'property info' => lm_paypal_rules_ipn_property_info(),
+      'token type' => 'ipn',
     ),
   );
+  dpm($rules_data);
+  return $rules_data;
 }
 
 function lm_paypal_rules_ipn_property_info() {
-  $schema = module_invoke('lm_paypal', 'schema');
+  $schema = drupal_get_schema_unprocessed('lm_paypal', 'lm_paypal_ipns');
+  dpm($schema);
   $ipn_property_info = array();
-  foreach ($schema['lm_paypal_ipns']['fields'] as $field => $values) {
+  foreach ($schema['fields'] as $field => $values) {
     $ipn_property_info[$field] = array(
       'type' => lm_paypal_rules_type_convertion($values['type']),
       'label' => $values['description'],
@@ -57,25 +61,70 @@ function lm_paypal_rules_ipn_property_info() {
   return $ipn_property_info;
 }
 
+
 function lm_paypal_rules_type_convertion($type){
   switch ($type) {
     case 'int':
+    case 'serial':
       return 'integer';
     break;
-    case 'text':
-      return 'text';
-    break;
     case 'varchar':
-      return 'string';
+    case 'text':
+    default:
+      return 'text';
     break;
     case 'numeric':
       return 'decimal';
     break;
-    case 'serial':
-      return 'integer';
-    break;
-    default:
-      return 'text';
-    break;
   }
+}
+
+/**
+ *
+ * Implements hook_token_info
+ *
+ * Create Tokens for Tours
+ *
+ */
+
+function lm_paypal_rules_token_info() {
+  //Define a 'tour' token type
+  $type = array(
+    'name' => 'Paypal IPN',
+    'description' => 'Tokens Related to Paypal IPNs',
+    'needs-data' => 'ipn',
+  );
+
+  $schema = drupal_get_schema_unprocessed('lm_paypal', 'lm_paypal_ipns');
+
+  $tokens = array();
+  foreach ($schema['fields'] as $field => $values) {
+    $tokens[$field] = array(
+      'name' => $field,
+      'description' => $values['description'],
+    );
+  }
+
+  return array(
+    'types' => array('ipn' => $type),
+    'tokens' => array('ipn' => $tokens),
+  );
+
+}
+
+/**
+ * implements hook_tokens()
+ *
+ *
+ */
+
+function lm_paypal_rules_tokens($type, $tokens, array $data = array(), array $options = array()) {
+   $replacements = array();   
+   if ($type == 'ipn' && !empty($data['ipn'])) {
+     $ipn = $data['ipn'];
+     foreach ($tokens as $name => $original) {
+       $replacements[$original] = (!empty($ipn->$name)) ? $ipn->$name : '';
+     }
+   }
+   return $replacements;
 }
