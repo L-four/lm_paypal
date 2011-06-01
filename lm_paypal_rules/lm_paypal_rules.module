@@ -44,7 +44,7 @@ function lm_paypal_rules_rules_data_info() {
 }
 
 function lm_paypal_rules_ipn_property_info() {
-  $schema = lm_paypal_schema();
+  $schema = module_invoke('lm_paypal', 'schema');
   $ipn_property_info = array();
   foreach ($schema['lm_paypal_ipns']['fields'] as $field => $values) {
     $ipn_property_info[$field] = array(
