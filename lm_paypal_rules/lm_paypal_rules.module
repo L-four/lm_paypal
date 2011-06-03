@@ -25,6 +25,13 @@ function lm_paypal_rules_rules_event_info() {
 
 function lm_paypal_rules_lm_paypal_ipn($ipn) {
   if (module_exists('rules')) {
+    if(!$ipn->custom) {
+      $custom = lm_paypal_unpack_ipn_custom($ipn);
+      foreach ($custom as $k => $v) {
+        $ipn->{$k} = $v;
+      }
+    }
+    dpm($ipn);
     rules_invoke_event('new_ipn', $ipn, preg_replace('/[^a-z0-9_]*/', '', $ipn->txn_type));
   }
 }
@@ -42,13 +49,11 @@ function lm_paypal_rules_rules_data_info() {
       'token type' => 'ipn',
     ),
   );
-  dpm($rules_data);
   return $rules_data;
 }
 
 function lm_paypal_rules_ipn_property_info() {
   $schema = drupal_get_schema_unprocessed('lm_paypal', 'lm_paypal_ipns');
-  dpm($schema);
   $ipn_property_info = array();
   foreach ($schema['fields'] as $field => $values) {
     $ipn_property_info[$field] = array(
@@ -57,7 +62,6 @@ function lm_paypal_rules_ipn_property_info() {
       'setter callback' => 'entity_property_verbatim_set',
     );
   }
-  dpm($ipn_property_info);
   return $ipn_property_info;
 }
 
@@ -113,8 +117,7 @@ function lm_paypal_rules_token_info() {
 }
 
 /**
- * implements hook_tokens()
- *
+ * implements hook_tokens
  *
  */
 
@@ -123,6 +126,7 @@ function lm_paypal_rules_tokens($type, $tokens, array $data = array(), array $op
    if ($type == 'ipn' && !empty($data['ipn'])) {
      $ipn = $data['ipn'];
      foreach ($tokens as $name => $original) {
+       if ($name == "custom") { continue; } // let other modules deal with this custom data
        $replacements[$original] = (!empty($ipn->$name)) ? $ipn->$name : '';
      }
    }

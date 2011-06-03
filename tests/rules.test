@@ -1,0 +1,119 @@
+<?php
+
+require_once(drupal_get_path('module', 'lm_paypal') . '/tests/abstract.test');
+
+/*
+[13-Jan-2009 08:36:31] SUBSCRIPTION IPN = Array
+(
+    [test_ipn] => 1
+    [payment_type] => instant
+    [payment_date] => 17:38:22 Jan. 03, 2009 PST
+    [payment_status] => Completed
+    [address_status] => confirmed
+    [payer_status] => verified
+    [first_name] => John
+    [last_name] => Smith
+    [payer_email] => simpletest_CW2G@example.com
+    [payer_id] => TESTBUYERID01
+    [address_name] => John Smith
+    [address_country] => United States
+    [address_country_code] => US
+    [address_zip] => 95131
+    [address_state] => CA
+    [address_city] => San Jose
+    [address_street] => 123, any street
+    [business] => seller@paypalsandbox.com
+    [receiver_email] => dummy@dummy.com
+    [receiver_id] => TESTSELLERID1
+    [residence_country] => US
+    [item_name] => ITEM_nYJFox
+    [item_number] => 0
+    [quantity] => 1
+    [shipping] => 3.04
+    [tax] => 2.02
+    [mc_currency] => USD
+    [mc_fee] => 0.44
+    [mc_gross] => 52.34
+    [mc_gross1] => 49.34
+    [txn_type] => web_accept
+    [txn_id] => 548954
+    [notify_version] => 2.1
+    [custom] => xyz123
+    [charset] => windows-1252
+    [verify_sign] => AFcWxV21C7fd0v3bYYYRCpSSRl31ADDFTKL8KpbikfcHwwH3QPTDWbuS
+)
+*/
+
+class LmPaypalRulesTestCase extends AbstractLmPaypalTestCase {
+
+  function getInfo() {
+    return array(
+      'name' => t('Rules: test rules intergration'),
+      'description' => t('Verify that rules, will display the correct information.'),
+      'group' => t('LM Paypal'),
+    );
+  }
+
+  /**
+   * SimpleTest core method: code run before each and every test method.
+   */
+  function setUp() {
+    // Always call the setUp() function from the parent class.
+    parent::setUp('dblog', 'devel', 'lm_paypal_rules', 'rules_admin');
+  }
+
+  /**
+   * SimpleTest core method: code run after each and every test method.
+   */
+  function tearDown() {
+
+    // Always call the tearDown() function from the parent class.
+    parent::tearDown();
+  }
+
+
+  /**
+   * Test basic stuff: processing a (fake) IPN, viewing saved IPNs. This does
+   * NOT require connectivity to paypal.com.
+   */
+  function testLmPaypal() {
+
+    $admin_user = user_load(1);
+    $this->drupalLogin($admin_user);
+
+    $edit = array(
+      'lm_paypal_business' => 'seller@paypalsandbox.com',
+    );
+    $this->drupalPost('admin/config/lm_paypal/settings', $edit, 'Save configuration');
+
+    $this->assertRaw('value="' . variable_get('lm_paypal_business', $edit['lm_paypal_business']) . '"');
+    $this->assertRaw('value="' . variable_get('lm_paypal_host', LM_PAYPAL_HOST_DEFAULT) . '"');
+    $this->assertRaw('value="' . variable_get('lm_paypal_ipns_max_age', LM_PAYPAL_IPNS_MAX_AGE_DEFAULT) . '"');
+
+    $edit = array(
+      'import' =>
+      '{ "rules_new_payment_cloned_testing" : {
+          "LABEL" : "New payment (cloned) testing",
+          "PLUGIN" : "reaction rule",
+          "REQUIRES" : [ "rules", "lm_paypal_rules" ],
+          "ON" : [ "new_ipn" ],
+          "IF" : [
+            { "data_is" : { "data" : [ "txn-type" ], "op" : "contains", "value" : "payment" } }
+          ],
+          "DO" : [ { "drupal_message" : { "message" : "[ipn:txn_id]\r\n[ipn:txn_type]" } } ]
+        }
+      }',
+    );
+
+    $this->drupalPost('admin/config/workflow/rules/reaction/import',  $edit, 'Import');
+
+    variable_set('lm_paypal_skip_validation', TRUE);
+    $ipn_post = $this->postPreparedIpn('ipn-web_accept-inprogress.txt');
+
+    $this->drupalGet('<front>');
+    $this->assertText('2214138');
+    $this->assertText('web_accept');
+
+    
+  }
+}

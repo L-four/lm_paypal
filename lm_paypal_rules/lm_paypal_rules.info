@@ -3,5 +3,7 @@ description = "Provides rule intergration for lm_paypal"
 package = "LM PayPal"
 core = "7.x"
 
+files[] = "../tests/rules.test"
+
 dependencies[] = "rules"
-dependencies[] = lm_paypal
+dependencies[] = "lm_paypal"
