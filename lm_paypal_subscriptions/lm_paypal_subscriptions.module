@@ -355,12 +355,6 @@ function lm_paypal_subscriptions_menu() {
  * to the page.
  */
 function lm_paypal_subscription_access($op, $subid) {
-  // Superuser access bypass
-  global $user;
-  if ($user->uid == 1) {
-    return TRUE;
-  }
-
   if (user_access('administer lm_paypal')) {
     switch ($op) {
       case 'subscription':
@@ -552,7 +546,7 @@ function lm_paypal_subscriptions_block_info() {
  * Implements hook_block_view().
  */
 function lm_paypal_subscriptions_block_view($delta) {
-  if ($user->uid != 0) {
+  if (user_is_logged_in()) {
     $subscription = lm_paypal_subscriptions_load_subscription($delta);
     if ($subscription && !lm_paypal_subscriptions_user_subscribed($subscription)) {
       if ($subscription->status == 1 && ($subscription->kind == 0 or $subscription->kind == 2)) {
