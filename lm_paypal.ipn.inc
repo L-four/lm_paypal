@@ -49,7 +49,7 @@ function lm_paypal_ipn_in() {
     watchdog(LM_PAYPAL, 'lm_paypal_ipn_in $last = ' . $ipn['id'], NULL);
     $link = l(t('view'), "admin/config/lm_paypal/id/$ipn[id]");
 
-    if ($validated) {
+    if ($validated || variable_get('lm_paypal_obey_test_ipns', FALSE)) {
       watchdog(LM_PAYPAL, 'IPN incoming %type', array('%type' => check_plain($ipn['txn_type'])), WATCHDOG_NOTICE, $link);
       lm_paypal_process_in((object) $ipn);
     }
