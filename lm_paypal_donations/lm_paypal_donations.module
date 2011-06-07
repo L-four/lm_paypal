@@ -91,7 +91,7 @@ if (function_exists(\'lm_paypal_donate\')) {
     case 'admin/config/lm_paypal_donations':
       // This appears at the start of the admin page before the options
     case 'admin/config/lm_paypal/donations':
-      // New to Drupal 5 - settings has moved
+      // New to Drupal 7 - settings has moved
     case 'admin/config/lm_paypal/donations_settings':
       $output = $_lm_paypal_welcome;
 
@@ -297,7 +297,7 @@ function _lm_paypal_process_in_donate($ipn, $link, $uid, $other, $item_number) {
 
 function lm_paypal_donate($amount, $options = array()) {
   
-  $options =+ array(
+  $options += array(
     'render' => TRUE,
   );
   
@@ -489,7 +489,8 @@ function lm_paypal_donations_block_view($delta) {
             array(
               'currency_code' => 'JPY',
               'display_amount' => TRUE,
-              'txt' => 'donation to example.com'
+              'txt' => 'donation to example.com',
+              'render' => FALSE,
             )
           ),
         '#suffix' => '<br>'
@@ -506,7 +507,8 @@ function lm_paypal_donations_block_view($delta) {
           array(
             'currency_code' => 'EUR',
             'display_amount' => TRUE,
-            'text' => 'donation to example.com'
+            'text' => 'donation to example.com',
+            'render' => FALSE,
           )
         ),
         '#suffix' => '<br>'
@@ -530,7 +532,8 @@ function lm_paypal_donations_block_view($delta) {
           'currency_code' =>'AUD',
           'text' => 'donation to example.com',
           'display_amount' => TRUE,
-          'item_name' =>'Donation'
+          'item_name' =>'Donation',
+          'render' => FALSE,
         )
       ),
         '#suffix' => '<br>'
