@@ -72,7 +72,7 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
 
     $content = $this->curlExec(
       array(
-        CURLOPT_URL => $this->getAbsoluteUrl('lm_paypal/ipn'),
+        CURLOPT_URL => url('lm_paypal/ipn', array('absolute' => TRUE)),
         CURLOPT_POST => TRUE,
         CURLOPT_POSTFIELDS => $post,
       )

@@ -213,7 +213,6 @@ class LmPaypalDonationsTestCase extends AbstractLmPaypalTestCase {
 if (function_exists('lm_paypal_donate')) {
   // 10 = amount, 'USD' is the currency followed by a description
   print 'We would really like a 10000 yen donation ' .
-    drupal_render(
       lm_paypal_donate(
         10000,
         array(
@@ -221,13 +220,11 @@ if (function_exists('lm_paypal_donate')) {
           'display_amount' => TRUE,
           'txt' => 'donation to example.com'
         )
-      )
     ) .'<br>';
 
   // The amount is a one element array so an text input with the one value as
   //  default
   print 'Write your own amount to give, we suggest 5 Euros' .
-    drupal_render(
       lm_paypal_donate(
         array(5),
         array(
@@ -235,7 +232,6 @@ if (function_exists('lm_paypal_donate')) {
           'display_amount' => TRUE,
           'text' => 'donation to example.com'
         )
-      )
     ) . '<br>';
 
   // The amount is a multi element array so a select will be used. Note if one
@@ -243,7 +239,6 @@ if (function_exists('lm_paypal_donate')) {
   // The final two parameters are an alternative button (here we use the default)
   //   and a replacement label before the amount
   print 'We would really like a $10, or more, donation ' .
-    drupal_render(
       lm_paypal_donate(
         array(
           5,
@@ -256,7 +251,6 @@ if (function_exists('lm_paypal_donate')) {
           'display_amount' => TRUE,
           'item_name' =>'Donation'
         )
-      )
     ) .'<br>';
 }
 EOF;
