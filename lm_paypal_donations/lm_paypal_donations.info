@@ -7,3 +7,5 @@ dependencies[] = lm_paypal
 files[] = ../tests/donations.test
 files[] = lm_paypal_donations.install
 files[] = lm_paypal_donations.module
+
+configure = admin/config/lm_paypal/donations_settings

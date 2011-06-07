@@ -5,3 +5,5 @@ core = 7.x
 
 dependencies[] = lm_paypal
 dependencies[] = lm_paypal_subscriptions
+
+configure = admin/config/lm_paypal/paid_adverts

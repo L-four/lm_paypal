@@ -10,3 +10,5 @@ files[] = lm_paypal_subscriptions.admin.inc
 files[] = lm_paypal_subscriptions.install
 files[] = lm_paypal_subscriptions.module
 files[] = lm_paypal_subscriptions.pages.inc
+
+configure = admin/config/lm_paypal/subscriptions_settings
