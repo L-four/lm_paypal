@@ -798,7 +798,7 @@ function lm_paypal_subscriptions_user_gain_role($account, $rid) {
  *   Role rid for the user to loose
  */
 function lm_paypal_subscriptions_user_loose_role($account, $rid) {
-  $also  = db_query("SELECT * FROM {lm_paypal_subscriptions} d INNER JOIN {lm_paypal_subscribers} s ON d.subid = s.subid WHERE uid = :uid AND rid = :rid AND s.status = :s.status AND d.kind = :d.kind", array(':uid' => array($account->uid, $rid), ':rid' => 1, ':s.status' => 0));
+  $also  = db_query("SELECT * FROM {lm_paypal_subscriptions} d INNER JOIN {lm_paypal_subscribers} s ON d.subid = s.subid WHERE uid = :uid AND rid = :rid AND s.status = :status AND d.kind = :kind", array(':uid' => $account->uid, ':rid' => $rid, ':status' => 1, ":kind" => 0));
   $debug = lm_paypal_debug();
 
   if ($also->fetchField()) {
