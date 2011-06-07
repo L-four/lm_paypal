@@ -976,7 +976,7 @@ function lm_paypal_mail($key, &$message, $params) {
     case 'notify':
       // $language = $message['language'];
       $message['subject'] = $params['subject'];
-      $message['body'] = $params['body'];
+      $message["body"] = array ($params["body"]);
       break;
   }
 }
