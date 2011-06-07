@@ -60,6 +60,10 @@ class LmPaypalRulesTestCase extends AbstractLmPaypalTestCase {
   function setUp() {
     // Always call the setUp() function from the parent class.
     parent::setUp('dblog', 'devel', 'lm_paypal_rules', 'rules_admin');
+
+    $this->admin_user = $this->drupalCreateUser(array('administer lm_paypal', 'administer rules', 'administer site configuration'));
+    
+    $this->drupalCreateUser();
   }
 
   /**
@@ -78,13 +82,22 @@ class LmPaypalRulesTestCase extends AbstractLmPaypalTestCase {
    */
   function testLmPaypal() {
 
-    $admin_user = user_load(1);
-    $this->drupalLogin($admin_user);
+    $this->drupalLogin($this->admin_user);
+    user_save($this->admin_user, array('mail' => 'buyer@paypalsandbox.com'));
 
     $edit = array(
       'lm_paypal_business' => 'seller@paypalsandbox.com',
+      'lm_paypal_obey_test_ipns' => '1',
     );
+    
     $this->drupalPost('admin/config/lm_paypal/settings', $edit, 'Save configuration');
+
+    $edit = array(
+      'rules_debug' => '1',
+    );
+
+    $this->drupalPost('admin/config/workflow/rules/settings', $edit, 'Save configuration');
+
 
     $this->assertRaw('value="' . variable_get('lm_paypal_business', $edit['lm_paypal_business']) . '"');
     $this->assertRaw('value="' . variable_get('lm_paypal_host', LM_PAYPAL_HOST_DEFAULT) . '"');
@@ -98,7 +111,7 @@ class LmPaypalRulesTestCase extends AbstractLmPaypalTestCase {
           "REQUIRES" : [ "rules", "lm_paypal_rules" ],
           "ON" : [ "new_ipn" ],
           "IF" : [
-            { "data_is" : { "data" : [ "txn-type" ], "op" : "contains", "value" : "payment" } }
+            { "data_is" : { "data" : [ "txn-type" ], "op" : "contains", "value" : "web_accept" } }
           ],
           "DO" : [ { "drupal_message" : { "message" : "[ipn:txn_id]\r\n[ipn:txn_type]" } } ]
         }
@@ -108,12 +121,21 @@ class LmPaypalRulesTestCase extends AbstractLmPaypalTestCase {
     $this->drupalPost('admin/config/workflow/rules/reaction/import',  $edit, 'Import');
 
     variable_set('lm_paypal_skip_validation', TRUE);
-    $ipn_post = $this->postPreparedIpn('ipn-web_accept-inprogress.txt');
+    
+    $custom = array(
+        'item_number' => 1234,
+        'custom' => serialize(array(
+          'uid' => $this->admin_user->uid
+        )),
+      );
+    $ipn_post = $this->postPreparedIpn('ipn-web_accept-inprogress.txt', $custom);
+    $ipn_post = $this->postPreparedIpn('ipn-web_accept-completed.txt',  $custom);
+    $ipn_post = $this->postPreparedIpn('ipn-web_accept-failed.txt',     $custom);
+    $ipn_post = $this->postPreparedIpn('sandbox-subscription-ipn1.txt', $custom);
+    $ipn_post = $this->postPreparedIpn('sandbox-subscription-ipn1.txt', $custom);
 
     $this->drupalGet('<front>');
     $this->assertText('2214138');
     $this->assertText('web_accept');
-
-    
   }
 }
