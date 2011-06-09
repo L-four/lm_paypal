@@ -61,6 +61,10 @@ function lm_paypal_rules_ipn_property_info() {
       'label' => $values['description'],
     );
   }
+  $ipn_property_info['uid'] = array(
+      'type' => 'integer',
+      'label' => 'uid - this is passed in custom and may be overridden',
+    );
   return $ipn_property_info;
 }
 
