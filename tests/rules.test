@@ -99,10 +99,6 @@ class LmPaypalRulesTestCase extends AbstractLmPaypalTestCase {
     $this->drupalPost('admin/config/workflow/rules/settings', $edit, 'Save configuration');
 
 
-    $this->assertRaw('value="' . variable_get('lm_paypal_business', $edit['lm_paypal_business']) . '"');
-    $this->assertRaw('value="' . variable_get('lm_paypal_host', LM_PAYPAL_HOST_DEFAULT) . '"');
-    $this->assertRaw('value="' . variable_get('lm_paypal_ipns_max_age', LM_PAYPAL_IPNS_MAX_AGE_DEFAULT) . '"');
-
     $edit = array(
       'import' =>
       '{ "rules_new_payment_cloned_testing" : {
