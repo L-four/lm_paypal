@@ -1,6 +1,6 @@
 <?php
 
-require_once(drupal_get_path('module', 'lm_paypal').'/tests/abstract.test');
+require_once(drupal_get_path('module', 'lm_paypal') . '/tests/abstract.test');
 
 class AbstractLmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
 
@@ -20,7 +20,7 @@ class AbstractLmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
     );
     $this->admin_user = $this->drupalCreateUser($admin_permissions);
     $this->paypal_admin_user = $this->drupalCreateUser(array('administer lm_paypal'));
-    $this->web_user = $this->drupalCreateUser(array('create page content', 'create story content'));
+    $this->web_user = $this->drupalCreateUser(array('create page content', 'create article content'));
     $this->observer_user = $this->drupalCreateUser();
 
     // We don't care where it is, but it needs to be set
@@ -57,7 +57,7 @@ class AbstractLmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
       'send_admin_onsub' => FALSE,
       'send_admin_onend' => FALSE,
     );
-    $this->drupalPost('admin/settings/lm_paypal/subscriptions/add', $subscription, t('Create'));
+    $this->drupalPost('admin/config/lm_paypal/subscriptions/add', $subscription, t('Create'));
 
     // After post, redirects to "All Subscriptions" page.
     $this->assertText($subscription['item_name']);
@@ -70,10 +70,10 @@ class AbstractLmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
     $sub_id = $matches[0][1];
 
     // Go back to the settings page.
-    $this->drupalGet('admin/settings/lm_paypal/paid_adverts/settings');
+    $this->drupalGet('admin/config/lm_paypal/paid_adverts');
     // Enable subscriptions for "Page" type for this subscription.
     $edit = array("live[page][$sub_id]" => $sub_id);
-    $this->drupalPost('admin/settings/lm_paypal/paid_adverts/settings', $edit, 'Save configuration');
+    $this->drupalPost('admin/config/lm_paypal/paid_adverts', $edit, 'Save configuration');
 
     return array($sub_id, $subscription);
   }
@@ -99,20 +99,22 @@ class AbstractLmPaypalPaidAdvertsTestCase extends AbstractLmPaypalTestCase {
     $this->drupalGet('node/add/'.$node_type);
     $edit = array(
       'title' => isset($options['title']) ? $options['title'] : $this->randomName(4, 'NODE_'),
-      'body' => isset($options['body']) ? $options['body'] : $this->randomName(20, 'BODY_'),
+      'body[und][0][value]' => isset($options['body']) ? $options['body'] : $this->randomName(20, 'BODY_'),
     );
 
     static $node_types;
     if (! $node_types) {
-      $node_types = node_get_types();
+      $node_types = node_type_get_types();
     }
 
-    $this->drupalPost('node/add/'.$node_type, $edit, 'Save');
-    $this->assertText($node_types[$node_type]->name." ".$edit['title']." has been created");
+    $this->drupalPost('node/add/' . $node_type, $edit, 'Save');
+    $this->assertText($node_types[$node_type]->name . " " . $edit['title'] . " has been created");
 
     if ($load) {
-      $body = $edit['body'];
-      $nid = (int) array_pop(explode("/", $this->getUrl()));
+      $body = $edit['body[und][0][value]'];
+      $url = $this->getUrl();
+      $parts = explode("/", $url);
+      $nid = (int) array_pop($parts);
       $node = node_load($nid);
       $this->assertEqual($node->title, $edit['title'], 'We could load the new node');
       unset($edit);

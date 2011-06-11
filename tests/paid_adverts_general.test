@@ -4,7 +4,7 @@ require_once(drupal_get_path('module', 'lm_paypal').'/tests/paid_adverts.test');
 
 class LmPaypalPaidAdvertsGeneralTestCase extends AbstractLmPaypalPaidAdvertsTestCase {
 
-  function getInfo() {
+  static function getInfo() {
     return array(
       'name' => t('Paid Adverts: general use case'),
       'description' => t('Tests the creation and processing of nodes that require payment before publishing.'),

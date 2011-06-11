@@ -179,7 +179,7 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
     $output = '=== Starting ' . $request . ' table dump ===';
     if (! empty($request)) {
       $result = db_query($request, $args);
-      while ($object = db_fetch_object($result)) {
+      foreach ($result as $object) {
         $output .= print_r($object, TRUE);
       }
     }
@@ -195,7 +195,7 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
     $output = "=== Starting ' . $table . ' table dump ===\n";
     if (! empty($table)) {
       $result = db_query("SELECT * FROM {%s}", $table);
-      while ($object = db_fetch_object($result)) {
+      foreach ($result as $object) {
         $output .= print_r($object, TRUE);
       }
     }
@@ -217,7 +217,7 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
 
     // Check if there are any errors in the watchdog log.
     $result = db_query('SELECT type, severity, message, variables FROM {watchdog} WHERE severity <= %d', $severity);
-    while ($dblog = db_fetch_object($result)) {
+    foreach ($result as $dblog) {
       $vars = array(
         '%type' => t($dblog->type),
         '!severity' => $levels[$dblog->severity],
@@ -242,7 +242,7 @@ abstract class AbstractLmPaypalTestCase extends DrupalWebTestCase {
   function dumpAllIpns() {
     error_log("Dumping all IPNs:");
     $result = db_query("SELECT * FROM {lm_paypal_ipns}");
-    while ($ipn = db_fetch_array($result)) {
+    foreach ($result as $ipn) {
       error_log(print_r($ipn, TRUE));
     }
   }
