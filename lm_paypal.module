@@ -143,7 +143,7 @@ function lm_paypal_requirements($phase) {
         'title' => t('LM PayPal'),
         'severity' => REQUIREMENT_ERROR,
         'value' => $t('LM PayPal default business address is not configured. Please set it in <a href="!admin_page">administration page</a>', array(
-          '!admin_page' => url('admin/settings/lm_paypal'),
+          '!admin_page' => url('admin/config/lm_paypal/settings'),
         )),
       );
     }
@@ -976,7 +976,7 @@ function lm_paypal_mail($key, &$message, $params) {
     case 'notify':
       // $language = $message['language'];
       $message['subject'] = $params['subject'];
-      $message["body"] = array ($params["body"]);
+      $message["body"] = array($params["body"]);
       break;
   }
 }
