@@ -647,7 +647,7 @@ function lm_paypal_subscriptions_node_subscribed($node) {
     $result = db_query("SELECT subid FROM {lm_paypal_subscribers} WHERE status = :status AND nid = :nid", array(':status' => 1, ':nid' => $nid))->fetchField();
 
     if (!empty($result)) {
-      $cache[$nid] = $result->subid;
+      $cache[$nid] = $result;
     }
   }
 
@@ -1617,10 +1617,12 @@ function lm_paypal_add_subscriber($kind, $uid, $nid, $subid, $subscr_id, $status
 
   // Add them to subscribers or update their existing record
   $result = db_query("SELECT COUNT(*) FROM {lm_paypal_subscribers} WHERE subscr_id = :subscr_id", array(':subscr_id' => $subscr_id));
+  // why this logic?
   if ($result->fetchField()) {
     // Update
     $object['status'] = $status;
-    $update['subscr_id'] = $subscr_id;
+    $object['subscr_id'] = $subscr_id;
+    $update[] = 'subscr_id';//$subscr_id;
     // error_log("UPDATE lm_paypal_add_subscriber($kind, $uid, $nid, $subid, $subscr_id, $status)");
   }
   else {

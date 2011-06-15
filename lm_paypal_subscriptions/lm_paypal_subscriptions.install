@@ -1,7 +1,5 @@
 <?php
 
-// $Id: lm_paypal_subscriptions.install,v 1.1.2.1 2009/04/17 00:33:48 lyricnz Exp $
-
 /**
  * @file
  *
@@ -10,31 +8,17 @@
 
 
 /**
- * hook_install()
- */
-function lm_paypal_subscriptions_install() {
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.
-  // drupal_install_schema('lm_paypal_subscriptions')
-}
-
-
-/**
  * hook_uninstall()
  */
 function lm_paypal_subscriptions_uninstall() {
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.
-  // drupal_uninstall_schema('lm_paypal_subscriptions')
   variable_del('lm_paypal_subscriptions_inprogress');
   variable_del('lm_paypal_subscriptions_menu_rebuild');
   variable_del('lm_paypal_subscriptions_menu_label');
 }
 
-/*
- * Database Schema (subscribers & subcriptions)
- */
+
 /**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
+ * Database Schema (subscribers & subcriptions)
  */
 function lm_paypal_subscriptions_schema() {
   $schema['lm_paypal_subscribers'] = array(
