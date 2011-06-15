@@ -61,7 +61,7 @@ class LmPaypalRulesTestCase extends AbstractLmPaypalTestCase {
     // Always call the setUp() function from the parent class.
     parent::setUp('dblog', 'devel', 'lm_paypal_rules', 'rules_admin');
 
-    $this->admin_user = $this->drupalCreateUser(array('administer lm_paypal', 'administer rules', 'administer site configuration'));
+    $this->admin_user = $this->drupalCreateUser(array('administer lm_paypal', 'administer rules', 'administer site configuration', 'administer users', 'administer permissions'));
     
     $this->drupalCreateUser();
   }
@@ -100,16 +100,24 @@ class LmPaypalRulesTestCase extends AbstractLmPaypalTestCase {
 
 
     $edit = array(
-      'import' =>
-      '{ "rules_new_payment_cloned_testing" : {
-          "LABEL" : "New payment (cloned) testing",
+      'import' => '{ "rules_new_payment_test" : {
+          "LABEL" : "New payment test",
           "PLUGIN" : "reaction rule",
           "REQUIRES" : [ "rules", "lm_paypal_rules" ],
           "ON" : [ "new_ipn" ],
           "IF" : [
             { "data_is" : { "data" : [ "txn-type" ], "op" : "contains", "value" : "web_accept" } }
           ],
-          "DO" : [ { "drupal_message" : { "message" : "[ipn:txn_id]\r\n[ipn:txn_type]" } } ]
+          "DO" : [
+            { "drupal_message" : { "message" : "[ipn:txn_id]\r\n[ipn:txn_type]" } },
+            { "entity_fetch" : {
+                "USING" : { "type" : "user", "id" : [ "ipn:uid" ] },
+                "PROVIDE" : { "entity_fetched" : { "entity_fetched" : "Fetched entity" } }
+              }
+            },
+            { "data_set" : { "data" : [ "entity-fetched:roles:2" ], "value" : "3" } },
+            { "entity_save" : { "data" : [ "entity-fetched" ] } }
+          ]
         }
       }',
     );
@@ -130,8 +138,8 @@ class LmPaypalRulesTestCase extends AbstractLmPaypalTestCase {
     $ipn_post = $this->postPreparedIpn('sandbox-subscription-ipn1.txt', $custom);
     $ipn_post = $this->postPreparedIpn('sandbox-subscription-ipn1.txt', $custom);
 
-    $this->drupalGet('<front>');
-    $this->assertText('2214138');
-    $this->assertText('web_accept');
+    $this->drupalGet('user/' . $this->admin_user->uid . '/edit');
+    $this->assertRaw('value="3" checked="checked"', 'Is admin');
+
   }
 }
