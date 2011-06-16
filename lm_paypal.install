@@ -85,6 +85,11 @@ function lm_paypal_schema() {
         'size' => 'medium',
         'description' => 'The full HTTP POST data for the IPN from paypal.',
       ),
+      'ipn_track_id' => array(
+        'type' => 'text',
+        'size' => 'medium',
+        'description' => 'Tracking id', //@TODO better desc
+      ),
       # Website Payments Standard, Website Payments Pro, and Refund Information
       # SOME FIELDS OMITTED
       'parent_txn_id' => array(
