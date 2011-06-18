@@ -213,7 +213,7 @@ define('LM_PAYPAL_SUBSCRIPTION_DISPLAY_LIST',         64);
  *       (or just none)
  * TODO: change this ugly button
  * @param string button_url
- *   The url of the button to display
+ *   The url of the button to 
  * @param int nid
  *   For node subscriptions this is the node id
  * @param object $account

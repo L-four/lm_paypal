@@ -282,7 +282,7 @@ function _lm_paypal_process_in_donate($ipn, $link, $uid, $other, $item_number) {
  *        form.
  *        Advanced usage only!
  *
- *	   'render' : boolean
+ *       'render' : boolean
  *        Return rendered html?
  *        defualt is TRUE
  * 
