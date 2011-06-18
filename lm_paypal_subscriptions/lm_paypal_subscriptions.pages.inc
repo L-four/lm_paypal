@@ -383,8 +383,8 @@ function lm_paypal_subscribe_subscription($subid, $display = 15, $button_url = N
   $hidden['sra'] = "1";
   $hidden['no_note'] = "1";
   $hidden['usr_manage'] = "0";
-  $output .= drupal_render(
-    drupal_get_form(
+  
+  $form = drupal_get_form(
       'lm_paypal_api_payment_form',
       $so->a3,
       array(
@@ -399,8 +399,8 @@ function lm_paypal_subscribe_subscription($subid, $display = 15, $button_url = N
         'hidden_fields' => $hidden,
       ),
       LM_PAYPAL_FORM_CMD_SUBSCRIBE
-    )
-  );
+    );
+  $output .= drupal_render($form);
 
   return $output;
 }
@@ -425,7 +425,7 @@ function lm_paypal_subscribe_subscription($subid, $display = 15, $button_url = N
  */
 // TODO: check this method
 function lm_paypal_subscribe_select($display = 15, $account = NULL) {
-  if (! $account) {
+  if (!$account) {
     global $user;
     $account = $user;
   }

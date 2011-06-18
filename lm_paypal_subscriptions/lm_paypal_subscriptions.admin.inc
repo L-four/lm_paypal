@@ -191,6 +191,7 @@ function lm_paypal_subscriptions_edit_form($form, $form_state, $subid = NULL) {
   }
   else {
     // Initialise a new subscription
+    $so = new stdClass;
     $so->item_name = '';
     $so->description = '';
     $so->kind = 0;
