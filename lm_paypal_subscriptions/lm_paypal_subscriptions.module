@@ -645,9 +645,8 @@ function lm_paypal_subscriptions_node_subscribed($node) {
 
   if (! isset($cache[$nid])) {
     $result = db_query("SELECT subid FROM {lm_paypal_subscribers} WHERE status = :status AND nid = :nid", array(':status' => 1, ':nid' => $nid))->fetchField();
-
     if (!empty($result)) {
-      $cache[$nid] = $result->subid;
+      $cache[$nid] = $result;
     }
   }
 

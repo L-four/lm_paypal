@@ -899,8 +899,8 @@ function lm_paypal_subscriber_pay_form($form, &$form_state, $subid = NULL, $nid 
     return $form;
   }
 
-  $form['Subscriber Pay'] = array(
-    '#value' => '<p>Mark node ' . $nid . ' as paid by user ' . $uid . ' for subscription ' . $subid . '</p>',
+  $form['subscriber_pay'] = array(
+    '#markup' => '<p>Mark node ' . $nid . ' as paid by user ' . $uid . ' for subscription ' . $subid . '</p>',
   );
 
   if ($destination = drupal_get_destination()) {
@@ -954,7 +954,7 @@ function lm_paypal_subscriber_pay_form_submit($form, &$form_state) {
   $so = NULL;
   $sql = "SELECT kind FROM {lm_paypal_subscriptions} WHERE subid = %d AND status = 1";
   $db_res = db_query("SELECT kind FROM {lm_paypal_subscriptions} WHERE subid = :subid AND status = :status", array(':subid' => $subid, ':status' => 1))->fetchCol();
-  dpm($db_res);
+
   if (is_array($db_res)) {
     $so = $db_res[0];
   }
@@ -985,18 +985,15 @@ function lm_paypal_subscriber_pay_form_submit($form, &$form_state) {
   // retrieve the usid now
   $sb = NULL;
   $sql = "SELECT usid FROM {lm_paypal_subscribers} WHERE subscr_id = '%s'";
-  $db_res = db_query("SELECT usid FROM {lm_paypal_subscribers} WHERE subscr_id = :subscr_id", array(':subscr_id' => $subscr_id));
-  if ($db_res) {
-    $sb = db_fetch_object($db_res);
-  }
-  if (!$sb) {
+  $usid = db_query("SELECT usid FROM {lm_paypal_subscribers} WHERE subscr_id = :subscr_id", array(':subscr_id' => $subscr_id))->fetchField();
+
+  if (!$usid) {
     $msg = t('Could not retrieve the subscribtion identifier sql: %sql', array('%sql' => check_plain($sql)));
     watchdog(LM_PAYPAL_SUBSCRIPTIONS, check_plain($msg), NULL, WATCHDOG_ERROR);
     drupal_set_message($msg);
     form_set_error(NULL, 'Failed to mark node as paid by subscriber');
     return;
   }
-  $usid = $sb->usid;
 
   $form_state['redirect'] = array("admin/config/lm_paypal/subscriber_edit/$usid");
 }

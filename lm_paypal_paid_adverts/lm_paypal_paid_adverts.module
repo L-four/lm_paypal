@@ -241,7 +241,7 @@ function lm_paypal_paid_adverts_paypal_access($node, $account = NULL) {
     $account = $user;
   }
   return lm_paypal_paid_adverts_node_is_handled($node)
-    and (
+    && (
       node_access('update', $node, $account)
       or user_access('access unpaid adverts', $account)
       or user_access('administer lm_paypal', $account)
@@ -394,14 +394,13 @@ function lm_paypal_paid_adverts_list_nodes($uid = 0, $nodes_per_page = 50) {
  */
 function lm_paypal_paid_adverts_node_access($node, $op, $account) {
   if ($op == 'view'
-    // Is this node is a paid advert?
-    && lm_paypal_paid_adverts_node_is_handled($node)
-    // And is it not paid yet? 
-    && empty($node->lm_paypal_paid_adverts->payement_subid)
-    // If the user does not own this node, and neither is a site administrator
-    // then dont allow access.
-    && ! lm_paypal_paid_adverts_paypal_access($node, $account))
-  {
+  // Is this node is a paid advert?
+  && lm_paypal_paid_adverts_node_is_handled($node)
+  // And is it not paid yet? 
+  && empty($node->lm_paypal_paid_adverts->payement_subid)
+  // If the user does not own this node, and neither is a site administrator
+  // then dont allow access.
+  && ! lm_paypal_paid_adverts_paypal_access($node, $account)) {
     return NODE_ACCESS_DENY;
   }
 }

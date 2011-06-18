@@ -225,7 +225,7 @@ function lm_paypal_subscribe($subid = NULL, $display = 15, $button_url = NULL, $
     return lm_paypal_subscribe_subscription($subid, $display, $button_url, $nid);
   }
   else {
-    return lm_paypal_subscribe_select($subid, $display, $nid, $account);
+    return lm_paypal_subscribe_select($display, $account);
   }
 }
 
