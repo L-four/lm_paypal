@@ -74,8 +74,8 @@ function lm_paypal_settings_form($form, &$form_state) {
  */
 function lm_paypal_ipns() {
   $ipns_per_page = 50;
-
-  $output = drupal_render(drupal_get_form('lm_paypal_ipns_filter'));
+  $filter = drupal_get_form('lm_paypal_ipns_filter');
+  $output = drupal_render($filter);
 
   $header = array(
     array(

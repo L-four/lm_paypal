@@ -203,11 +203,9 @@ function _lm_paypal_process_in_donate($ipn, $link, $uid, $other, $item_number) {
   if (lm_paypal_debug()) {
     watchdog(LM_PAYPAL_DONATIONS, 'in donate');
   }
-
-  $wr = drupal_write_record(
-    'lm_paypal_donations',
-    array_merge((array)$ipn, array('uid' => $uid, 'datepaid' => time()))
-  );
+  
+  $record = array_merge((array) $ipn, array('uid' => $uid, 'datepaid' => time()));
+  $wr = drupal_write_record('lm_paypal_donations', $record);
 
   if ($wr == FALSE) {
     watchdog(LM_PAYPAL_DONATIONS, 'Failed to add to donations (uid %uid)', array('%uid' => $uid), WATCHDOG_ERROR);
@@ -284,7 +282,7 @@ function _lm_paypal_process_in_donate($ipn, $link, $uid, $other, $item_number) {
  *        form.
  *        Advanced usage only!
  *
- *	   'render' : boolean
+ *       'render' : boolean
  *        Return rendered html?
  *        defualt is TRUE
  * 
@@ -314,7 +312,8 @@ function lm_paypal_donate($amount, $options = array()) {
   }
   // dont force render
   if (isset($options['render']) && $options['render'] == TRUE) {
-    return drupal_render(drupal_get_form('lm_paypal_api_payment_form', $amount, $options));
+    $form = drupal_get_form('lm_paypal_api_payment_form', $amount, $options);
+    return drupal_render($form);
   }
   return drupal_get_form('lm_paypal_api_payment_form', $amount, $options);
 }

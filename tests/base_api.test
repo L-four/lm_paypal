@@ -46,7 +46,7 @@ require_once(drupal_get_path('module', 'lm_paypal') . '/tests/abstract.test');
 
 class LmPaypalTestCase extends AbstractLmPaypalTestCase {
 
-  function getInfo() {
+  static function getInfo() {
     return array(
       'name' => t('Base: basic module functionality and API'),
       'description' => t('Verify the UI and IPN-processing function of LM Paypal.'),

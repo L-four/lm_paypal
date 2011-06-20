@@ -4,7 +4,7 @@ require_once(drupal_get_path('module', 'lm_paypal').'/tests/paid_adverts.test');
 
 class LmPaypalPaidAdvertsAPITestCase extends AbstractLmPaypalPaidAdvertsTestCase {
 
-  function getInfo() {
+  static function getInfo() {
     return array(
       'name' => t('Paid Adverts: basics and API'),
       'description' => t('Test all internal API methods, needed for the module to work and eventually interact with other modules.'),
@@ -31,7 +31,7 @@ class LmPaypalPaidAdvertsAPITestCase extends AbstractLmPaypalPaidAdvertsTestCase
   function testPaidAdvertAPI() {
     // Create a new subscription
     $this->drupalLogin($this->admin_user);
-    $this->drupalGet('admin/settings/lm_paypal/paid_adverts/settings');
+    $this->drupalGet('admin/config/lm_paypal/paid_adverts/settings');
     list($sub_id, $subscription) = $this->_createNodeSubscription();
 
     // Logout and login as a custom user
@@ -41,7 +41,7 @@ class LmPaypalPaidAdvertsAPITestCase extends AbstractLmPaypalPaidAdvertsTestCase
     // Create a subscribable node
     $node_handled = $this->_createNode('page', array(), TRUE);
     // And another which is not
-    $node_not_handled = $this->_createNode('story', array(), TRUE);
+    $node_not_handled = $this->_createNode('article', array(), TRUE);
 
     // Logout and login as admin user
     $this->drupalLogout();
@@ -56,7 +56,7 @@ class LmPaypalPaidAdvertsAPITestCase extends AbstractLmPaypalPaidAdvertsTestCase
       'lm_paypal_paid_adverts_node_is_handled with first node returns TRUE');
     // And for not handled node
     $live = lm_paypal_paid_adverts_get_live_subscriptions($node_not_handled->type);
-    $this->assertEqual(count($live), 0, 'Type story has no possible subscriptions');
+    $this->assertEqual(count($live), 0, 'Type article has no possible subscriptions');
     $this->assertFalse(lm_paypal_paid_adverts_type_is_handled($node_not_handled->type),
       'lm_paypal_paid_adverts_type_is_handled with first node returns FALSE');
     $this->assertFalse(lm_paypal_paid_adverts_node_is_handled($node_not_handled),
@@ -114,7 +114,7 @@ class LmPaypalPaidAdvertsAPITestCase extends AbstractLmPaypalPaidAdvertsTestCase
     $this->drupalLogin($this->admin_user);
 
     // Create a new subscription
-    $this->drupalGet('admin/settings/lm_paypal/paid_adverts/settings');
+    $this->drupalGet('admin/config/lm_paypal/paid_adverts/settings');
     list($sub_id, $subscription) = $this->_createNodeSubscription();
 
     // Logout and login as a custom user
@@ -138,7 +138,8 @@ class LmPaypalPaidAdvertsAPITestCase extends AbstractLmPaypalPaidAdvertsTestCase
 
     // Check we can't see any data about that node
     $this->drupalGet('node/'.$node->nid);
-    $this->assertNoText($node->body);
+    $this->assertWatchdogError('IPN web_accept no uid, found payer_email%%');
+    $this->assertNoText($node->body['und'][0]['value']);
     $this->assertNoText("Paypal subscription");
     $this->assertNoText("This classified ad for subscription #$sub_id is still unpaid. Other users will not be able to access it.");
 
@@ -151,7 +152,7 @@ class LmPaypalPaidAdvertsAPITestCase extends AbstractLmPaypalPaidAdvertsTestCase
 
     // Check we can see then node, and see the unpay links
     $this->drupalGet('node/'.$node->nid);
-    $body = str_replace("<!--break-->", "", $node->body);
+    $body = str_replace("<!--break-->", "", $node->body['und'][0]['value']);
     $this->assertText($body);
     // No idea why, this one fails as admin
     // $this->assertText("Paypal subscription");
@@ -171,7 +172,7 @@ class LmPaypalPaidAdvertsAPITestCase extends AbstractLmPaypalPaidAdvertsTestCase
 
     // Check we can read the node
     $this->drupalGet('node/'.$node->nid);
-    $body = str_replace("<!--break-->", "", $node->body);
+    $body = str_replace("<!--break-->", "", $node->body['und'][0]['value']);
     $this->assertText($body);
   }
 }

@@ -85,6 +85,11 @@ function lm_paypal_schema() {
         'size' => 'medium',
         'description' => 'The full HTTP POST data for the IPN from paypal.',
       ),
+      'ipn_track_id' => array(
+        'type' => 'text',
+        'size' => 'medium',
+        'description' => 'Tracking id', //@TODO better desc
+      ),
       # Website Payments Standard, Website Payments Pro, and Refund Information
       # SOME FIELDS OMITTED
       'parent_txn_id' => array(
@@ -191,7 +196,7 @@ function lm_paypal_schema() {
       'contact_phone' => array(
         'type' => 'varchar',
         'length' => 20,
-        'description' => 'CustomerÕs telephone number.',
+        'description' => 'Customerï¿½s telephone number.',
       ),
       'residence_country' => array(
         'type' => 'varchar',
@@ -320,7 +325,7 @@ function lm_paypal_schema() {
         'description' => 'Amount that is deposited into the accounts primary baal nce after a currency conversion from automatic conversion (through your Payment Receiving Preferences) or manual conversion (through manually accepting a payment).',
       ),
       'handling_amount' => array( /* Undocumented IPN Variable */
-        'description' => 'Fi',
+        'description' => 'handling amount',
         'type' => 'numeric',
         'precision' => 10,
         'scale' => 2,
@@ -496,3 +501,66 @@ function lm_paypal_update_6002() {
   // See http://drupal.org/node/224333#update_sql.
   return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
+
+/**
+ * updating fields in lm_paypal_ipns table
+ * payment_gross
+ * payment_fee
+ * adding addtional fields to lm_paypal_ipns table
+ * handling_amount
+ * protection_eligibility
+ * transaction_subject
+ * ipn_track_id
+ */
+function lm_paypal_update_7001() {
+
+  $spec = array(
+    'type' => 'numeric',
+    'precision' => 10,
+    'scale' => 2,
+    'not null' => FALSE,
+    'default' => 0,
+    'description' => 'Full USD amount of the customer\'s payment, before transaction fee is subtracted. Will be empty for non-USD payments. This is a legacy field replaced by mc_gross. If this amount is negative, it signifies a refund or reversal, and either of those payment statuses can be for the full or partial amount of the original transaction.',
+  );
+  db_change_field('lm_paypal_ipns', 'payment_gross', 'payment_gross', $spec);
+
+  $spec = array(
+    'type' => 'numeric',
+    'precision' => 10,
+    'scale' => 2,
+    'not null' => FALSE,
+    'default' => 0,
+    'description' => 'USD transaction fee associated with the payment.  payment_gross minus payment_fee equals the amount deposited into the receiver email account. Is empty for non-USD payments. If this amount is negative, it signifies a refund or reversal, and either of those payment statuses can be for the full or partial amount of the original transaction fee.  NOTE: This is a deprecated field. Use mc_fee instead.',
+  );
+  db_change_field('lm_paypal_ipns', 'payment_fee', 'payment_fee', $spec);
+  
+  $spec = array( /* Undocumented IPN Variable */
+    'description' => 'Fi',
+    'type' => 'numeric',
+    'precision' => 10,
+    'scale' => 2,
+  );
+  db_add_field('lm_paypal_ipns', 'handling_amount', $spec);
+
+  $spec = array( /* Undocumented IPN Variable */
+    'type' => 'varchar',
+    'length' => 30,
+    'description' => 'The protection eligibility of the payment.',
+  );
+  db_add_field('lm_paypal_ipns', 'protection_eligibility', $spec);
+
+  $spec = array(
+    'type' => 'varchar',
+    'length' => 255,
+    'description' => 'Custom value as passed by you, the merchant. These are passthrough variables that are never presented to your customer',
+  );
+  db_add_field('lm_paypal_ipns', 'transaction_subject', $spec);
+  $spec = array(
+    'type' => 'text',
+    'length' => 'medium',
+    'description' => 'Tracking id',
+  );
+  db_add_field('lm_paypal_ipns', 'ipn_track_id', $spec);
+}
+
+
