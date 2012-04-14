@@ -465,8 +465,15 @@ function lm_paypal_donations($uid, $per_page = 50) {
 
 function lm_paypal_donations_block_info() {
   return array(
+    'lm_paypal_donation_block_example' => array(
+      'info' => t('LM PayPal Donations Examples'),
+      'weight' => 0,
+      'status' => 1,
+      'region' => 'sidebar_first',
+      'cache' => DRUPAL_CACHE_GLOBAL
+    ),
     'lm_paypal_donation_block' => array(
-      'info' => t('lLM PayPal Donations Examples'),
+      'info' => t('LM PayPal Donations Block'),
       'weight' => 0,
       'status' => 1,
       'region' => 'sidebar_first',
@@ -476,8 +483,120 @@ function lm_paypal_donations_block_info() {
 }
 
 function lm_paypal_donations_block_view($delta) {
-  if ($delta == 'lm_paypal_donation_block') {
-    $content = array(
+  $func = __FUNCTION__ . '_' . $delta ."_content";
+  $subject = '';
+  $content = array();
+  if (function_exists($func)) {
+    $content = $func($subject);
+  }
+  return array(
+    'subject' => $subject,
+    'content' => $content
+  );
+}
+function lm_paypal_donations_block_configure($delta) {
+  $func = __FUNCTION__ . '_' . $delta ."_form";
+  $form = array();
+  if (function_exists($func)) {
+    $form = $func();
+  }
+  return $form;
+}
+function lm_paypal_donations_block_save($delta, $edit) {
+  $func = __FUNCTION__ . '_' . $delta;
+  if (function_exists($func)) {
+    $func($edit);
+  }
+}
+function lm_paypal_donations_block_save_lm_paypal_donation_block($edit){
+  variable_set('paypal_donations_block', $edit['config']);
+}
+function lm_paypal_donations_block_configure_lm_paypal_donation_block_form(){
+  $vars = variable_get('paypal_donations_block', array(
+    'description' => 'Please donate 1000',
+    'amount' => '100',
+    'currency_code' => 'USD',
+    'type' => 'text',
+  ));
+  $form['config'] = array(
+    '#tree' => TRUE,
+    'description' => array(
+      '#title' => 'Description',
+      '#type' => 'textarea',
+      '#description' => 'A description to appear above the donation form.',
+      '#default_value' => $vars['description'],
+    ),
+    'type' => array(
+      '#title' => 'Field Type',
+      '#type' => 'select',
+      '#options' => array(
+        'textfield' => 'Textfield',
+        'select' => 'Select',
+        'fixed' => 'Fixed',
+      ),
+      '#description' => 'How to display the form.',
+      '#default_value' => $vars['type'],
+    ),
+    'amount' => array(
+      '#title' => 'Amount',
+      '#type' => 'textarea',
+      '#description' => 'An single amount e.g. 10 or multiple amounts for select list type separated by | e.g. 5|10|15',
+      '#default_value' => $vars['amount'],
+    ),
+    'currency_code' => array(
+      '#title' => 'Currency Code',
+      '#type' => 'textfield',
+      '#description' => 'Currency Code e.g. USD, AUD, JPY, EUR',
+      '#default_value' => $vars['currency_code'],
+    ),
+  );
+  return $form;
+}
+function lm_paypal_donations_block_view_lm_paypal_donation_block_content(&$subject){
+  $subject = t('Simple LM Paypal Donations Block');
+  $vars = variable_get('paypal_donations_block', array(
+    'description' => 'Please donate 1000',
+    'amount' => '100',
+    'currency_code' => 'USD',
+    'type' => 'textfield',
+  ));
+  $amount = array();
+  switch ($vars['type']) {
+    case 'textfield':
+      $amount = array(trim($vars['amount']));
+      break;
+    
+    case 'select':
+      $amount = explode('|', $vars['amount']);
+      break;
+
+    case 'fixed':
+      $amount = trim($vars['amount']);
+      break;
+
+    default:
+      $amount = array(0);
+      break;
+  }
+  $content = array(
+      'donation form' => array(
+        'form' => lm_paypal_donate(
+            $amount,
+            array(
+              'currency_code' => $vars['currency_code'],
+              'display_amount' => TRUE,
+              'text' => $vars['description'],
+              'render' => FALSE,
+            )
+          ),
+        '#suffix' => '<br>'
+      ),
+  );
+  return $content;
+}
+function lm_paypal_donations_block_view_lm_paypal_donation_block_example_content(&$subject){
+  $subject = t('Dummy LM Paypal Donations Block');
+  $content = array(
       // 10 = amount, 'USD' is the currency followed by a description
       'donation 10' => array(
         '#markup' => 'We would really like a $10 donation',
@@ -488,7 +607,7 @@ function lm_paypal_donations_block_view($delta) {
             array(
               'currency_code' => 'JPY',
               'display_amount' => TRUE,
-              'txt' => 'donation to example.com',
+              'text' => 'donation to example.com',
               'render' => FALSE,
             )
           ),
@@ -538,10 +657,6 @@ function lm_paypal_donations_block_view($delta) {
         '#suffix' => '<br>'
       )
    );
-    return array(
-        'subject' => t('Dummy LM Paypal Donations Block'),
-        'content' => $content
-      );
-  }
+  return $content;
 }
  /**/

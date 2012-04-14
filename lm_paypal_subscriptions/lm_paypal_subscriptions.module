@@ -708,6 +708,11 @@ function lm_paypal_subscriptions_user_subscribed($subscription, $account = NULL)
  *   TRUE only if there is a user and they have not already subscribed
  */
 function lm_paypal_subscriptions_can_subscribe($subscription, $account = NULL) {
+  if (is_int($subscription)) {
+    $subid = $subscription;
+    $subscription = new stdClass;
+    $subscription->subid =  $subid;
+  }
   if (! $account) {
     global $user;
     $account = $user;
