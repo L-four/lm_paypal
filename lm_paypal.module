@@ -489,7 +489,7 @@ function lm_paypal_api_payment_form($form, $form_state, $amount, $options = arra
 
   $button_text = t('Proceed to paypal.com');
   
-  // And check for button customisation
+  // And check for button customization
   if (isset($options['button']) && is_array($options['button'])) {
     if (isset($options['button']['url']) && check_url($options['url'])) {
       $button_url = $options['url'];
@@ -598,12 +598,14 @@ function lm_paypal_api_payment_form($form, $form_state, $amount, $options = arra
     
     $form['amount']['#title'] = t($label); 
   }
-  elseif ((isset($options['display_amount']) && $options['display_amount'])) {
-    $form['amount_display'] = array(
-      '#type' => 'markup',
-      '#markup' => '<p>' . t('Proceed with your !price payment', array(
-        '!price' => theme('lm_paypal_amount', array('amount' => $valid_amount, 'ccc' => $currency_code)))) . '</p>',
-    );
+  else {
+    if (isset($options['display_amount']) && $options['display_amount']) {
+      $form['amount_display'] = array(
+        '#type' => 'markup',
+        '#markup' => '<p>' . t('Proceed with your !price payment', array(
+          '!price' => theme('lm_paypal_amount', array('amount' => $valid_amount, 'cc' => $currency_code)))) . '</p>',
+      );
+    }
     $form['amount'] = array(
       '#type' => 'hidden',
       '#value' => $valid_amount,

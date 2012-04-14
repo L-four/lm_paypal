@@ -26,7 +26,7 @@ function theme_lm_paypal_payment_form($form) {
  * @param array $options
  *   - float 'amount
  *      A numeric amount
- *   - string 'ccc'
+ *   - string 'cc'
  *     A PayPal three letter currency code (eg: USD)
  *   - boolean 'syms' = TRUE
  *     Display either "$5" or "5 US Dollar". With TRUE display it with symbol.
@@ -36,15 +36,15 @@ function theme_lm_paypal_payment_form($form) {
  
 function theme_lm_paypal_amount($options = array()) {
   $options += array(
-    'ccc' => lm_paypal_api_get_currency_default(),
+    'cc' => lm_paypal_api_get_currency_default(),
     'syms' => TRUE
   );
   // Get textual representation
-  $textual = lm_paypal_api_get_currency($options['ccc'], $options['syms']);
+  $textual = lm_paypal_api_get_currency($options['cc'], $options['syms']);
 
   // Do not display a NULL currency
   if (! $textual) {
-    $textual = $options['ccc'];
+    $textual = $options['cc'];
     $options['syms'] = TRUE;
   }
 
