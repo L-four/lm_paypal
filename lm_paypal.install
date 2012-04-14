@@ -557,10 +557,9 @@ function lm_paypal_update_7001() {
   db_add_field('lm_paypal_ipns', 'transaction_subject', $spec);
   $spec = array(
     'type' => 'text',
-    'length' => 'medium',
+    'size' => 'medium',
     'description' => 'Tracking id',
   );
   db_add_field('lm_paypal_ipns', 'ipn_track_id', $spec);
 }
-
 
