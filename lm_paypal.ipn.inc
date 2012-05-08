@@ -41,6 +41,11 @@ function lm_paypal_ipn_in() {
   $ipn['timestamp'] = time();
   $ipn['ipn'] = serialize($_POST);
   unset($ipn['processed']);
+  foreach ($ipn as $key => $value) {
+    if ($value == '') {
+      $ipn[$key] = NULL;
+    }
+  }
 
   // Add the IPN to our database (whether it validated or not).
   $wr = drupal_write_record('lm_paypal_ipns', $ipn);
