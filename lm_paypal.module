@@ -147,15 +147,6 @@ function lm_paypal_requirements($phase) {
         )),
       );
     }
-    if (! module_exists('job_queue')) {
-      $requirements['lm_paypal_job_queue'] = array(
-        'title' => t('LM PayPal'),
-        'severity' => REQUIREMENT_INFO,
-        'value' => $t('LM PayPal works best when <a href="!job_queue_url">job_queue</a> module is enabled.', array(
-          '!job_queue_url' => url('http://drupal.org/project/job_queue')
-        )),
-      );
-    }
   }
 
   return $requirements;
@@ -964,12 +955,7 @@ function lm_paypal_mail_user($to_uid, $about_uid, $subject, $message, $vars) {
   $func = 'drupal_mail';
   $args = array('lm_paypal', 'notify', $to, user_preferred_language($to_account), $params);
 
-  if (module_exists('job_queue')) {
-    job_queue_add($func, 'lm_paypal send mail', $args, '', FALSE);
-  }
-  else {
-    call_user_func_array($func, $args);
-  }
+  call_user_func_array($func, $args);
 }
 
 function lm_paypal_mail($key, &$message, $params) {
