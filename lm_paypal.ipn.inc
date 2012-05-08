@@ -339,7 +339,7 @@ function lm_paypal_web_accept_invoke($ipn, $link, $uid, $other, $item_number) {
   // level IPNs.
   if (module_exists('lm_paypal_donations')) {
     include_once drupal_get_path('module', 'lm_paypal_donations') . '/lm_paypal_donations.module';
-    if ($item_number == 0) {
+    if ($item_number >= 0) {
       return _lm_paypal_process_in_donate($ipn, $link, $uid, $other, $item_number);
     }
   }
