@@ -105,7 +105,7 @@ function lm_paypal_ipns() {
   
   $select = db_select('lm_paypal_ipns', 'ipns')
     ->extend('TableSort')
-    ->fields('ipns', array('id', 'timestamp', 'txn_type'))
+    ->fields('ipns', array('id', 'timestamp', 'txn_type', 'test_ipn', 'payer_email'))
     ->orderByHeader($header)
     ->extend('PagerDefault')
     ->limit($ipns_per_page);
@@ -129,6 +129,9 @@ function lm_paypal_ipns() {
     // $other = ($ipn->custom >> 16) & 0xFFFF;
     if (!empty($custom)) {
       $custom_data = $custom['uid'] . ($custom['other'] == '' ? '' : " ($custom[other])");
+    }
+    else if ($ipn->test_ipn != 1) {
+      $custom_data = $ipn->payer_email;
     }
     else {
       $custom_data = "This is a Test IPN";
